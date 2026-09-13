@@ -1,0 +1,17 @@
+name: Refresh integrated shared apps v5.12.1
+on:
+  push:
+    paths:
+      - '.github/workflows/bump-shared-apps-v5121.yml'
+      - 'scripts/bump_shared_apps_v5121.py'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh embedded app versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/bump_shared_apps_v5121.py
