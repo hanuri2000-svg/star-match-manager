@@ -94,6 +94,9 @@ function readRecords() {
 function saveRecords() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    window.dispatchEvent(
+      new CustomEvent("spawn-note:records-changed", { detail: { count: records.length } }),
+    );
   } catch (error) {
     alert("브라우저 저장 공간에 기록을 저장하지 못했어. 먼저 JSON 백업을 받아줘.");
     throw error;
@@ -1191,4 +1194,3 @@ load();
 const existing=document.querySelector('[data-spwn-native-host]');
 if(existing)window.mountSpwnNoteNative(existing);
 })();
-

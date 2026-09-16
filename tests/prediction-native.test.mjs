@@ -7,7 +7,7 @@ const moduleSource = fs.readFileSync(new URL("../prediction-native.js", import.m
 
 test("맞혀도랑은 iframe 없이 통합 모듈로 열린다", () => {
   assert.match(main, /data-prediction-native-host/);
-  assert.match(main, /prediction-native\.js\?v=5\.14\.0/);
+  assert.match(main, /prediction-native\.js\?v=5\.15\.0/);
   assert.doesNotMatch(main, /class="prediction-frame"/);
   assert.doesNotMatch(main, /star-prediction\/\?embed=1/);
 });
