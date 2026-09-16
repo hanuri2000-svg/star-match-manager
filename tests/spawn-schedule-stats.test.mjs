@@ -38,7 +38,7 @@ test("저장 데이터가 없거나 손상돼도 0전으로 안전하게 표시�
 });
 
 test("달력과 스폰노트가 같은 저장 키로 자동 갱신된다", () => {
-  assert.match(main, /spawn-schedule-stats\.js\?v=5\.15\.1/);
+  assert.match(main, /spawn-schedule-stats\.js\?v=5\.15\.2/);
   assert.match(main, /SpawnScheduleStats\?\.summarizeStorage/);
   assert.match(main, /저그전/);
   assert.match(main, /테란전/);
@@ -47,4 +47,10 @@ test("달력과 스폰노트가 같은 저장 키로 자동 갱신된다", () =>
   assert.match(main, /spawn-note:records-changed/);
   assert.match(main, /event\.key==='spawnNote\.records\.v1'/);
   assert.match(spwnModule, /new CustomEvent\("spawn-note:records-changed"/);
+});
+
+test("통합페이지는 스케줄로 시작하고 별풍 정산을 마지막에 배치한다", () => {
+  assert.match(main, /activeTab:'schedule'/);
+  assert.match(main, /s\.activeTab='schedule';/);
+  assert.match(main, /nav\.appendChild\(settlementTab\)/);
 });
