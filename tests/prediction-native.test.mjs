@@ -26,6 +26,9 @@ test("기존 맞혀도랑 저장 키와 전체 기능을 유지한다", () => {
     assert.match(moduleSource, new RegExp(`\\b${feature}\\b`));
   }
   assert.match(moduleSource, /mountPredictionNative/);
+  assert.match(moduleSource, /ASL 우승·준우승 예측/);
+  assert.match(moduleSource, /setAslPick/);
+  assert.match(moduleSource, /1등과 2등은 같은 선수를 선택할 수 없어/);
   assert.match(moduleSource, /attachShadow\(\{mode:'open'\}\)/);
 });
 
