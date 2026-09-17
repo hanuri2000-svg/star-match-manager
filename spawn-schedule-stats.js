@@ -82,5 +82,20 @@
   };
 
   global.SpawnScheduleStats = api;
+  if (global.document) {
+    const style = global.document.createElement("style");
+    style.textContent = `
+      body.app-fit-screen #app > .tab-view { min-width:0; width:100%; }
+      body.app-fit-screen #app > .schedule-view { overflow-x:hidden !important; }
+      .schedule-shell,.schedule-main-layout,.schedule-bottom-layout { min-width:0; max-width:100%; }
+    `;
+    global.document.head.appendChild(style);
+    const keepScheduleAtLeft = () => {
+      const view = global.document.querySelector(".schedule-view");
+      if (view && view.scrollLeft !== 0) view.scrollLeft = 0;
+    };
+    new MutationObserver(keepScheduleAtLeft).observe(global.document.documentElement,{childList:true,subtree:true});
+    global.addEventListener("pageshow",keepScheduleAtLeft);
+  }
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

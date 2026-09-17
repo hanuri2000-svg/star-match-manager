@@ -528,4 +528,10 @@ render();
 };
 const existing=document.querySelector('[data-prediction-native-host]');
 if(existing)window.mountPredictionNative(existing);
+const RELEASE_VERSION='5.16.0';
+function syncReleaseVersion(){
+  document.querySelectorAll('.app-version-badge').forEach(el=>{el.textContent='v'+RELEASE_VERSION});
+}
+syncReleaseVersion();
+new MutationObserver(syncReleaseVersion).observe(document.body,{childList:true,subtree:true});
 })();
