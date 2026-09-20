@@ -19,6 +19,11 @@ test("아이폰 공유와 저장 대체 경로를 함께 제공한다", () => {
   assert.match(main, /downloadPartyImage/);
 });
 
+test("이미지 저장 기능이 공통 탭 렌더 함수를 덮어쓰지 않는다", () => {
+  assert.doesNotMatch(main, /renderBeforePartyImage/);
+  assert.match(main, /class="primary party-save-image" data-party-image-save/);
+});
+
 test("결과 이미지에 게임·팀 점수·최종 순위를 포함한다", () => {
   assert.match(main, /순위 결과/);
   assert.match(main, /const totalA=/);

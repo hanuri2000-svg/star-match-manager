@@ -7,7 +7,7 @@ const moduleSource = fs.readFileSync(new URL("../spwn-native.js", import.meta.ur
 
 test("스폰노트는 iframe 없이 통합 모듈로 열린다", () => {
   assert.match(main, /data-spwn-native-host/);
-  assert.match(main, /spwn-native\.js\?v=5\.16\.4/);
+  assert.match(main, /spwn-native\.js\?v=5\.16\.5/);
   assert.doesNotMatch(main, /src="\.\.\/spwn-note\/\?embed=1/);
 });
 
