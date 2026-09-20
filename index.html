@@ -1,6 +1,6 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>도랑이꺼야~</title>
 <style>:root{--bg:#080b14;--panel:#121728;--line:#29324d;--text:#f4f6ff;--muted:#929bb8;--purple:#8067ff;--green:#45d6a0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% -10%,#24204d 0,transparent 35%),var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer;border:1px solid transparent;border-radius:10px;padding:11px 15px;color:var(--text);background:#242c44;font-weight:750}button:hover{filter:brightness(1.12)}main{width:min(1440px,100%);margin:auto;padding:34px 28px 60px}.head{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}.eyebrow{margin:0 0 8px;color:#a895ff;font-size:12px;font-weight:800;letter-spacing:.18em}h1,h2,p{margin-top:0}h1{margin-bottom:8px;font-size:clamp(30px,4vw,50px);letter-spacing:-.05em}h2{margin-bottom:0}.sub,.empty{color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:8px}.primary{background:linear-gradient(135deg,var(--purple),#6750d8)}.secondary{border-color:var(--line);background:#121728}.danger{color:#ff9bac;border-color:#5a2b3b;background:#25121a}.panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#151b2e,#101523);box-shadow:0 16px 40px #0004}.settings{display:grid;grid-template-columns:1.2fr .7fr 2fr;gap:16px;padding:18px;margin-bottom:18px}label{display:grid;gap:7px;color:var(--muted);font-size:12px;font-weight:750}input,select{width:100%;border:1px solid #303a59;border-radius:10px;padding:11px 12px;outline:none;background:#0c101d;color:var(--text)}input:focus,select:focus{border-color:var(--purple)}.note{display:flex;align-items:center;gap:12px;border-left:1px solid var(--line);padding-left:18px;color:var(--muted);font-size:13px}.note b{flex:none;color:#fff;border:1px solid #604dce;border-radius:8px;padding:6px 9px;background:#282052}.teams{display:grid;grid-template-columns:1fr 1fr;gap:18px}.team{padding:18px}.team-name{margin-bottom:14px;padding:5px 0 12px;border-width:0 0 1px;border-radius:0;background:transparent;font-size:24px;font-weight:850}.player-form{display:grid;grid-template-columns:1.5fr .7fr 1fr auto;gap:8px}.roster{display:grid;gap:7px;margin-top:14px}.empty{text-align:center;font-size:13px}.player{display:grid;grid-template-columns:34px 1fr 1fr 34px;align-items:center;gap:8px;padding:7px;border-radius:10px;background:#0d1220}.player span:nth-child(3){color:var(--muted);font-size:13px}.chip{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;font-weight:900;font-size:12px}.P{background:#325ecb}.T{background:#cb5545}.Z{background:#7a3ec9}.R{background:#3a9c7b}.x{padding:2px;background:transparent;color:var(--muted);font-size:22px}.score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:22px 30px;margin-top:24px;border-color:#4d447f;background:linear-gradient(110deg,#181938,#111527 50%,#241631)}.score>div:not(.score-label){display:flex;align-items:center;justify-content:flex-end;gap:22px;font-size:22px;font-weight:800}.score>div:last-child{justify-content:flex-start}.score strong{font-size:42px}.score-label{padding:0 34px;color:var(--muted);font-size:11px;letter-spacing:.2em}.section-title{display:flex;justify-content:space-between;align-items:end;margin:28px 0 14px}.matches{display:grid;gap:10px}.match{display:grid;grid-template-columns:58px 120px minmax(230px,1fr) 38px minmax(230px,1fr) 28px;align-items:center;gap:12px;padding:12px 14px}.match.done{border-color:#3b755f}.num{font-size:28px;font-weight:900}.map input{padding:9px}.fighter{display:grid;grid-template-columns:1.4fr 1fr 68px;gap:7px;padding:5px;border:1px solid transparent;border-radius:12px}.fighter.win{border-color:#3fc08f;background:#173a30}.fighter button{padding:8px;font-size:12px}.fighter.win button{background:var(--green);color:#071b14}.vs{text-align:center;color:var(--muted);font-size:11px;font-weight:900}.blank{display:grid;place-items:center;gap:7px;padding:45px}footer{padding-top:30px;color:#68728f;text-align:center;font-size:12px}@media(max-width:960px){.head{align-items:flex-start;flex-direction:column}.settings{grid-template-columns:1fr 1fr}.note{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);padding:14px 0 0}.teams{grid-template-columns:1fr}.match{position:relative;grid-template-columns:50px 1fr 28px}.map{grid-column:2}.fighter,.vs{grid-column:1/-1}.match>.x{position:absolute;right:16px}}@media(max-width:600px){main{padding:22px 14px 45px}.settings{grid-template-columns:1fr}.note{grid-column:auto}.player-form{grid-template-columns:1fr 1fr}.player-form input:first-child{grid-column:1/-1}.score{padding:16px}.score>div:not(.score-label){gap:10px;font-size:15px}.score strong{font-size:32px}.score-label{padding:0 10px}.fighter{grid-template-columns:1fr 1fr}.fighter button{grid-column:1/-1}}</style></head><body><main id="app"></main>
-<script src="./spawn-schedule-stats.js?v=5.16.3"></script>
+<script src="./spawn-schedule-stats.js?v=5.16.4"></script>
 <script>
 document.head.insertAdjacentHTML('beforeend',`<style>.funding-title{display:flex;align-items:end;justify-content:space-between;margin:14px 0 7px;padding-top:12px;border-top:1px solid var(--line)}.funding-title h3{margin:0}.funding-title span{color:var(--muted);font-size:11px}.funding-teams{display:grid;grid-template-columns:1fr 1fr;gap:10px}.funding-teams>div{padding:10px;border:1px solid var(--line);border-radius:12px;background:#0c101d}.funding-teams h3{margin:0 0 7px;font-size:15px}.funding-teams label{display:grid;grid-template-columns:1fr 120px;align-items:center;gap:8px;margin-top:4px}.funding-teams label span{color:var(--text);font-size:12px}.funding-teams small{color:var(--muted)}.funding-teams input{padding:6px 8px}@media(min-width:961px){.funding-teams>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px}.funding-teams h3{grid-column:1/-1}.funding-teams label{grid-template-columns:1fr 95px;margin:0}}@media(max-width:650px){.funding-teams{grid-template-columns:1fr}}.native-tier-player{grid-template-columns:34px 25px minmax(0,1fr) auto!important;min-height:42px!important;padding:4px 7px!important}.native-avatar-link{width:32px;height:32px;border-radius:50%;overflow:hidden;display:grid;place-items:center;text-decoration:none;background:#eee5f4;border:2px solid rgba(154,123,213,.25)}.native-avatar{width:100%;height:100%;object-fit:cover;display:block}.native-avatar-fallback{width:100%;height:100%;place-items:center;font-size:13px;font-weight:900;color:#70568b}.native-tier-player strong{font-size:14px!important;color:#2f2638!important}.native-live{font-size:11px!important;padding:5px 7px!important;color:#fff!important;background:#e64971!important;border-radius:8px;box-shadow:0 2px 7px rgba(230,73,113,.28)}
 </style>`);
@@ -11,7 +11,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>.winner-settings{grid-colum
 document.head.insertAdjacentHTML('beforeend',`<style>@media(min-width:961px){main{width:min(1800px,100%);padding:14px 18px 24px}.head{align-items:center;margin-bottom:10px}.head h1{font-size:30px;margin-bottom:2px}.head .eyebrow{margin-bottom:2px;font-size:9px}.sub{font-size:12px}.actions{gap:5px}.actions button,button{padding:7px 10px;border-radius:8px;font-size:12px}.settings{grid-template-columns:1.1fr .55fr 1.7fr;padding:9px 12px;margin-bottom:9px;gap:9px}.settings label{gap:3px}.settings input,.settings select{padding:7px 9px}.note{font-size:11px}.teams{gap:9px}.team{padding:9px 11px}.team-name{font-size:18px;margin-bottom:7px;padding:2px 0 6px}.player-form{gap:5px}.player-form input,.player-form select{padding:7px 8px;font-size:12px}.roster{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:7px}.player{grid-template-columns:28px 1fr 1.25fr 24px;min-height:32px;padding:2px 5px;font-size:12px}.chip{width:23px;height:23px;font-size:10px}.player .x{font-size:17px}.score{margin-top:9px;padding:7px 20px}.score>div:not(.score-label){font-size:15px;gap:12px}.score strong{font-size:27px}.section-title{margin:10px 0 7px}.section-title h2{font-size:21px}.section-title .eyebrow{font-size:9px}.set-block{margin-bottom:9px;padding:8px 10px;border-radius:13px}.set-head{gap:10px;margin-bottom:5px}.set-head .eyebrow{margin-bottom:1px;font-size:8px}.set-head h3{font-size:16px}.set-controls label{min-width:90px}.set-controls select{padding:5px 7px}.set-score{padding:4px 10px}.set-score strong{font-size:18px}.matches{gap:4px}.match{grid-template-columns:38px 100px minmax(220px,1fr) 28px minmax(220px,1fr) 18px;gap:6px;padding:4px 7px;border-radius:10px}.num{font-size:18px}.map input,.fighter select{padding:6px 7px;font-size:11px}.fighter{grid-template-columns:1.4fr .85fr 55px;gap:4px;padding:2px}.fighter button{padding:6px 4px;font-size:10px}footer{padding-top:8px;font-size:10px}.winner-settings{padding-top:7px}.winner-settings select{padding:6px}}</style>`);
 document.head.insertAdjacentHTML('beforeend',`<style>.settlement{margin-top:14px;padding:16px}.settle-title{display:flex;align-items:end;justify-content:space-between;margin-bottom:12px}.settle-title h2{font-size:22px}.settle-title>span{color:var(--muted);font-size:12px}.settle-form{display:grid;grid-template-columns:1.3fr repeat(5,1fr);gap:8px}.settle-summary{display:grid;grid-template-columns:.8fr 1.1fr 1.1fr;gap:8px;margin-top:12px}.settle-summary>div{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0c101d}.settle-summary span,.settle-summary small,.settle-detail{color:var(--muted);font-size:11px}.settle-summary strong{font-size:20px}.settle-summary .win-pay{border-color:#3fc08f;background:#173a30}.settle-empty{margin-top:12px;padding:18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}.settle-detail{margin:7px 2px 0}@media(min-width:961px){.settlement{padding:9px 11px}.settle-title{margin-bottom:7px}.settle-form input,.settle-form select{padding:6px 7px;font-size:11px}.settle-summary{margin-top:7px}.settle-summary>div{padding:6px 9px}.settle-summary strong{font-size:16px}}@media(max-width:960px){.settle-form{grid-template-columns:repeat(2,1fr)}.settle-summary{grid-template-columns:1fr}}@media(max-width:520px){.settle-form{grid-template-columns:1fr}}.settle-mode-rules{display:grid;gap:5px;margin:8px 0 10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#faf7fc}.settle-mode-rules p{margin:0;padding:5px 8px;border-radius:7px;color:#55485e;font-size:12px;font-weight:800}.settle-mode-rules p.active{background:#eadcf5;color:#4f3265;box-shadow:inset 3px 0 #a87bd0}
 </style>`);
-const APP_VERSION='5.16.3',KEY='star-match-manager-v1',races={P:'프로토스',T:'테란',Z:'저그',R:'랜덤'},tiers=['갓','킹','잭','조커','스페이드','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'],defaultRoulette=()=>({type:'map',maps:'투혼\n폴리포이드\n실피드\n라데온',playerId:'',result:'',note:'',history:[],angle:0}),fresh=()=>({title:'오늘의 CK',mode:'CK',teamA:'A팀',teamB:'B팀',playersA:[],playersB:[],matches:[],setGames:[1],setModes:['normal'],aces:[],winnerEnd:'elimination',winnerFixed:7,activeTab:'schedule',roulette:defaultRoulette(),settlement:{mode:'main',mainFunding:0,entryPerPerson:0,winRatio:6,loseRatio:4,winner:'',playerFunding:{}}});let s;try{s=JSON.parse(localStorage.getItem(KEY))||fresh()}catch{s=fresh()}s.setGames=s.setGames||[Math.max(1,s.matches?.length||1)];s.matches=(s.matches||[]).map(m=>({...m,set:m.set||1}));s.aces=s.aces||[];s.winnerEnd=s.winnerEnd||'elimination';s.winnerFixed=s.winnerFixed||7;s.activeTab=s.activeTab||'schedule';let legacyWinner=s.mode==='위너스';s.setModes=s.setModes||s.setGames.map(()=>legacyWinner?'winners':'normal');while(s.setModes.length<s.setGames.length)s.setModes.push('normal');if(legacyWinner)s.mode='CK';s.roulette={...defaultRoulette(),...(s.roulette||{})};s.roulette.history=s.roulette.history||[];s.settlement={mode:'main',mainFunding:0,entryPerPerson:0,winRatio:6,loseRatio:4,winner:'',playerFunding:{},...(s.settlement||{})};s.settlement.playerFunding=s.settlement.playerFunding||{};const id=()=>Math.random().toString(36).slice(2,10),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),raceOpts=v=>Object.entries(races).map(([k,n])=>`<option value="${k}" ${k===v?'selected':''}>${n}</option>`).join(''),subRaceOpts=v=>'<option value="">부종 선택</option>'+['P','T','Z'].map(k=>`<option value="${k}" ${k===v?'selected':''}>${races[k]}</option>`).join(''),tierOpts=v=>'<option value="">티어 선택</option>'+tiers.map(t=>`<option value="${t}" ${t===v?'selected':''}>${t}</option>`).join(''),random=()=>['랜능크','빨무'].includes(s.mode),newMatch=set=>({id:id(),set,map:'',a:'',b:'',raceA:random()?'R':'P',raceB:random()?'R':'P',winner:''}),syncSets=()=>{s.setGames=s.setGames.map((count,i)=>['winners','losers'].includes(s.setModes[i])?(s.winnerEnd==='elimination'?Math.max(1,s.playersA.length+s.playersB.length-1):s.winnerFixed):count);s.setGames.forEach((count,i)=>{let set=i+1,ms=s.matches.filter(m=>m.set===set);while(ms.length<count){let m=newMatch(set);s.matches.push(m);ms.push(m)}if(ms.length>count){let remove=new Set(ms.slice(count).map(m=>m.id));s.matches=s.matches.filter(m=>!remove.has(m.id))}})},setResult=setNo=>{let ms=s.matches.filter(m=>m.set===setNo),a=ms.filter(m=>m.winner==='A').length,b=ms.filter(m=>m.winner==='B').length;if(['winners','losers'].includes(s.setModes[setNo-1])&&s.winnerEnd==='elimination'){let special=s.setModes[setNo-1],outA=new Set(ms.filter(m=>m.winner===(special==='winners'?'B':'A')).map(m=>m.a).filter(Boolean)),outB=new Set(ms.filter(m=>m.winner===(special==='winners'?'A':'B')).map(m=>m.b).filter(Boolean));if(s.playersA.length&&outA.size>=s.playersA.length)return{a,b,winner:special==='winners'?'B':'A',done:true};if(s.playersB.length&&outB.size>=s.playersB.length)return{a,b,winner:special==='winners'?'A':'B',done:true};return{a,b,winner:'',done:false}}let done=ms.length===s.setGames[setNo-1]&&ms.every(m=>m.winner),winner=done&&a!==b?(a>b?'A':'B'):'';return{a,b,winner,done}},save=()=>{syncSets();localStorage.setItem(KEY,JSON.stringify(s));render()},players=()=>[...s.playersA,...s.playersB];syncSets();s.teamA='도랑팀';s.teamB='너거팀';
+const APP_VERSION='5.16.4',KEY='star-match-manager-v1',races={P:'프로토스',T:'테란',Z:'저그',R:'랜덤'},tiers=['갓','킹','잭','조커','스페이드','0티어','1티어','2티어','3티어','4티어','5티어','6티어','7티어','8티어','유스'],defaultRoulette=()=>({type:'map',maps:'투혼\n폴리포이드\n실피드\n라데온',playerId:'',result:'',note:'',history:[],angle:0}),fresh=()=>({title:'오늘의 CK',mode:'CK',teamA:'A팀',teamB:'B팀',playersA:[],playersB:[],matches:[],setGames:[1],setModes:['normal'],aces:[],winnerEnd:'elimination',winnerFixed:7,activeTab:'schedule',roulette:defaultRoulette(),settlement:{mode:'main',mainFunding:0,entryPerPerson:0,winRatio:6,loseRatio:4,winner:'',playerFunding:{}}});let s;try{s=JSON.parse(localStorage.getItem(KEY))||fresh()}catch{s=fresh()}s.setGames=s.setGames||[Math.max(1,s.matches?.length||1)];s.matches=(s.matches||[]).map(m=>({...m,set:m.set||1}));s.aces=s.aces||[];s.winnerEnd=s.winnerEnd||'elimination';s.winnerFixed=s.winnerFixed||7;s.activeTab=s.activeTab||'schedule';let legacyWinner=s.mode==='위너스';s.setModes=s.setModes||s.setGames.map(()=>legacyWinner?'winners':'normal');while(s.setModes.length<s.setGames.length)s.setModes.push('normal');if(legacyWinner)s.mode='CK';s.roulette={...defaultRoulette(),...(s.roulette||{})};s.roulette.history=s.roulette.history||[];s.settlement={mode:'main',mainFunding:0,entryPerPerson:0,winRatio:6,loseRatio:4,winner:'',playerFunding:{},...(s.settlement||{})};s.settlement.playerFunding=s.settlement.playerFunding||{};const id=()=>Math.random().toString(36).slice(2,10),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),raceOpts=v=>Object.entries(races).map(([k,n])=>`<option value="${k}" ${k===v?'selected':''}>${n}</option>`).join(''),subRaceOpts=v=>'<option value="">부종 선택</option>'+['P','T','Z'].map(k=>`<option value="${k}" ${k===v?'selected':''}>${races[k]}</option>`).join(''),tierOpts=v=>'<option value="">티어 선택</option>'+tiers.map(t=>`<option value="${t}" ${t===v?'selected':''}>${t}</option>`).join(''),random=()=>['랜능크','빨무'].includes(s.mode),newMatch=set=>({id:id(),set,map:'',a:'',b:'',raceA:random()?'R':'P',raceB:random()?'R':'P',winner:''}),syncSets=()=>{s.setGames=s.setGames.map((count,i)=>['winners','losers'].includes(s.setModes[i])?(s.winnerEnd==='elimination'?Math.max(1,s.playersA.length+s.playersB.length-1):s.winnerFixed):count);s.setGames.forEach((count,i)=>{let set=i+1,ms=s.matches.filter(m=>m.set===set);while(ms.length<count){let m=newMatch(set);s.matches.push(m);ms.push(m)}if(ms.length>count){let remove=new Set(ms.slice(count).map(m=>m.id));s.matches=s.matches.filter(m=>!remove.has(m.id))}})},setResult=setNo=>{let ms=s.matches.filter(m=>m.set===setNo),a=ms.filter(m=>m.winner==='A').length,b=ms.filter(m=>m.winner==='B').length;if(['winners','losers'].includes(s.setModes[setNo-1])&&s.winnerEnd==='elimination'){let special=s.setModes[setNo-1],outA=new Set(ms.filter(m=>m.winner===(special==='winners'?'B':'A')).map(m=>m.a).filter(Boolean)),outB=new Set(ms.filter(m=>m.winner===(special==='winners'?'A':'B')).map(m=>m.b).filter(Boolean));if(s.playersA.length&&outA.size>=s.playersA.length)return{a,b,winner:special==='winners'?'B':'A',done:true};if(s.playersB.length&&outB.size>=s.playersB.length)return{a,b,winner:special==='winners'?'A':'B',done:true};return{a,b,winner:'',done:false}}let done=ms.length===s.setGames[setNo-1]&&ms.every(m=>m.winner),winner=done&&a!==b?(a>b?'A':'B'):'';return{a,b,winner,done}},save=()=>{syncSets();localStorage.setItem(KEY,JSON.stringify(s));render()},players=()=>[...s.playersA,...s.playersB];syncSets();s.teamA='도랑팀';s.teamB='너거팀';
 if(new URLSearchParams(location.search).get('broadcast')!=='1')s.activeTab='schedule';
 function playerPanel(side){let ps=s['players'+side],team=s['team'+side];return `<section class="panel team"><div class="team-name">${esc(team)}</div><div class="player-form"><input id="name${side}" data-auto-player="${side}" placeholder="선수 이름"><select id="tier${side}">${tierOpts('')}</select><select id="race${side}">${raceOpts('P')}</select><select id="subrace${side}">${subRaceOpts('')}</select><button class="primary" data-act="add-player" data-side="${side}">선수 추가</button></div><div class="roster">${ps.length?ps.map(p=>`<div class="player"><span class="chip ${p.race}">${p.race}</span><strong>${esc(p.name)}</strong><span>${esc(p.tier||'티어 미입력')} · 본 ${p.race}${p.subrace?' / 부 '+p.subrace:''}</span><button class="x" data-act="del-player" data-side="${side}" data-id="${p.id}">×</button></div>`).join(''):'<p class="empty">등록된 선수가 없어</p>'}</div></section>`}
 function matchRow(m,i,ace=false){let earlier=ace?[]:s.matches.filter(x=>x.set===m.set).slice(0,i),format=s.setModes[m.set-1]||'normal',special=['winners','losers'].includes(format),outA=new Set(earlier.filter(x=>x.winner===(format==='winners'?'B':'A')).map(x=>x.a)),outB=new Set(earlier.filter(x=>x.winner===(format==='winners'?'A':'B')).map(x=>x.b)),pa=s.playersA.map(p=>`<option value="${p.id}" ${p.id===m.a?'selected':''} ${special&&outA.has(p.id)&&p.id!==m.a?'disabled':''}>${esc(p.name)}${p.tier?' · '+esc(p.tier):''}${special&&outA.has(p.id)?format==='losers'?' · 통과':' · 탈락':''}</option>`).join(''),pb=s.playersB.map(p=>`<option value="${p.id}" ${p.id===m.b?'selected':''} ${special&&outB.has(p.id)&&p.id!==m.b?'disabled':''}>${esc(p.name)}${p.tier?' · '+esc(p.tier):''}${special&&outB.has(p.id)?format==='losers'?' · 통과':' · 탈락':''}</option>`).join('');return `<article class="match panel ${m.winner?'done':''} ${!ace&&format==='normal'&&s.setGames[m.set-1]>=3&&i===s.setGames[m.set-1]-1?'ace-match':''}" data-id="${m.id}" data-ace="${ace}"><div class="num">${ace||(!ace&&format==='normal'&&s.setGames[m.set-1]>=3&&i===s.setGames[m.set-1]-1)?'ACE':i+1}</div><div class="map"><input data-field="map" placeholder="맵 이름" value="${esc(m.map)}"></div><div class="fighter ${m.winner==='A'?'win':''}"><select data-field="a"><option value="">${esc(s.teamA)} 선수 선택</option>${pa}</select><select data-field="raceA">${raceOpts(m.raceA)}</select><button data-act="winner" data-side="A">${m.winner==='A'?'승리 ✓':'승리'}</button></div><span class="vs">VS</span><div class="fighter ${m.winner==='B'?'win':''}"><select data-field="b"><option value="">${esc(s.teamB)} 선수 선택</option>${pb}</select><select data-field="raceB">${raceOpts(m.raceB)}</select><button data-act="winner" data-side="B">${m.winner==='B'?'승리 ✓':'승리'}</button></div>${ace?'<button class="x" data-act="del-ace">×</button>':'<span></span>'}</article>`}
@@ -932,6 +932,168 @@ body.app-fit-screen .harina-signature{width:340px!important;max-height:none!impo
 
 render();
 </script>
+<script id="party-ranking-image-export">
+(()=>{
+  const rankPartyPlayers=()=>{
+    let lastTotal=null,lastRank=0;
+    return s.partyScore.players
+      .map(player=>({...player,team:player.team||'A',total:partyTotal(player)}))
+      .sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name,'ko'))
+      .map((player,index)=>{
+        const rank=player.total===lastTotal?lastRank:index+1;
+        lastTotal=player.total;lastRank=rank;
+        return {...player,rank};
+      });
+  };
+  const fitCanvasText=(ctx,value,maxWidth)=>{
+    const text=String(value??'');
+    if(ctx.measureText(text).width<=maxWidth)return text;
+    let shortened=text;
+    while(shortened.length&&ctx.measureText(shortened+'…').width>maxWidth)shortened=shortened.slice(0,-1);
+    return shortened+'…';
+  };
+  const roundedRect=(ctx,x,y,width,height,radius)=>{
+    const r=Math.min(radius,width/2,height/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.arcTo(x+width,y,x+width,y+height,r);
+    ctx.arcTo(x+width,y+height,x,y+height,r);ctx.arcTo(x,y+height,x,y,r);
+    ctx.arcTo(x,y,x+width,y,r);ctx.closePath();
+  };
+  const fillRoundedRect=(ctx,x,y,width,height,radius,fill,stroke)=>{
+    roundedRect(ctx,x,y,width,height,radius);
+    ctx.fillStyle=fill;ctx.fill();
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}
+  };
+  const canvasToPngBlob=canvas=>{
+    const data=canvas.toDataURL('image/png').split(',')[1];
+    const binary=atob(data),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return new Blob([bytes],{type:'image/png'});
+  };
+  function makePartyRankingCanvas(){
+    const ranked=rankPartyPlayers(),width=1080,rowHeight=66;
+    const height=Math.max(620,456+ranked.length*rowHeight);
+    const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+    const ctx=canvas.getContext('2d');
+    const font='-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+    const background=ctx.createLinearGradient(0,0,width,height);
+    background.addColorStop(0,'#fff8fc');background.addColorStop(.48,'#f5effb');background.addColorStop(1,'#edf6ff');
+    ctx.fillStyle=background;ctx.fillRect(0,0,width,height);
+    ctx.globalAlpha=.22;ctx.fillStyle='#e4bbdc';ctx.beginPath();ctx.arc(970,50,190,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#bcd9f2';ctx.beginPath();ctx.arc(80,height-10,170,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+
+    ctx.fillStyle='#8a5aae';ctx.font=`800 20px ${font}`;ctx.textAlign='left';ctx.fillText('DORANG PARTY SCOREBOARD',60,52);
+    ctx.fillStyle='#463451';ctx.font=`900 50px ${font}`;ctx.fillText(`${s.partyScore.game} 순위 결과`,60,116);
+    const date=new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    ctx.fillStyle='#7c6c85';ctx.font=`700 22px ${font}`;
+    ctx.fillText(`${date}  ·  참가자 ${ranked.length}명  ·  ${s.partyScore.rounds}라운드`,62,157);
+
+    const totalA=ranked.filter(player=>player.team==='A').reduce((sum,player)=>sum+player.total,0);
+    const totalB=ranked.filter(player=>player.team==='B').reduce((sum,player)=>sum+player.total,0);
+    const countA=ranked.filter(player=>player.team==='A').length,countB=ranked.length-countA;
+    fillRoundedRect(ctx,60,184,450,112,22,'#fff0f6','#efbfd2');
+    fillRoundedRect(ctx,570,184,450,112,22,'#eef7ff','#bbd8ed');
+    ctx.textAlign='left';ctx.fillStyle='#9a4c71';ctx.font=`800 22px ${font}`;ctx.fillText(fitCanvasText(ctx,s.partyScore.teamA,255),88,224);
+    ctx.fillStyle='#8e6e7d';ctx.font=`700 17px ${font}`;ctx.fillText(`${countA}명`,88,260);
+    ctx.textAlign='right';ctx.fillStyle='#8a3e63';ctx.font=`900 47px ${font}`;ctx.fillText(String(totalA),482,260);
+    ctx.textAlign='left';ctx.fillStyle='#47769e';ctx.font=`800 22px ${font}`;ctx.fillText(fitCanvasText(ctx,s.partyScore.teamB,255),598,224);
+    ctx.fillStyle='#68859b';ctx.font=`700 17px ${font}`;ctx.fillText(`${countB}명`,598,260);
+    ctx.textAlign='right';ctx.fillStyle='#315f8b';ctx.font=`900 47px ${font}`;ctx.fillText(String(totalB),992,260);
+    fillRoundedRect(ctx,510,215,60,48,24,'#ffffff','#d9c8e2');
+    ctx.textAlign='center';ctx.fillStyle='#725a7f';ctx.font=`900 18px ${font}`;ctx.fillText('VS',540,246);
+
+    const tableX=60,tableWidth=960,tableTop=332,headerHeight=56;
+    fillRoundedRect(ctx,tableX,tableTop,tableWidth,headerHeight,16,'#5f496d');
+    ctx.fillStyle='#ffffff';ctx.font=`800 20px ${font}`;ctx.textBaseline='middle';
+    ctx.textAlign='center';ctx.fillText('순위',116,tableTop+headerHeight/2);ctx.fillText('팀',280,tableTop+headerHeight/2);
+    ctx.textAlign='left';ctx.fillText('참가자',382,tableTop+headerHeight/2);
+    ctx.textAlign='center';ctx.fillText('총점',934,tableTop+headerHeight/2);
+
+    ranked.forEach((player,index)=>{
+      const y=tableTop+headerHeight+8+index*rowHeight,isA=player.team==='A';
+      fillRoundedRect(ctx,tableX,y,tableWidth,58,14,isA?'#fff8fb':'#f5faff',isA?'#f1d3df':'#d4e7f4');
+      const medalColor=player.rank===1?'#e6ad3c':player.rank===2?'#a8a9bb':player.rank===3?'#b97955':'#ebe5ef';
+      ctx.beginPath();ctx.arc(116,y+29,21,0,Math.PI*2);ctx.fillStyle=medalColor;ctx.fill();
+      ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=player.rank<=3?'#fff':'#65576d';ctx.font=`900 20px ${font}`;ctx.fillText(String(player.rank),116,y+30);
+      fillRoundedRect(ctx,196,y+12,168,34,17,isA?'#ffe5ef':'#e3f2fc');
+      ctx.fillStyle=isA?'#9a4c71':'#3972a2';ctx.font=`800 17px ${font}`;
+      ctx.fillText(fitCanvasText(ctx,isA?s.partyScore.teamA:s.partyScore.teamB,138),280,y+30);
+      ctx.textAlign='left';ctx.fillStyle='#3f3248';ctx.font=`850 23px ${font}`;ctx.fillText(fitCanvasText(ctx,player.name,400),382,y+30);
+      ctx.textAlign='center';ctx.fillStyle='#416332';ctx.font=`900 27px ${font}`;ctx.fillText(String(player.total),934,y+30);
+    });
+    ctx.textBaseline='alphabetic';ctx.textAlign='center';ctx.fillStyle='#887a91';ctx.font=`700 17px ${font}`;
+    ctx.fillText('하리나 매치룸 · 덕몽 & 폴가이즈',width/2,height-28);
+    return canvas;
+  }
+  const closePartyImagePreview=()=>{
+    const preview=document.querySelector('.party-image-preview');
+    if(preview)preview._partyCleanup?.();
+  };
+  function showPartyImagePreview(blob,fileName){
+    closePartyImagePreview();
+    const url=URL.createObjectURL(blob),modal=document.createElement('div');
+    modal.className='party-image-preview';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+    modal.innerHTML='<div class="party-image-preview-card"><div class="party-image-preview-head"><div><strong>순위 결과 이미지</strong><span>이미지를 길게 눌러 사진 앱에 저장할 수 있어.</span></div><button type="button" data-party-preview-close aria-label="닫기">×</button></div><div class="party-image-preview-scroll"><img alt="덕몽 & 폴가이즈 순위 결과"></div><div class="party-image-preview-actions"><a class="primary" download>파일로 저장</a><button type="button" class="secondary" data-party-preview-close>닫기</button></div></div>';
+    modal.querySelector('img').src=url;
+    const download=modal.querySelector('a');download.href=url;download.download=fileName;
+    let closed=false;
+    const close=()=>{if(closed)return;closed=true;URL.revokeObjectURL(url);modal.remove()};
+    modal._partyCleanup=close;
+    modal.querySelectorAll('[data-party-preview-close]').forEach(button=>button.addEventListener('click',close));
+    modal.addEventListener('click',event=>{if(event.target===modal)close()});
+    document.body.appendChild(modal);
+  }
+  function downloadPartyImage(blob,fileName){
+    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(isIOS){showPartyImagePreview(blob,fileName);return}
+    const url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+  async function savePartyRankingImage(button){
+    if(!s.partyScore.players.length){alert('저장할 순위 결과가 없어. 참가자를 먼저 추가해줘.');return}
+    const original=button.textContent;button.disabled=true;button.textContent='이미지 만드는 중…';
+    try{
+      const canvas=makePartyRankingCanvas(),blob=canvasToPngBlob(canvas);
+      const now=new Date(),stamp=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('')+'-'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+      const game=String(s.partyScore.game||'순위결과').replace(/[\\/:*?"<>|]/g,'_');
+      const fileName=`${game}-순위결과-${stamp}.png`;
+      const file=typeof File==='function'?new File([blob],fileName,{type:'image/png'}):null;
+      let canShare=false;
+      try{canShare=!!(file&&navigator.share&&navigator.canShare?.({files:[file]}))}catch{}
+      if(canShare){
+        try{await navigator.share({files:[file],title:`${s.partyScore.game} 순위 결과`});return}
+        catch(error){if(error?.name==='AbortError')return}
+      }
+      downloadPartyImage(blob,fileName);
+    }catch(error){console.error(error);alert('순위 결과 이미지를 만들지 못했어. 다시 한 번 눌러줘.')}
+    finally{if(button.isConnected){button.disabled=false;button.textContent=original}}
+  }
+  const renderBeforePartyImage=render;
+  render=function(){
+    renderBeforePartyImage();
+    if(s.activeTab!=='party')return;
+    const actions=document.querySelector('.party-score-actions');
+    if(actions&&!actions.querySelector('[data-party-image-save]'))actions.insertAdjacentHTML('beforeend','<button type="button" class="primary party-save-image" data-party-image-save>순위 결과 이미지 저장</button>');
+  };
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-party-image-save]');
+    if(button)savePartyRankingImage(button);
+  });
+  document.head.insertAdjacentHTML('beforeend',`<style>
+.party-save-image{white-space:nowrap;background:linear-gradient(135deg,#7450aa,#b84f7b)!important;color:#fff!important}
+.party-save-image:disabled{cursor:wait;opacity:.68}
+.party-image-preview{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:rgba(35,24,43,.72);backdrop-filter:blur(8px)}
+.party-image-preview-card{display:flex;flex-direction:column;width:min(680px,100%);max-height:92dvh;overflow:hidden;border:1px solid #dbcbe4;border-radius:20px;background:#fff;box-shadow:0 25px 80px rgba(22,12,30,.4)}
+.party-image-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #eadfeb;background:linear-gradient(120deg,#faf2fc,#eef6ff)}
+.party-image-preview-head>div{display:grid;gap:3px}.party-image-preview-head strong{color:#4d3a59;font-size:16px}.party-image-preview-head span{color:#7d6c86;font-size:11px}.party-image-preview-head button{padding:4px 10px!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:27px!important}
+.party-image-preview-scroll{flex:1;min-height:0;overflow:auto;padding:12px;background:#eee8f2}.party-image-preview-scroll img{display:block;width:100%;height:auto;border-radius:11px;box-shadow:0 8px 24px rgba(60,42,72,.18);-webkit-touch-callout:default;user-select:auto}
+.party-image-preview-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px}.party-image-preview-actions a{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:9px;text-decoration:none}
+@media(max-width:760px){.party-save-image{flex:1 1 100%;width:100%}.party-image-preview{padding:8px}.party-image-preview-card{max-height:96dvh}.party-image-preview-actions>*{flex:1}.party-image-preview-head span{font-size:10px}}
+</style>`);
+  render();
+})();
+</script>
 <script id="shared-player-master-ui">
 (()=>{
   window.__masterDbSearch='';
@@ -961,7 +1123,7 @@ render();
 </script>
 <script id="integrated-update-manager">
 (()=>{
-const RELEASE_VERSION='5.16.3';
+const RELEASE_VERSION='5.16.4';
 const VERSION_URL='./version.json';
 const versionParts=v=>String(v||'0').split('.').map(n=>Number(n)||0);
 const newer=(a,b)=>{const x=versionParts(a),y=versionParts(b);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false};
@@ -1015,7 +1177,7 @@ new MutationObserver(installUpdateControl).observe(document.getElementById('app'
 window.checkIntegratedUpdate=checkIntegratedUpdate;
 })();
 </script>
-<script src="./spwn-native.js?v=5.16.3"></script>
-<script src="./prediction-native.js?v=5.16.3"></script>
+<script src="./spwn-native.js?v=5.16.4"></script>
+<script src="./prediction-native.js?v=5.16.4"></script>
 
 </body></html>
