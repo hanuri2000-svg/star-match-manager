@@ -1,5 +1,5 @@
 {
-  "version": "5.16.7",
-  "releasedAt": "2026-09-23T00:00:00Z",
-  "notes": "EloBoard 스타CK 티어표 v3.62(2026-09-21) 전체 명단 동기화"
+  "version": "5.16.8",
+  "releasedAt": "2026-09-23T01:10:00Z",
+  "notes": "EloBoard 티어표 새 버전 6시간 간격 자동 감지·동기화"
 }

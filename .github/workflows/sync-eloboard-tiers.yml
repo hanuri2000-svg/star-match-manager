@@ -1,0 +1,40 @@
+name: Sync EloBoard tiers
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/sync-eloboard-tiers.mjs'
+      - '.github/workflows/sync-eloboard-tiers.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-eloboard-tiers
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Read and compare EloBoard tiers
+        run: node scripts/sync-eloboard-tiers.mjs
+      - name: Commit updated tier data
+        run: |
+          if git diff --quiet -- players.json; then
+            echo "No tier changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add players.json
+          git commit -m "Auto-sync EloBoard tier table"
+          git push
