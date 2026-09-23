@@ -3,13 +3,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 const SOURCE_URL = 'https://eloboard.co.kr/tiers';
 const PLAYER_FILE = 'players.json';
 
-const tierIds = [
-  ['god', '갓'], ['king', '킹'], ['jack', '잭'], ['joker', '조커'],
-  ['spade', '스페이드'], ['0', '0티어'], ['1', '1티어'], ['2', '2티어'],
-  ['3', '3티어'], ['4', '4티어'], ['5', '5티어'], ['6', '6티어'],
-  ['7', '7티어'], ['8', '8티어'], ['9', '유스']
-];
-
 function decodeHtml(value = '') {
   return value
     .replace(/<[^>]*>/g, '')
@@ -22,6 +15,39 @@ function decodeHtml(value = '') {
     .trim();
 }
 
+function parseFlightData(html) {
+  const chunks = [];
+  const pattern = /self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)<\/script>/g;
+  for (const match of html.matchAll(pattern)) chunks.push(JSON.parse(match[1]));
+  if (!chunks.length) throw new Error('EloBoard Next.js data was not found');
+  return chunks.join('\n');
+}
+
+function parseJsonValue(source, marker) {
+  const markerAt = source.indexOf(marker);
+  if (markerAt < 0) throw new Error(`EloBoard data marker was not found: ${marker}`);
+  const start = markerAt + marker.length;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < source.length; index += 1) {
+    const char = source[index];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+    if (char === '"') inString = true;
+    else if (char === '[' || char === '{') depth += 1;
+    else if (char === ']' || char === '}') {
+      depth -= 1;
+      if (depth === 0) return JSON.parse(source.slice(start, index + 1));
+    }
+  }
+  throw new Error(`EloBoard data was incomplete after marker: ${marker}`);
+}
+
 function parseSourceMeta(html) {
   const match = html.match(/<h2>변경사항<\/h2>\s*<span[^>]*>([^<]+)<\/span>\s*<span[^>]*>(\d{4}-\d{2}-\d{2})<\/span>/);
   if (!match) throw new Error('EloBoard version metadata was not found');
@@ -29,27 +55,18 @@ function parseSourceMeta(html) {
 }
 
 function parsePlayers(html) {
-  const players = [];
-  for (const [id, tier] of tierIds) {
-    const marker = `id="tier-${id}"`;
-    const start = html.indexOf(marker);
-    if (start < 0) throw new Error(`Missing tier section: ${tier}`);
-    const end = html.indexOf('</section>', start);
-    if (end < 0) throw new Error(`Unclosed tier section: ${tier}`);
-    const section = html.slice(start, end);
-    const links = section.matchAll(/<a\b([^>]*\bhref="\/players\/(\d+)"[^>]*)>([\s\S]*?)<\/a>/g);
-    for (const match of links) {
-      const attrs = match[1];
-      const body = match[3];
-      const race = attrs.match(/__([TZP])(?:\s|"|$)/)?.[1];
-      const nameMatches = [...body.matchAll(/<span\b[^>]*class="[^"]*__nm[^"]*"[^>]*>([\s\S]*?)<\/span>/g)];
-      const name = decodeHtml(nameMatches.at(-1)?.[1]);
-      if (!race || !name) continue;
-      const rawImage = body.match(/<img\b[^>]*\bsrc="([^"]+)"/)?.[1] || '';
-      const thumbUrl = decodeHtml(rawImage).replace(/^https:\/\/eloboard\.co\.kr\/static\//, '');
-      players.push({ id: Number(match[2]), name, tier, race, thumbUrl });
-    }
+  const flightData = parseFlightData(html);
+  const sections = parseJsonValue(flightData, '"sections":');
+  if (!Array.isArray(sections) || sections.length !== 15) {
+    throw new Error(`Unsafe EloBoard result: ${sections?.length || 0} tier sections`);
   }
+  const players = sections.flatMap(section => section.players.map(player => ({
+    id: Number(player.player_id),
+    name: player.name,
+    tier: section.key === '9' ? '유스' : section.label,
+    race: player.race,
+    thumbUrl: player.thumb_url || ''
+  })));
   const ids = new Set(players.map(player => player.id));
   if (players.length < 300 || ids.size !== players.length) {
     throw new Error(`Unsafe EloBoard result: ${players.length} players, ${ids.size} unique IDs`);
