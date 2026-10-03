@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-10-03",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -2857,12 +2857,12 @@
       "name": "김채이",
       "tier": "6티어",
       "tierLabel": "6티어",
-      "race": "P",
+      "race": "Z",
       "aliases": [],
       "active": true,
       "eloId": 667,
       "soopId": "have1y",
-      "thumbUrl": ""
+      "thumbUrl": "players/667_dfc8b61c.jpg?v=1791023434"
     },
     {
       "name": "김무아",
