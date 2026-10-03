@@ -2,18 +2,20 @@
 (function(global){
   'use strict';
   const APP='dorang-integrated-page',HISTORY_KEY='dorangIntegratedBackup.v1',MAX_HISTORY=5,MAX_HISTORY_CHARS=900000;
-  const KEYS=['star-match-manager-v1','spawnNote.records.v1','spawnNote.eloPlayer','spawnNote.rivalPlayer','spawnNote.rivalOpponent','starPredictionManager_v31','newcatsleSpawnNote.records.v1','newcatsleEloPlayer'];
-  const JSON_KEYS=[KEYS[0],KEYS[1],KEYS[5],KEYS[6]];
+  const KEYS=['star-match-manager-v1','spawnNote.records.v1','spawnNote.eloPlayer','spawnNote.rivalPlayer','spawnNote.rivalOpponent','starPredictionManager_v31','newcatsleSpawnNote.records.v1','newcatsleEloPlayer','dorangNotificationCenter.v1'];
+  const JSON_KEYS=[KEYS[0],KEYS[1],KEYS[5],KEYS[6],KEYS[8]];
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function validate(backup){
     if(!object(backup)||backup.app!==APP||backup.schemaVersion!==1||typeof backup.createdAt!=='string'||!Number.isFinite(Date.parse(backup.createdAt))||!object(backup.data))throw new Error('올바른 통합 백업 파일이 아니야.');
-    if(Object.keys(backup.data).length!==KEYS.length||KEYS.some(key=>!Object.hasOwn(backup.data,key)))throw new Error('백업에 필요한 데이터가 빠져 있어.');
+    if(Object.keys(backup.data).some(key=>!KEYS.includes(key))||KEYS.slice(0,8).some(key=>!Object.hasOwn(backup.data,key)))throw new Error('백업에 필요한 데이터가 빠져 있어.');
+    if(!Object.hasOwn(backup.data,KEYS[8]))backup.data[KEYS[8]]=null;
     for(const key of KEYS){
       const value=backup.data[key];if(value!==null&&typeof value!=='string')throw new Error('백업 데이터 형식이 올바르지 않아.');
       if(value===null||!JSON_KEYS.includes(key))continue;
       let parsed;try{parsed=JSON.parse(value)}catch{throw new Error('백업 데이터가 손상됐어.')}
-      if(key===KEYS[1]||key===KEYS[6]){if(!Array.isArray(parsed)||parsed.some(item=>!object(item)))throw new Error('스폰노트 기록 형식이 올바르지 않아.')}
+      if(key===KEYS[8]){if(!object(parsed)||parsed.schemaVersion!==1||!Array.isArray(parsed.items)||!Array.isArray(parsed.seen)||!object(parsed.baseline))throw new Error('알림 데이터 형식이 올바르지 않아.')}
+      else if(key===KEYS[1]||key===KEYS[6]){if(!Array.isArray(parsed)||parsed.some(item=>!object(item)))throw new Error('스폰노트 기록 형식이 올바르지 않아.')}
       else{
         if(!object(parsed))throw new Error('앱 데이터 형식이 올바르지 않아.');
         const required=key===KEYS[0]?['playersA','playersB','matches','setGames']:['participants','matches'];
@@ -80,7 +82,7 @@
     const host=global.document.querySelector('[data-integrated-backup]');if(!host)return;
     const list=history(localStorage),last=list.at(-1);
     const preview=pending?counts(pending):null;
-    const content=`<details class="backup-details"><summary><strong>백업·복구</strong><span>${last?'최근 백업 '+esc(date(last.backup.createdAt)):'백업 없음'}</span></summary><div class="backup-body"><p>일정·스폰노트·맞혀도랑·대진·정산·게임 점수를 함께 보관해. 자동 백업은 이 기기에 최근 5개까지 저장돼. 다른 기기로 옮길 땐 파일 백업을 사용해.</p><div class="backup-actions"><button type="button" class="secondary" data-backup-save>지금 백업</button><button type="button" class="primary" data-backup-export>파일 백업</button><label class="backup-file">파일 복구<input type="file" accept=".json,application/json" data-backup-file></label></div><div class="backup-history"><select data-backup-history aria-label="복구할 이전 백업">${list.length?list.slice().reverse().map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(date(item.backup.createdAt))} · ${reason[item.reason]||'백업'} · 일정 ${counts(item.backup).schedules}개 / 스폰 ${counts(item.backup).records}경기</option>`).join(''):'<option value="">이전 백업 없음</option>'}</select><button type="button" class="secondary" data-backup-previous ${list.length?'':'disabled'}>이전 백업 복구</button></div>${pending?`<div class="backup-preview"><b>복구할 백업 · ${esc(date(pending.createdAt))}</b><span>일정 ${preview.schedules}개 · 스폰 ${preview.records}경기 · 맞혀도랑 ${preview.predictions}경기</span><small>현재 데이터를 교체하고 페이지를 다시 열어. 교체 전 데이터는 자동으로 백업해.</small><div class="backup-actions"><button type="button" class="primary" data-backup-restore>이 백업으로 복구</button><button type="button" class="secondary" data-backup-cancel>취소</button></div></div>`:''}${error?`<p class="backup-message" role="status">${esc(error)}</p>`:''}</div></details>`;
+    const content=`<details class="backup-details"><summary><strong>백업·복구</strong><span>${last?'최근 백업 '+esc(date(last.backup.createdAt)):'백업 없음'}</span></summary><div class="backup-body"><p>일정·스폰노트·맞혀도랑·대진·정산·게임 점수·알림을 함께 보관해. 자동 백업은 이 기기에 최근 5개까지 저장돼. 다른 기기로 옮길 땐 파일 백업을 사용해.</p><div class="backup-actions"><button type="button" class="secondary" data-backup-save>지금 백업</button><button type="button" class="primary" data-backup-export>파일 백업</button><label class="backup-file">파일 복구<input type="file" accept=".json,application/json" data-backup-file></label></div><div class="backup-history"><select data-backup-history aria-label="복구할 이전 백업">${list.length?list.slice().reverse().map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(date(item.backup.createdAt))} · ${reason[item.reason]||'백업'} · 일정 ${counts(item.backup).schedules}개 / 스폰 ${counts(item.backup).records}경기</option>`).join(''):'<option value="">이전 백업 없음</option>'}</select><button type="button" class="secondary" data-backup-previous ${list.length?'':'disabled'}>이전 백업 복구</button></div>${pending?`<div class="backup-preview"><b>복구할 백업 · ${esc(date(pending.createdAt))}</b><span>일정 ${preview.schedules}개 · 스폰 ${preview.records}경기 · 맞혀도랑 ${preview.predictions}경기</span><small>현재 데이터를 교체하고 페이지를 다시 열어. 교체 전 데이터는 자동으로 백업해.</small><div class="backup-actions"><button type="button" class="primary" data-backup-restore>이 백업으로 복구</button><button type="button" class="secondary" data-backup-cancel>취소</button></div></div>`:''}${error?`<p class="backup-message" role="status">${esc(error)}</p>`:''}</div></details>`;
     if(host._backupContent===content)return;
     const open=host.querySelector('details')?.open;host._backupContent=content;host.innerHTML=content;
     if(open||pending)host.querySelector('details').open=true;
@@ -117,7 +119,7 @@
   });
   const style=global.document.createElement('style');style.textContent=`.backup-details{border:1px solid #d3bfdc;border-radius:12px;background:#fff;color:#513c60;padding:10px 14px}.backup-details summary{cursor:pointer;font-size:.875rem}.backup-details summary span{margin-left:12px;color:#74647d;font-size:.75rem}.backup-body{display:grid;gap:10px;margin-top:10px}.backup-body p{margin:0;color:#74647d;font-size:.875rem;line-height:1.5}.backup-actions{display:flex;flex-wrap:wrap;gap:8px}.backup-actions button,.backup-history button,.backup-file{font-size:.875rem!important;padding:8px 12px!important}.backup-file{position:relative;display:inline-flex;align-items:center;border:1px solid #c7b5d1;border-radius:8px;background:#f5eef9;color:#574662;cursor:pointer;font-weight:700;overflow:hidden}.backup-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}.backup-history{display:flex;gap:8px;min-width:0}.backup-history select{flex:1;min-width:0;font-size:.875rem}.backup-history button{flex-shrink:0}.backup-preview{display:grid;gap:7px;border:1px solid #c7b5d1;padding:12px;border-radius:10px;background:#faf5fc}.backup-preview b,.backup-preview span{font-size:.875rem}.backup-preview small{font-size:.75rem;line-height:1.5}.backup-body p.backup-message{color:#865a3b}@media(max-width:560px){.backup-history{flex-direction:column}.backup-details summary span{display:block;margin:4px 0 0 15px}}`;global.document.head.appendChild(style);
   new MutationObserver(render).observe(global.document.getElementById('app'),{childList:true,subtree:true});
-  for(const event of ['dorang:data-changed','spawn-note:records-changed','prediction:data-changed'])global.addEventListener(event,scheduleBackup);
+  for(const event of ['dorang:data-changed','spawn-note:records-changed','prediction:data-changed','dorang:notifications-changed'])global.addEventListener(event,scheduleBackup);
   for(const event of ['input','change','click'])global.document.addEventListener(event,e=>{if(!e.composedPath().some(node=>node?.matches?.('[data-integrated-backup]')))scheduleBackup()},true);
   global.addEventListener('pagehide',()=>backup());global.addEventListener('storage',event=>{if(KEYS.includes(event.key)){scheduleBackup()}else if(event.key===HISTORY_KEY)render()});
   global.IntegratedBackup={...api,backup,render,exportFile};render();backup();

@@ -51,7 +51,7 @@ test('달력 위에 카드 영역을 두고 모바일과 PC 배치 및 릴리스
  assert.match(source,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
  assert.match(source,/@media\(max-width:900px\)[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.ok(main.includes(`const APP_VERSION='${version}'`));assert.ok(main.includes(`const RELEASE_VERSION='${version}'`));
- for(const module of ['schedule-dashboard','spwn-native','prediction-native','spawn-schedule-stats','integrated-backup'])assert.ok(main.includes(`${module}.js?v=${version}`));
+ for(const module of ['schedule-dashboard','spwn-native','prediction-native','spawn-schedule-stats','integrated-backup','notification-center'])assert.ok(main.includes(`${module}.js?v=${version}`));
 });
 test('동기화 상태는 갱신 중·성공·실패를 구분하고 마지막 성공 시점을 보존한다',async()=>{
  let fail=false;const f=fixture({fetcher:async()=>{if(fail)throw new Error('offline');return{ok:true,json:async()=>({player:{name:'최도랑',elo:'1200'}})}}});

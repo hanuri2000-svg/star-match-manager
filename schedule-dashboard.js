@@ -15,6 +15,11 @@
   if (!snapshot && shared?.player === PLAYER) snapshot = {player:PLAYER,data:shared.data,checkedAt:0,delta:null};
   let loading = false, error = '', lastAttempt = 0;
   let eloSync={status:snapshot?'cached':'idle',lastSuccess:snapshot?.checkedAt||0,error:''};
+  function publishElo(){
+    const score=numeric(snapshot?.data?.player?.elo);
+    global.DORANG_ELO_SYNC_STATUS={...eloSync,score,previousScore:score!=null&&snapshot?.delta!=null?Number((score-snapshot.delta).toFixed(1)):null};
+    if(typeof global.CustomEvent==='function')global.dispatchEvent?.(new global.CustomEvent('dorang:elo-sync',{detail:global.DORANG_ELO_SYNC_STATUS}));
+  }
   let manualRefreshing=false;
   const syncLabels={idle:'확인 전',loading:'업데이트 중',ok:'정상',cached:'저장된 자료',error:'오류'};
   function syncHtml(){
@@ -83,7 +88,7 @@
       eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
       try { localStorage.setItem(CACHE,JSON.stringify(snapshot)); localStorage.setItem(SHARED_CACHE,JSON.stringify({player:PLAYER,data})); } catch {}
     } catch (failure) { error = failure.name==='AbortError'?'응답 시간 초과':failure.message;eloSync={...eloSync,status:'error',error}; }
-    finally { clearTimeout(timeout); loading = false; render(); }
+    finally { clearTimeout(timeout); loading = false; publishElo();render(); }
   }
   async function refreshAll(){
     if(manualRefreshing||loading||eloSync.status==='loading'||global.HARINA_MASTER_SYNC_STATUS?.status==='loading')return;
@@ -119,6 +124,7 @@
   global.addEventListener('spawn-note:dashboard-sync',event=>{
     if(event.detail?.player!==PLAYER)return;
     eloSync={...eloSync,status:event.detail.status,error:event.detail.error||''};render();
+    publishElo();
   });
   global.addEventListener('spawn-note:dashboard-changed',event=>{
     const {player,data}=event.detail||{};
@@ -126,6 +132,7 @@
     const previous=numeric(snapshot?.data?.player?.elo),current=numeric(data.player.elo);
     snapshot={player:PLAYER,data,checkedAt:Date.now(),delta:previous==null?null:Number((current-previous).toFixed(1))};
     eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
+    publishElo();
     error='';
     try{localStorage.setItem(CACHE,JSON.stringify(snapshot))}catch{}
     render();
@@ -146,5 +153,5 @@
     };
     setTimeout(focus,0);
   });
-  render();refresh();
+  publishElo();render();refresh();
 })(window);
