@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const stats=require('../spawn-schedule-stats.js');
+const {createClient}=require('../elo-sync-client.js');
 const source=fs.readFileSync(new URL('../schedule-dashboard.js',import.meta.url),'utf8');
 const main=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url),'utf8')).version;
@@ -13,10 +14,11 @@ function fixture({records=[],cache=null,fetcher=async()=>({ok:true,json:async()=
  const storage=new Map([['spawnNote.records.v1',JSON.stringify(records)],['scheduleDashboard.eloSnapshot.v1',JSON.stringify(cache)]]);
  const host={innerHTML:''},syncHost={innerHTML:''},events={},documentEvents={},styles=[];
  const window={localStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},SpawnScheduleStats:stats,HARINA_PLAYER_DIRECTORY:{최도랑:{tier:'4티어'}},getScheduleDashboardSchedules:()=>[{date:today(),time:'23:59',title:'CK <테스트>'}],addEventListener:(name,fn)=>events[name]=fn,document:{hidden:false,head:{appendChild:style=>styles.push(style.textContent)},createElement:()=>({}),getElementById:()=>({}),querySelector:selector=>selector==='[data-schedule-dashboard]'?host:selector==='[data-schedule-sync]'?syncHost:null,addEventListener:(name,fn)=>documentEvents[name]=fn}};
+ window.EloDashboardClient=createClient({fetch:fetcher,storage:window.localStorage,retryDelay:0,timeoutMs:timeout?1:12000});
  vm.runInNewContext(source,{window,localStorage:window.localStorage,fetch:fetcher,MutationObserver:class{observe(){}},URLSearchParams,AbortController,setTimeout:timeout?(fn,ms)=>ms===8000?setTimeout(fn,1):setTimeout(fn,ms):setTimeout,clearTimeout,Date});
  return {window,host,syncHost,events,storage,styles};
 }
-const settle=()=>new Promise(resolve=>setImmediate(resolve));
+const settle=()=>new Promise(resolve=>setTimeout(resolve,10));
 test('오늘 기록·종족별 합계·최근 결과와 ELO 차이를 정확히 표시한다',async()=>{
  const f=fixture({cache:{player:'최도랑',data:{player:{elo:'1200'}},checkedAt:1},records:[{id:1,date:today(),race:'P',result:'승',opponent:'A',map:'투혼'},{id:2,date:today(),race:'Z',result:'패',opponent:'B'},{id:3,date:today(),race:'T',result:'승',opponent:'<상대>',map:'실피드'},{id:4,date:'2000-01-01',race:'P',result:'패'}]});
  await settle();
@@ -46,12 +48,19 @@ test('기록 변경과 스폰노트의 점수 갱신을 재요청 없이 반영�
  f.events['spawn-note:dashboard-changed']({detail:{player:'최도랑',data:{player:{elo:'1190'}}}});
  assert.match(f.host.innerHTML,/1,190.*▼ 10/);assert.equal(calls,1);
 });
+test('공유 응답을 두 화면에서 반영해도 점수 변동과 성공 시각을 덮어쓰지 않는다',async()=>{
+ const f=fixture({cache:{player:'최도랑',data:{player:{elo:'1200'}},checkedAt:1}});await settle();
+ const snapshot=JSON.parse(f.storage.get('scheduleDashboard.eloSnapshot.v1'));
+ f.events['spawn-note:dashboard-changed']({detail:{player:'최도랑',data:snapshot.data,checkedAt:snapshot.checkedAt}});
+ assert.match(f.host.innerHTML,/▲ 34.5/);
+ const repeated=JSON.parse(f.storage.get('scheduleDashboard.eloSnapshot.v1'));assert.equal(repeated.checkedAt,snapshot.checkedAt);assert.equal(repeated.delta,34.5);
+});
 test('달력 위에 카드 영역을 두고 모바일과 PC 배치 및 릴리스 버전을 맞춘다',()=>{
  assert.match(main,/data-schedule-dashboard[\s\S]*schedule-toolbar panel/);
  assert.match(source,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
  assert.match(source,/@media\(max-width:900px\)[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.ok(main.includes(`const APP_VERSION='${version}'`));assert.ok(main.includes(`const RELEASE_VERSION='${version}'`));
- for(const module of ['schedule-dashboard','spwn-native','prediction-native','spawn-schedule-stats','integrated-backup','notification-center'])assert.ok(main.includes(`${module}.js?v=${version}`));
+ for(const module of ['elo-sync-client','schedule-dashboard','spwn-native','prediction-native','spawn-schedule-stats','integrated-backup','notification-center'])assert.ok(main.includes(`${module}.js?v=${version}`));
 });
 test('동기화 상태는 갱신 중·성공·실패를 구분하고 마지막 성공 시점을 보존한다',async()=>{
  let fail=false;const f=fixture({fetcher:async()=>{if(fail)throw new Error('offline');return{ok:true,json:async()=>({player:{name:'최도랑',elo:'1200'}})}}});

@@ -133,13 +133,8 @@ function readDashboardCache(player) {
   }
 }
 
-function writeDashboardCache(player, data) {
-  try {
-    localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({ player, data }));
-    window.dispatchEvent(new CustomEvent('spawn-note:dashboard-changed', {detail:{player,data}}));
-  } catch (error) {
-    console.warn("ELOBOARD 대시보드 임시 저장에 실패했어.", error);
-  }
+function publishDashboard(player, data, checkedAt) {
+  window.dispatchEvent(new CustomEvent('spawn-note:dashboard-changed', {detail:{player,data,checkedAt}}));
 }
 
 async function fetchJson(url, options) {
@@ -288,7 +283,8 @@ function renderBasePlayerStatus() {
   status.textContent = `${player} 선수를 기준으로 ELOBOARD 통계를 준비하고 있어.`;
 }
 
-async function refreshEloDashboard() {
+async function refreshEloDashboard(force = false) {
+  if (eloDashboardLoading) return;
   const player = getBasePlayer();
   if (!player || !ELO_API_BASE) {
     eloDashboardError = !ELO_API_BASE ? "ELO 조회 서버가 아직 연결되지 않았어." : "";
@@ -301,20 +297,18 @@ async function refreshEloDashboard() {
   renderDash();
   const button = $("#basePlayerSaveButton");
   if (button) button.disabled = true;
-  const controller = new AbortController();
-  const timeout = setTimeout(()=>controller.abort(),8000);
+  let syncStatus = 'ok';
   try {
-    const query = new URLSearchParams({ player, today: localDateKey() });
-    const data = await fetchJson(`${ELO_API_BASE}/api/elo/dashboard?${query}`,{signal:controller.signal});
+    const {data,checkedAt,cached} = await window.EloDashboardClient.get({player,today:localDateKey(),base:ELO_API_BASE,force});
     eloDashboard = data;
     eloDashboardPlayer = player;
-    writeDashboardCache(player, data);
+    syncStatus = cached ? 'cached' : 'ok';
+    if (!cached) publishDashboard(player, data, checkedAt);
   } catch (error) {
     eloDashboardError = error.name==='AbortError'?'응답 시간 초과 · 다시 갱신해 줘.':error.message;
   } finally {
-    clearTimeout(timeout);
     eloDashboardLoading = false;
-    window.dispatchEvent(new CustomEvent('spawn-note:dashboard-sync',{detail:{player,status:eloDashboardError?'error':'ok',error:eloDashboardError}}));
+    window.dispatchEvent(new CustomEvent('spawn-note:dashboard-sync',{detail:{player,status:eloDashboardError?'error':syncStatus,error:eloDashboardError}}));
     if (button) button.disabled = false;
     renderDash();
   }
@@ -337,7 +331,7 @@ async function saveBasePlayer() {
   loadBasePlayerInputs();
   loadRivalInputs();
   $("#rivalResult")?.classList.add("hidden");
-  await refreshEloDashboard();
+  await refreshEloDashboard(true);
 }
 
 function loadRivalInputs() {

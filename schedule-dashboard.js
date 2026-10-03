@@ -74,21 +74,16 @@
     lastAttempt = Date.now();
     if (!force && snapshot?.checkedAt && Date.now()-snapshot.checkedAt<TTL) return;
     loading = true; error = ''; eloSync={...eloSync,status:'loading',error:''};render();
-    const controller = new AbortController();
-    const timeout = setTimeout(()=>controller.abort(),8000);
     try {
       const base = String(global.SPAWN_NOTE_ELO_API_BASE || 'https://spawn-note-elo-relay.hajimayo8130.workers.dev').replace(/\/$/,'');
-      const query = new URLSearchParams({player:PLAYER,today:dateKey()});
-      const response = await fetch(`${base}/api/elo/dashboard?${query}`,{signal:controller.signal});
-      if (!response.ok) throw new Error('ELO 조회 실패');
-      const data = await response.json();
-      if (data?.player?.name !== PLAYER || numeric(data.player.elo) == null) throw new Error('ELO 점수 확인 불가');
+      const {data,checkedAt,cached} = await global.EloDashboardClient.get({player:PLAYER,today:dateKey(),base,force});
       const previous = numeric(snapshot?.data?.player?.elo), current = numeric(data.player.elo);
-      snapshot = {player:PLAYER,data,checkedAt:Date.now(),delta:previous==null?null:Number((current-previous).toFixed(1))};
-      eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
-      try { localStorage.setItem(CACHE,JSON.stringify(snapshot)); localStorage.setItem(SHARED_CACHE,JSON.stringify({player:PLAYER,data})); } catch {}
+      const delta = snapshot?.checkedAt===checkedAt&&previous===current?snapshot.delta:previous==null?null:Number((current-previous).toFixed(1));
+      snapshot = {player:PLAYER,data,checkedAt,delta};
+      eloSync={status:cached?'cached':'ok',lastSuccess:checkedAt,error:''};
+      try { localStorage.setItem(CACHE,JSON.stringify(snapshot)); } catch {}
     } catch (failure) { error = failure.name==='AbortError'?'응답 시간 초과':failure.message;eloSync={...eloSync,status:'error',error}; }
-    finally { clearTimeout(timeout); loading = false; publishElo();render(); }
+    finally { loading = false; publishElo();render(); }
   }
   async function refreshAll(){
     if(manualRefreshing||loading||eloSync.status==='loading'||global.HARINA_MASTER_SYNC_STATUS?.status==='loading')return;
@@ -123,14 +118,16 @@
   global.addEventListener('offline',render);
   global.addEventListener('spawn-note:dashboard-sync',event=>{
     if(event.detail?.player!==PLAYER)return;
-    eloSync={...eloSync,status:event.detail.status,error:event.detail.error||''};render();
+    error=event.detail.error||'';
+    eloSync={...eloSync,status:event.detail.status,error};render();
     publishElo();
   });
   global.addEventListener('spawn-note:dashboard-changed',event=>{
-    const {player,data}=event.detail||{};
+    const {player,data,checkedAt=Date.now()}=event.detail||{};
     if(player!==PLAYER || numeric(data?.player?.elo)==null)return;
     const previous=numeric(snapshot?.data?.player?.elo),current=numeric(data.player.elo);
-    snapshot={player:PLAYER,data,checkedAt:Date.now(),delta:previous==null?null:Number((current-previous).toFixed(1))};
+    const delta=snapshot?.checkedAt===checkedAt&&previous===current?snapshot.delta:previous==null?null:Number((current-previous).toFixed(1));
+    snapshot={player:PLAYER,data,checkedAt,delta};
     eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
     publishElo();
     error='';
