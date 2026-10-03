@@ -14,6 +14,17 @@
   let snapshot = own?.player === PLAYER ? own : null;
   if (!snapshot && shared?.player === PLAYER) snapshot = {player:PLAYER,data:shared.data,checkedAt:0,delta:null};
   let loading = false, error = '', lastAttempt = 0;
+  let eloSync={status:snapshot?'cached':'idle',lastSuccess:snapshot?.checkedAt||0,error:''};
+  let manualRefreshing=false;
+  const syncLabels={idle:'확인 전',loading:'업데이트 중',ok:'정상',cached:'저장된 자료',error:'오류'};
+  function syncHtml(){
+    const tier=global.HARINA_MASTER_SYNC_STATUS||{status:'idle'};
+    const time=timestamp=>timestamp?new Date(timestamp).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'없음';
+    const row=(label,state,detail='')=>`<div class="sync-source"><div><b>${label}</b><span class="sync-badge sync-${state.status}">${syncLabels[state.status]||'확인 전'}</span></div><span>마지막 성공 ${esc(time(state.lastSuccess))}</span>${state.status==='error'?`<small class="sync-error">${esc(state.error||'갱신 실패')} · 이전 자료 유지</small>`:detail?`<small>${esc(detail)}</small>`:''}</div>`;
+    const busy=manualRefreshing||loading||eloSync.status==='loading'||tier.status==='loading';
+    const offline=global.navigator?.onLine===false;
+    return `<div class="sync-heading"><strong>동기화 상태</strong><button type="button" class="secondary" data-sync-refresh ${busy?'disabled':''}>${busy?'확인 중…':'새로고침'}</button></div><div class="sync-sources">${row('ELO 전적',eloSync,eloSync.status==='cached'?'저장된 점수 표시 중':'최도랑 점수·공식전 통계')}${row('티어표',tier,tier.version?`자료 v${tier.version}${tier.sourceDate?' · '+tier.sourceDate+' 기준':''}`:'선수 DB')}</div>${offline?'<p class="sync-offline">인터넷 연결 없음 · 저장된 자료를 표시해.</p>':''}`;
+  }
   const statText = stat => `${stat.games}전 ${stat.wins}승 ${stat.losses}패`;
   function card(label, value, detail, action, extra = '') {
     return `<button type="button" class="today-summary-card" data-act="${action==='schedule'?'schedule-today':'tab'}" ${action!=='schedule'?'data-tab="spwn"':''} data-overview-target="${action}"><span class="today-summary-label">${label}</span><strong>${value}</strong><span class="today-summary-detail">${detail}</span>${extra}</button>`;
@@ -50,12 +61,14 @@
       host._dashboardContent = content;
       host.innerHTML = content;
     }
+    const sync=global.document.querySelector('[data-schedule-sync]');
+    if(sync){const content=syncHtml();if(sync._syncContent!==content){sync._syncContent=content;sync.innerHTML=content}}
   }
   async function refresh(force = false) {
     if (loading || (!force && Date.now()-lastAttempt<TTL)) return;
     lastAttempt = Date.now();
     if (!force && snapshot?.checkedAt && Date.now()-snapshot.checkedAt<TTL) return;
-    loading = true; error = ''; render();
+    loading = true; error = ''; eloSync={...eloSync,status:'loading',error:''};render();
     const controller = new AbortController();
     const timeout = setTimeout(()=>controller.abort(),8000);
     try {
@@ -67,11 +80,18 @@
       if (data?.player?.name !== PLAYER || numeric(data.player.elo) == null) throw new Error('ELO 점수 확인 불가');
       const previous = numeric(snapshot?.data?.player?.elo), current = numeric(data.player.elo);
       snapshot = {player:PLAYER,data,checkedAt:Date.now(),delta:previous==null?null:Number((current-previous).toFixed(1))};
+      eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
       try { localStorage.setItem(CACHE,JSON.stringify(snapshot)); localStorage.setItem(SHARED_CACHE,JSON.stringify({player:PLAYER,data})); } catch {}
-    } catch (failure) { error = failure.message; }
+    } catch (failure) { error = failure.name==='AbortError'?'응답 시간 초과':failure.message;eloSync={...eloSync,status:'error',error}; }
     finally { clearTimeout(timeout); loading = false; render(); }
   }
-  global.ScheduleDashboard = {render,refresh};
+  async function refreshAll(){
+    if(manualRefreshing||loading||eloSync.status==='loading'||global.HARINA_MASTER_SYNC_STATUS?.status==='loading')return;
+    manualRefreshing=true;render();
+    try{await Promise.allSettled([refresh(true),Promise.resolve().then(()=>global.HARINA_LOAD_PLAYER_MASTER?.(true))])}
+    finally{manualRefreshing=false;render()}
+  }
+  global.ScheduleDashboard = {render,refresh,refreshAll};
   const style = global.document.createElement('style');
   style.textContent = `
     .schedule-dashboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;min-width:0}
@@ -83,17 +103,29 @@
     .today-summary-meta{font-size:.75rem;color:#85718e;margin-top:auto}
     .today-race-list{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:.75rem;line-height:1.5;color:#6d5878}.today-race-list>span{white-space:nowrap}
     .today-result{color:#328258}.today-result.loss{color:#c44869}
+    .schedule-sync{padding:10px 14px;border:1px solid #d3bfdc;border-radius:12px;background:#fff;min-width:0;color:#513c60}
+    .sync-heading,.sync-source>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.sync-heading strong{font-size:.875rem}.sync-heading button{font-size:.875rem!important;padding:6px 10px!important}.sync-heading button:disabled{opacity:.65;cursor:wait}
+    .sync-sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}.sync-source{display:grid;gap:4px;min-width:0;padding:8px 10px;background:#faf7fc;border-radius:8px}.sync-source b{font-size:.875rem}.sync-source>span,.sync-source small{color:#74647d;font-size:.75rem;line-height:1.4;overflow-wrap:anywhere}
+    .sync-badge{font-size:.75rem;padding:3px 7px;border-radius:6px;background:#ece5f2;color:#705982;white-space:nowrap}.sync-ok{background:#e7f5ed;color:#28724e}.sync-loading{background:#e9effd;color:#4468a3}.sync-error{background:#fce9ef;color:#b63d5e}.sync-source small.sync-error{color:#b63d5e;background:transparent}.sync-offline{margin:8px 0 0;color:#b63d5e;font-size:.875rem}
     body.app-fit-screen .today-summary-card{padding:10px!important;gap:4px}
     @media(max-width:900px){.schedule-dashboard{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.today-summary-card{padding:12px!important}.today-summary-card>strong{font-size:1.0625rem}}
   `;
   global.document.head.appendChild(style);
   new MutationObserver(render).observe(global.document.getElementById('app'),{childList:true,subtree:true});
   global.addEventListener('spawn-note:records-changed',render);
+  global.addEventListener('harina-player-master-sync',render);
+  global.addEventListener('online',()=>{render();refreshAll()});
+  global.addEventListener('offline',render);
+  global.addEventListener('spawn-note:dashboard-sync',event=>{
+    if(event.detail?.player!==PLAYER)return;
+    eloSync={...eloSync,status:event.detail.status,error:event.detail.error||''};render();
+  });
   global.addEventListener('spawn-note:dashboard-changed',event=>{
     const {player,data}=event.detail||{};
     if(player!==PLAYER || numeric(data?.player?.elo)==null)return;
     const previous=numeric(snapshot?.data?.player?.elo),current=numeric(data.player.elo);
     snapshot={player:PLAYER,data,checkedAt:Date.now(),delta:previous==null?null:Number((current-previous).toFixed(1))};
+    eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
     error='';
     try{localStorage.setItem(CACHE,JSON.stringify(snapshot))}catch{}
     render();
@@ -102,6 +134,7 @@
   global.addEventListener('pageshow',()=>{render();refresh()});
   global.document.addEventListener('visibilitychange',()=>{if(!global.document.hidden){render();refresh()}});
   global.document.addEventListener('click',event=>{
+    if(event.target.closest('[data-sync-refresh]')){refreshAll();return;}
     const target=event.target.closest('[data-overview-target]')?.dataset.overviewTarget;
     if(!target || target==='schedule')return;
     const started=Date.now();

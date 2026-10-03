@@ -297,19 +297,24 @@ async function refreshEloDashboard() {
   }
   eloDashboardLoading = true;
   eloDashboardError = "";
+  window.dispatchEvent(new CustomEvent('spawn-note:dashboard-sync',{detail:{player,status:'loading'}}));
   renderDash();
   const button = $("#basePlayerSaveButton");
   if (button) button.disabled = true;
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(),8000);
   try {
     const query = new URLSearchParams({ player, today: localDateKey() });
-    const data = await fetchJson(`${ELO_API_BASE}/api/elo/dashboard?${query}`);
+    const data = await fetchJson(`${ELO_API_BASE}/api/elo/dashboard?${query}`,{signal:controller.signal});
     eloDashboard = data;
     eloDashboardPlayer = player;
     writeDashboardCache(player, data);
   } catch (error) {
-    eloDashboardError = error.message;
+    eloDashboardError = error.name==='AbortError'?'응답 시간 초과 · 다시 갱신해 줘.':error.message;
   } finally {
+    clearTimeout(timeout);
     eloDashboardLoading = false;
+    window.dispatchEvent(new CustomEvent('spawn-note:dashboard-sync',{detail:{player,status:eloDashboardError?'error':'ok',error:eloDashboardError}}));
     if (button) button.disabled = false;
     renderDash();
   }
