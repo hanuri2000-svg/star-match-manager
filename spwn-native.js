@@ -136,6 +136,7 @@ function readDashboardCache(player) {
 function writeDashboardCache(player, data) {
   try {
     localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({ player, data }));
+    window.dispatchEvent(new CustomEvent('spawn-note:dashboard-changed', {detail:{player,data}}));
   } catch (error) {
     console.warn("ELOBOARD 대시보드 임시 저장에 실패했어.", error);
   }

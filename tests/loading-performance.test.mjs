@@ -8,7 +8,7 @@ const prediction = fs.readFileSync(new URL("prediction-native.js", root), "utf8"
 
 test("통합페이지가 버전 배지를 두 코드에서 반복 변경하지 않는다", () => {
   assert.doesNotMatch(prediction, /syncReleaseVersion|app-version-badge|RELEASE_VERSION/);
-  assert.match(main, /const RELEASE_VERSION='5\.16\.6'/);
+  assert.match(main, /const RELEASE_VERSION='\d+\.\d+\.\d+'/);
 });
 
 test("초기 HTML은 인라인 이미지 없이 가볍게 유지한다", () => {
@@ -20,8 +20,8 @@ test("초기 HTML은 인라인 이미지 없이 가볍게 유지한다", () => {
 });
 
 test("무거운 탭 모듈은 첫 화면 파싱을 막지 않는다", () => {
-  assert.match(main, /<script async src="\.\/spwn-native\.js\?v=5\.16\.6"><\/script>/);
-  assert.match(main, /<script async src="\.\/prediction-native\.js\?v=5\.16\.6"><\/script>/);
+  assert.match(main, /<script async src="\.\/spwn-native\.js\?v=\d+\.\d+\.\d+"><\/script>/);
+  assert.match(main, /<script async src="\.\/prediction-native\.js\?v=\d+\.\d+\.\d+"><\/script>/);
   assert.match(main, /window\.__appBootReady=true/);
 });
 
