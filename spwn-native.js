@@ -682,7 +682,7 @@ function renderTable() {
           record.source === "eloboard" ? ' <span class="elo-badge">ELO</span>' : "";
         return `<tr class="game-row ${
           record.result === "승" ? "win" : "lose"
-        }" onclick="window.SpwnNative.toggleNote(${Number(record.id)})" title="클릭하면 느낀점과 피드백 전체 내용을 볼 수 있어"><td>${esc(
+        }" data-record-id="${Number(record.id)}" onclick="window.SpwnNative.toggleNote(${Number(record.id)})" title="클릭하면 느낀점과 피드백 전체 내용을 볼 수 있어"><td>${esc(
           record.date,
         )}</td><td>${esc(record.opponent)}${sourceBadge}</td><td>${esc(
           record.tier,
@@ -713,6 +713,22 @@ function renderTable() {
 
 function toggleNote(id) {
   document.getElementById(`note-${id}`)?.classList.toggle("hidden");
+}
+
+function openSearchRecord(id) {
+  if (!records.some(record => String(record.id) === String(id))) return false;
+  showTab('log');
+  $("#search").value = '';
+  renderTable();
+  const row = Array.from(document.querySelectorAll('[data-record-id]')).find(item => item.dataset.recordId === String(id));
+  if (!row) return false;
+  document.getElementById(`note-${id}`)?.classList.remove('hidden');
+  row.tabIndex = -1;
+  row.scrollIntoView({behavior:'smooth',block:'center'});
+  row.focus({preventScroll:true});
+  row.style.outline = '2px solid #a87bd0';
+  setTimeout(() => row.style.outline = '',2200);
+  return true;
 }
 
 function sharedPlayerDirectory() {
@@ -1163,6 +1179,7 @@ load = function () {
 
 
 window.SpwnNative={
+  openSearchRecord,
   showTab,
   saveBasePlayer,
   searchRival,
