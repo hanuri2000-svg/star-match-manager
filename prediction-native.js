@@ -129,6 +129,7 @@ let previousRanks={};
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
 function save(){
   localStorage.setItem(KEY,JSON.stringify(data));
+  window.dispatchEvent(new CustomEvent('prediction:data-changed'));
   const s=document.getElementById('saveState');
   if(s){s.textContent='저장 중…';s.style.opacity='.65'}
   render();
