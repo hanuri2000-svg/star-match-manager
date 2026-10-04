@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-03",
+  "updatedAt": "2026-10-04",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -3033,7 +3033,7 @@
       "name": "세월",
       "tier": "7티어",
       "tierLabel": "7티어",
-      "race": "T",
+      "race": null,
       "aliases": [],
       "active": true,
       "eloId": 6029,
