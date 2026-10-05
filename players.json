@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-04",
+  "updatedAt": "2026-10-05",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -2813,7 +2813,7 @@
       "name": "태린",
       "tier": "6티어",
       "tierLabel": "6티어",
-      "race": "P",
+      "race": "Z",
       "aliases": [],
       "active": true,
       "eloId": 608,
