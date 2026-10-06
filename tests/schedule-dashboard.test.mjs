@@ -81,11 +81,19 @@ test('저장된 자료와 오프라인 상태를 정상 동기화로 표시하�
  const f=fixture({cache:{player:'최도랑',data:{player:{elo:'1200'}},checkedAt:Date.now()}});await settle();
  assert.match(f.syncHost.innerHTML,/ELO 전적.*저장된 자료/);f.window.navigator={onLine:false};f.events.offline();assert.match(f.syncHost.innerHTML,/인터넷 연결 없음/);
 });
-function masterFixture(fetcher){
+function masterFixture(fetcher,render){
  const code=main.slice(main.indexOf('let sharedPlayerMasterRequest=null;'),main.indexOf('window.HARINA_LOAD_PLAYER_MASTER=loadSharedPlayerMaster;')+'window.HARINA_LOAD_PLAYER_MASTER=loadSharedPlayerMaster;'.length);
  const window={dispatchEvent(){}};const directory={최도랑:{name:'최도랑',tier:'4티어'}};const groups=[{tier:'4티어',players:[{name:'최도랑'}]}];
- vm.runInNewContext(code,{window,fetch:fetcher,SHARED_PLAYER_MASTER_URL:'./players.json',PLAYER_DIRECTORY:directory,TIER_DATA:groups,normalizePlayerDirectoryName:v=>v,AbortController,CustomEvent:class{},setTimeout:fn=>setTimeout(fn,5),clearTimeout,Date});return{window,directory,groups};
+ vm.runInNewContext(code,{window,fetch:fetcher,render,console:{warn(){}},SHARED_PLAYER_MASTER_URL:'./players.json',PLAYER_DIRECTORY:directory,TIER_DATA:groups,normalizePlayerDirectoryName:v=>v,AbortController,CustomEvent:class{},setTimeout:fn=>setTimeout(fn,5),clearTimeout,Date});return{window,directory,groups};
 }
+test('화면 표시 실패가 성공한 티어표 동기화를 오류로 바꾸지 않는다',async()=>{
+ const f=masterFixture(async()=>({ok:true,json:async()=>({source:{version:'3.62'},players:[{name:'최도랑',tier:'3티어',race:'P'}]})}),()=>{throw new SyntaxError('The string did not match the expected pattern.')});
+ await f.window.HARINA_LOAD_PLAYER_MASTER(true);
+ assert.equal(f.window.HARINA_MASTER_SYNC_STATUS.status,'ok');
+ assert.equal(f.directory.최도랑.tier,'3티어');
+ await f.window.HARINA_LOAD_PLAYER_MASTER(true);
+ assert.equal(f.window.HARINA_MASTER_SYNC_STATUS.error,'');
+});
 test('티어표 중복 요청을 합치고 성공한 자료의 버전과 날짜를 기록한다',async()=>{
  let calls=0,finish;const f=masterFixture(async()=>{calls++;return new Promise(resolve=>finish=resolve)});
  const one=f.window.HARINA_LOAD_PLAYER_MASTER(true),two=f.window.HARINA_LOAD_PLAYER_MASTER(true);assert.equal(one,two);assert.equal(calls,1);
