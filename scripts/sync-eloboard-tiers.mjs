@@ -110,7 +110,8 @@ async function main() {
     }
     player.tier = item.tier;
     player.tierLabel = item.tier === '유스' ? '베이비' : item.tier;
-    player.race = item.race;
+    // Missing or unknown source values must not erase a known race.
+    if (['T', 'Z', 'P'].includes(item.race)) player.race = item.race;
     player.active = true;
     player.eloId = item.id;
     if (item.thumbUrl) player.thumbUrl = item.thumbUrl;

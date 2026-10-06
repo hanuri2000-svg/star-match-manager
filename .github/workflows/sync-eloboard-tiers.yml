@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/sync-eloboard-tiers.mjs'
+      - 'tests/sync-eloboard-tiers.test.mjs'
       - '.github/workflows/sync-eloboard-tiers.yml'
 
 permissions:
@@ -25,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Test EloBoard tier sync
+        run: node --test tests/sync-eloboard-tiers.test.mjs
       - name: Read and compare EloBoard tiers
         run: node scripts/sync-eloboard-tiers.mjs
       - name: Commit updated tier data
