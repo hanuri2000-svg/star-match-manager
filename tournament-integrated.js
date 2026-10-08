@@ -13,8 +13,11 @@
     .tournament-bar a{flex:none;padding:8px 11px;border:1px solid #cdbbd8;border-radius:9px;background:#fff;color:#6d5a8f;font-size:12px;font-weight:900;text-decoration:none}
     .tournament-frame{display:block;width:100%;height:calc(100vh - 238px);min-height:720px;border:0;background:#09070e}
     @media(max-width:760px){
+      .tournament-shell{border-radius:14px}
+      .tournament-bar{padding:9px 10px}
       .tournament-bar span{display:none}
-      .tournament-frame{height:calc(100vh - 205px);min-height:620px}
+      .tournament-bar a{padding:7px 9px;font-size:11px}
+      .tournament-frame{height:760px;min-height:0}
     }
   `;
   document.head.appendChild(style);
@@ -50,6 +53,10 @@
 
     if(s.activeTab==='tournament'){
       document.querySelectorAll('.tab-view:not(.tournament-view)').forEach(v=>v.style.display='none');
+      requestAnimationFrame(()=>{
+        const active=nav.querySelector('[data-tab="tournament"]');
+        active?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+      });
     }
   };
 })();
