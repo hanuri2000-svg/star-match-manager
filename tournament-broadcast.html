@@ -27,11 +27,12 @@
     <path d="M1303 283 H1262 V315 H1229"/><path d="M1303 341 H1262 V315 H1229"/><path d="M1303 401 H1262 V431 H1229"/><path d="M1303 459 H1262 V431 H1229"/><path d="M1303 522 H1262 V554 H1229"/><path d="M1303 581 H1262 V554 H1229"/><path d="M1303 642 H1262 V674 H1229"/><path d="M1303 700 H1262 V674 H1229"/>
     <path d="M1138 315 H1105 V375 H1073"/><path d="M1138 431 H1105 V375 H1073"/><path d="M1138 554 H1105 V612 H1073"/><path d="M1138 674 H1105 V612 H1073"/><path d="M977 375 H936 V476 H1016"/><path d="M977 612 H936 V476 H1016"/><path d="M926 476 H856 V508"/>
   </svg>
-  <div class="progress" id="progress">16강 결과 0 / 8</div><div class="version">DORANG TOURNAMENT · v5.22.0</div>
+  <div class="progress" id="progress">16강 결과 0 / 8</div><div class="version">DORANG TOURNAMENT · v5.22.1</div>
   <div class="podium" id="podium"><div class="podium-wrap"><button class="close" id="closePodium">×</button><div class="podium-title" id="podiumTitle">최종 순위</div><div class="podium-grid"><div class="podium-card second"><div class="rank">2위</div><div class="team" id="p2">-</div></div><div class="podium-card first"><div style="font-size:40px;color:#f1c96e">♛</div><div class="rank">1위</div><div class="team" id="p1">-</div></div><div class="podium-card third"><div class="rank">3위</div><div class="team" id="p3">-</div></div></div></div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
-<script src="./tournament-core.js?v=5.22.0"></script>
+<script src="./tournament-transport.js?v=5.22.1"></script>
+<script src="./tournament-core.js?v=5.22.1"></script>
 <script>
 const C=window.DorangTournamentCore,KEY="star-match-manager-v1",room=C.roomFromUrl(),board=document.getElementById("board"),els={},noRoom=document.getElementById("noRoom");let state=C.blank(),lastSig="";
 for(const id of Object.keys(C.SLOT_POSITIONS)){const d=document.createElement("div");d.className="slot"+(id==="CHAMP"?" champ":"");d.style.cssText=C.positionStyle(id);board.appendChild(d);els[id]=d}
@@ -47,7 +48,7 @@ function render(){
 document.getElementById("closePodium").onclick=()=>document.getElementById("podium").classList.remove("show");document.getElementById("podium").onclick=e=>{if(e.target.id==="podium")e.currentTarget.classList.remove("show")};
 function loadLocal(){try{const app=JSON.parse(localStorage.getItem(KEY)||"null");if(app?.tournament)state=C.normalize(app.tournament)}catch{}render()}
 if(!room){noRoom.classList.add("show");loadLocal()}else if(typeof Peer==="undefined"){loadLocal()}else{
-  const peer=new Peer(),connect=()=>{const conn=peer.connect(C.peerPrefix+room,{reliable:true});conn.on("data",msg=>{if(msg?.type==="state"){state=C.normalize(msg.state);render()}});conn.on("close",()=>setTimeout(connect,2000));conn.on("error",()=>setTimeout(connect,2000))};peer.on("open",connect);peer.on("error",()=>setTimeout(connect,2000));
+  window.DorangTournamentTransport.create({hostId:C.peerPrefix+room,onState:next=>{state=C.normalize(next);render()}});
 }
 window.addEventListener("storage",e=>{if(e.key===KEY)loadLocal()});render();
 </script>
