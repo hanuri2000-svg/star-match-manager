@@ -5,8 +5,8 @@
 
   const OLD_KEY="newcatsle_yut_final_v1";
   const history=[];
-  const peers=new Set();
-  let hostPeer=null;
+  let transport=null;
+  let remoteStatus="송출컴 연결 준비 중";
 
   const migrateOld=()=>{
     try{
@@ -27,7 +27,7 @@
     s.tournament.updatedAt=Date.now();
     localStorage.setItem(KEY,JSON.stringify(s));
     window.dispatchEvent(new CustomEvent("dorang:tournament-changed",{detail:s.tournament}));
-    for(const conn of peers){if(conn?.open){try{conn.send({type:"state",state:s.tournament})}catch{}}}
+    transport?.broadcast();
     if(rerender)render();
   };
 
@@ -148,7 +148,7 @@
       </div>
       <div class="tn-statusbar">
         <strong>${tnEsc(status)}</strong>
-        <div class="tn-remote"><span data-tn-remote-status>송출컴 연결 준비 중</span><button type="button" data-tn-act="copy-broadcast">송출컴 방송링크 복사</button><button type="button" data-tn-act="open-broadcast">방송화면 열기</button></div>
+        <div class="tn-remote"><span data-tn-remote-status>${tnEsc(remoteStatus)}</span><button type="button" data-tn-act="copy-broadcast">송출컴 방송링크 복사</button><button type="button" data-tn-act="open-broadcast">방송화면 열기</button></div>
       </div>
       ${boardHtml(state)}
       ${modalHtml()}
@@ -269,18 +269,10 @@
   });
 
   const room=C.getRoom();
-  function setRemoteStatus(msg){document.querySelector("[data-tn-remote-status]")?.replaceChildren(document.createTextNode(msg))}
+  function setRemoteStatus(msg){remoteStatus=msg;document.querySelector("[data-tn-remote-status]")?.replaceChildren(document.createTextNode(msg))}
   function initHost(){
-    if(typeof Peer==="undefined"){setRemoteStatus("원격 연결 모듈 로드 실패");return}
-    hostPeer=new Peer(C.peerPrefix+room);
-    hostPeer.on("open",()=>setRemoteStatus("송출컴 연결 대기"));
-    hostPeer.on("connection",conn=>{
-      peers.add(conn);
-      conn.on("open",()=>{setRemoteStatus("송출컴 연결됨");try{conn.send({type:"state",state:tn()})}catch{}});
-      conn.on("close",()=>{peers.delete(conn);setRemoteStatus("송출컴 연결 끊김 · 재연결 대기")});
-      conn.on("error",()=>{peers.delete(conn);setRemoteStatus("송출컴 연결 오류")});
-    });
-    hostPeer.on("error",err=>setRemoteStatus(err?.type==="unavailable-id"?"다른 조작화면이 이미 연결 중":"원격 연결 오류"));
+    if(typeof Peer==="undefined"||!window.DorangTournamentTransport){setRemoteStatus("원격 연결 모듈 로드 실패");return}
+    transport=window.DorangTournamentTransport.create({hostId:C.peerPrefix+room,getState:tn,onStatus:setRemoteStatus});
   }
   async function copyBroadcast(){
     const url=C.broadcastUrl(room);
