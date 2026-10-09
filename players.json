@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-09",
+  "updatedAt": "2026-10-10",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -3722,7 +3722,7 @@
       "active": true,
       "eloId": 843,
       "soopId": "",
-      "thumbUrl": "players/843.jpg?v=1787122152"
+      "thumbUrl": "players/843_a8ab39ca.jpg?v=1791580142"
     },
     {
       "name": "럭키위키",
