@@ -1180,6 +1180,7 @@ load = function () {
 
 
 window.SpwnNative={
+  reloadRecords:()=>{records=readRecords();renderAll();},
   openSearchRecord,
   showTab,
   saveBasePlayer,
@@ -1208,6 +1209,7 @@ window.SpwnNative={
   closeEloDialog:()=>eloDlg.close()
 };
 load();
+window.DailyEloImport?.renderStatus();
 };
 const existing=document.querySelector('[data-spwn-native-host]');
 if(existing)window.mountSpwnNoteNative(existing);
