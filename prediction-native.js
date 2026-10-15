@@ -18,6 +18,7 @@ window.mountPredictionNative=function(host){
   window.__predictionNativeHost=host;
   const root=host.shadowRoot||host.attachShadow({mode:'open'});
   root.innerHTML='<style>'+STYLES+ASL_STYLES+'</style>'+TEMPLATE;
+  if (typeof window.applySeasonThemeToShadow === 'function') window.applySeasonThemeToShadow(root);
   const realDocument=window.document;
   const aslPanel=realDocument.createElement('div');
   aslPanel.className='asl-panel';

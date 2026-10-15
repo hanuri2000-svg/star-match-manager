@@ -7,6 +7,7 @@ window.mountSpwnNoteNative=function(host){
   host.dataset.spwnMounted='1';
   const root=host.shadowRoot||host.attachShadow({mode:'open'});
   root.innerHTML='<style>'+STYLES+'</style>'+TEMPLATE;
+  if (typeof window.applySeasonThemeToShadow === 'function') window.applySeasonThemeToShadow(root);
   const realDocument=window.document;
   const document={
     querySelector:root.querySelector.bind(root),

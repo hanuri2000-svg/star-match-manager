@@ -1,0 +1,221 @@
+/* 도랑이꺼야 월별 시즌 테마 v5.23.0. 기존 화면의 배치와 기록을 변경하지 않는다. */
+html[data-season-theme] {
+  --season-bg: #f4f0f7;
+  --season-panel: #ffffff;
+  --season-soft: #f4eff8;
+  --season-text: #34283e;
+  --season-muted: #665471;
+  --season-line: #d9cadf;
+  --season-accent: #6c437e;
+  --season-on-accent: #ffffff;
+  --season-glow-a: #e8cbf355;
+  --season-glow-b: #ebdcfa66;
+  color-scheme: light;
+}
+html[data-season-theme="dark"] { color-scheme: dark; }
+html[data-season-theme] body:not(.broadcast-only) {
+  background:
+    radial-gradient(circle at 8% 0%,var(--season-glow-a) 0%,transparent 35%),
+    radial-gradient(circle at 96% 20%,var(--season-glow-b) 0%,transparent 34%),
+    var(--season-bg) !important;
+  color: var(--season-text) !important;
+}
+html[data-season-theme] #app {position:relative;z-index:1}
+html[data-season-theme] body:not(.broadcast-only) .head,
+html[data-season-theme] body:not(.broadcast-only) .panel,
+html[data-season-theme] body:not(.broadcast-only) .set-block,
+html[data-season-theme] body:not(.broadcast-only) .settings,
+html[data-season-theme] body:not(.broadcast-only) .settlement,
+html[data-season-theme] body:not(.broadcast-only) .schedule-toolbar,
+html[data-season-theme] body:not(.broadcast-only) .calendar,
+html[data-season-theme] body:not(.broadcast-only) .schedule-editor,
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda,
+html[data-season-theme] body:not(.broadcast-only) .spwn-note-shell,
+html[data-season-theme] body:not(.broadcast-only) .spwn-note-bar,
+html[data-season-theme] body:not(.broadcast-only) .native-tier-panel,
+html[data-season-theme] body:not(.broadcast-only) .today-summary-card,
+html[data-season-theme] body:not(.broadcast-only) .schedule-sync,
+html[data-season-theme] body:not(.broadcast-only) .notification-details {
+  background: var(--season-panel) !important;
+  border-color: var(--season-line) !important;
+  color: var(--season-text) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .app-tabs,
+html[data-season-theme] body:not(.broadcast-only) .sync-source,
+html[data-season-theme] body:not(.broadcast-only) .set-score,
+html[data-season-theme] body:not(.broadcast-only) .native-tier-group,
+html[data-season-theme] body:not(.broadcast-only) .funding-teams>div,
+html[data-season-theme] body:not(.broadcast-only) .settle-summary>div,
+html[data-season-theme] body:not(.broadcast-only) .roulette-result,
+html[data-season-theme] body:not(.broadcast-only) .history-row,
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda-row,
+html[data-season-theme] body:not(.broadcast-only) .schedule-list-item,
+html[data-season-theme] body:not(.broadcast-only) .party-team-score,
+html[data-season-theme] body:not(.broadcast-only) .party-score-panel {
+  background: var(--season-soft) !important;
+  border-color: var(--season-line) !important;
+  color: var(--season-text) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .app-tabs button {
+  color: var(--season-text) !important;
+  background: transparent !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .app-tabs button.active,
+html[data-season-theme] body:not(.broadcast-only) .primary,
+html[data-season-theme] body:not(.broadcast-only) .spin-button {
+  background: var(--season-accent) !important;
+  border-color: var(--season-accent) !important;
+  color: var(--season-on-accent) !important;
+  -webkit-text-fill-color: var(--season-on-accent) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .secondary,
+html[data-season-theme] body:not(.broadcast-only) .head .actions button:not(.primary):not(.danger):not(.season-theme-open) {
+  background: var(--season-soft) !important;
+  border-color: var(--season-line) !important;
+  color: var(--season-text) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) input,
+html[data-season-theme] body:not(.broadcast-only) textarea,
+html[data-season-theme] body:not(.broadcast-only) select {
+  background: var(--season-panel) !important;
+  color: var(--season-text) !important;
+  border-color: var(--season-line) !important;
+  color-scheme: inherit;
+}
+html[data-season-theme] body:not(.broadcast-only) select option {
+  background: var(--season-panel) !important;
+  color: var(--season-text) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .head h1,
+html[data-season-theme] body:not(.broadcast-only) .schedule-toolbar h2,
+html[data-season-theme] body:not(.broadcast-only) .schedule-editor h3,
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda h3,
+html[data-season-theme] body:not(.broadcast-only) .team-name,
+html[data-season-theme] body:not(.broadcast-only) .today-summary-card>strong,
+html[data-season-theme] body:not(.broadcast-only) .sync-heading strong,
+html[data-season-theme] body:not(.broadcast-only) .native-tier-group h3,
+html[data-season-theme] body:not(.broadcast-only) .calendar-number,
+html[data-season-theme] body:not(.broadcast-only) .calendar-week b {
+  color: var(--season-text) !important;
+  -webkit-text-fill-color: var(--season-text) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .sub,
+html[data-season-theme] body:not(.broadcast-only) .empty,
+html[data-season-theme] body:not(.broadcast-only) .today-summary-label,
+html[data-season-theme] body:not(.broadcast-only) .today-summary-detail,
+html[data-season-theme] body:not(.broadcast-only) .today-summary-meta,
+html[data-season-theme] body:not(.broadcast-only) .today-race-list,
+html[data-season-theme] body:not(.broadcast-only) .sync-source>span,
+html[data-season-theme] body:not(.broadcast-only) .sync-source small,
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda-head>span,
+html[data-season-theme] body:not(.broadcast-only) .schedule-list-item small,
+html[data-season-theme] body:not(.broadcast-only) .roulette-result>span {
+  color: var(--season-muted) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .calendar-day:not(.dorang-special):not(.holiday) {
+  background: var(--season-panel) !important;
+  border-color: var(--season-line) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .calendar-day.selected:not(.dorang-special):not(.holiday) {
+  background: var(--season-soft) !important;
+  box-shadow: inset 0 0 0 2px var(--season-accent) !important;
+}
+html[data-season-theme] body:not(.broadcast-only) .calendar-grid {border-color:var(--season-line) !important}
+html[data-season-theme] body:not(.broadcast-only) .player,
+html[data-season-theme] body:not(.broadcast-only) .overview-row:not(.in-progress),
+html[data-season-theme] body:not(.broadcast-only) .live-set:not(.current):not(.done),
+html[data-season-theme] body:not(.broadcast-only) .native-tier-player {
+  background: var(--season-soft) !important;
+  border-color: var(--season-line) !important;
+  color: var(--season-text) !important;
+}
+/* 경기 결과, 종족, 알림 상태, 특별 일정의 의미색 및 방송 오버레이는 유지한다. */
+/* 계절 오브젝트는 UI와 별도 레이어에 두어 글자와 버튼을 가리지 않는다. */
+.season-scene {position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;user-select:none}
+.season-scene span {position:absolute;display:block;opacity:.14;filter:saturate(.8);animation:seasonFloat 11s ease-in-out infinite alternate}
+.season-scene span:nth-child(1){top:8%;right:2%;font-size:clamp(48px,7vw,112px)}
+.season-scene span:nth-child(2){bottom:4%;left:2%;font-size:clamp(42px,6vw,90px);animation-delay:-4s}
+.season-scene span:nth-child(3){bottom:14%;right:8%;font-size:clamp(30px,4vw,66px);animation-delay:-7s}
+html[data-season-effect="full"] .season-scene span{opacity:.24}
+html[data-season-effect="off"] .season-scene span{display:none}
+html[data-season-effect="off"] .season-scene{display:none}
+@keyframes seasonFloat {from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-18px) rotate(8deg)}}
+@media(max-width:700px){.season-scene span{opacity:.09!important}.season-scene span:nth-child(1){top:15%;right:-12px}.season-scene span:nth-child(2){bottom:5%;left:-10px}}
+@media(prefers-reduced-motion:reduce){.season-scene span{animation:none!important}}
+
+/* 테마 전환 제어: 헤더 우측에 배치, 데이터/탭 동작과 독립 */
+html[data-season-theme] body:not(.broadcast-only) .season-theme-open {
+  background:var(--season-soft)!important;
+  color:var(--season-text)!important;
+  border:1px solid var(--season-line)!important;
+  white-space:nowrap;
+  min-height:32px;
+}
+.season-theme-popover[hidden]{display:none!important}
+.season-theme-popover {
+  position:fixed;z-index:99999;top:72px;right:12px;
+  width:min(335px,calc(100vw - 24px));padding:18px;display:grid;gap:12px;
+  border:1px solid var(--season-line,#d9cadf);border-radius:17px;
+  background:var(--season-panel,#fff);color:var(--season-text,#34283e);
+  box-shadow:0 16px 55px #0004;font:14px/1.5 system-ui,"Noto Sans KR",sans-serif;
+}
+.season-theme-popover .season-title {display:flex;align-items:center;justify-content:space-between;gap:8px}
+.season-theme-popover .season-title strong{font-size:17px}
+.season-theme-popover .season-title button {border:0!important;background:transparent!important;color:var(--season-text)!important;font-size:23px!important;box-shadow:none!important;padding:0 4px!important}
+.season-theme-popover label{display:grid;gap:5px;color:var(--season-text)!important;font-weight:700}
+.season-theme-popover select {
+  width:100%;padding:9px 11px;border:1px solid var(--season-line)!important;border-radius:9px;
+  background:var(--season-panel)!important;color:var(--season-text)!important;font:inherit;
+}
+.season-theme-popover small {color:var(--season-muted,#665471);line-height:1.5}
+.season-theme-popover button:focus-visible,.season-theme-popover select:focus-visible,.season-theme-open:focus-visible{
+  outline:3px solid var(--season-accent,#6c437e);outline-offset:2px;
+}
+@media(max-width:700px){.season-theme-popover{top:60px;right:8px}.head .actions .season-theme-open{padding:6px 9px!important;font-size:11px!important}}
+
+/* 어두운 계절에서 이전 버전의 밝은 상태 카드와 흰 글자가 충돌하지 않도록 별도 보정 */
+html[data-season-theme="dark"] body:not(.broadcast-only) .overview-row.in-progress,
+html[data-season-theme="dark"] body:not(.broadcast-only) .live-set.current {
+  background:var(--season-soft)!important;
+  color:var(--season-text)!important;
+  border-color:var(--season-accent)!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .overview-row.in-progress em,
+html[data-season-theme="dark"] body:not(.broadcast-only) .live-set.current em {
+  background:var(--season-accent)!important;
+  color:var(--season-on-accent)!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .live-set.done,
+html[data-season-theme="dark"] body:not(.broadcast-only) .match.done,
+html[data-season-theme="dark"] body:not(.broadcast-only) .fighter.win,
+html[data-season-theme="dark"] body:not(.broadcast-only) .settle-summary .win-pay {
+  background:#21463d!important;color:#f2fff9!important;border-color:#76b7a4!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-day.holiday,
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-day.dorang-special {
+  background:var(--season-soft)!important;color:var(--season-text)!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-day.dorang-special.debut,
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-day.holiday.selected {
+  background:var(--season-panel)!important;
+}
+/* 촘촘한 순위표와 종족표는 색상을 유지하되 읽기 영역은 고대비 밝은 카드로 보호 */
+html[data-season-theme="dark"] body:not(.broadcast-only) .party-score-panel,
+html[data-season-theme="dark"] body:not(.broadcast-only) .party-team-score,
+html[data-season-theme="dark"] body:not(.broadcast-only) .party-table,
+html[data-season-theme="dark"] body:not(.broadcast-only) .native-tier-panel,
+html[data-season-theme="dark"] body:not(.broadcast-only) .native-tier-group {
+  background:#fffdfd!important;color:#392b42!important;border-color:#d9c7df!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .native-tier-group h3 {
+  color:#392b42!important;-webkit-text-fill-color:#392b42!important;
+}
+/* 기존 종족 구별색(주황/파랑/보라)은 유지하면서 배지 텍스트만 어둡게 */
+html[data-season-theme] body:not(.broadcast-only) .chip.P,
+html[data-season-theme] body:not(.broadcast-only) .chip.T,
+html[data-season-theme] body:not(.broadcast-only) .chip.Z,
+html[data-season-theme] body:not(.broadcast-only) .race-P,
+html[data-season-theme] body:not(.broadcast-only) .race-T,
+html[data-season-theme] body:not(.broadcast-only) .race-Z {
+  color:#281e34!important;
+}
