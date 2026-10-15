@@ -1,4 +1,4 @@
-/* 도랑이꺼야 12개월 시즌 테마 엔진 v5.23.2 */
+/* 도랑이꺼야 12개월 시즌 테마 엔진 v5.23.4 */
 (function () {
   "use strict";
   if (typeof document === "undefined") return;
@@ -83,7 +83,7 @@
     delete root.dataset.seasonTheme;
     delete root.dataset.seasonMonth;
     delete root.dataset.seasonEffect;
-    for(const n of cssNames.concat(varNames,["--season-module-bg","--season-module-panel","--season-module-soft","--season-module-line","--season-module-text","--season-module-muted","--season-object-primary","--season-object-secondary","--season-object-tertiary"]))root.style.removeProperty(n);
+    for(const n of cssNames.concat(varNames,["--season-module-bg","--season-module-panel","--season-module-soft","--season-module-line","--season-module-text","--season-module-muted","--season-object-primary","--season-object-secondary","--season-object-tertiary","--season-banner-image"]))root.style.removeProperty(n);
     const scene=document.getElementById("season-scene");
     if(scene)scene.remove();
     activeMonth="";
@@ -98,6 +98,7 @@
     root.dataset.seasonTheme=p.dark?"dark":"light";
     root.dataset.seasonMonth=month;
     root.dataset.seasonEffect=settings.effect;
+    root.style.setProperty("--season-banner-image",'url("./assets/season-banners/'+month.padStart(2,"0")+'.svg?v=5.23.4")');
     seasonNames.forEach((n,i)=>root.style.setProperty(cssNames[i],p[n]));
     [["--bg",p.bg],["--panel",p.panel],["--line",p.line],["--text",p.text],["--muted",p.muted],["--purple",p.accent],["--purple2",p.accent]].forEach(pair=>root.style.setProperty(pair[0],pair[1]));
     const modulePalette = p.dark ? {bg:"#f9f6fc",panel:"#ffffff",soft:"#f2eaf6",text:"#352b40",muted:"#64536f",line:"#d7c6df"} : p;
