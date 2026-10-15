@@ -1,22 +1,22 @@
-/* 도랑이꺼야 12개월 시즌 테마 엔진 v5.23.1 */
+/* 도랑이꺼야 12개월 시즌 테마 엔진 v5.23.2 */
 (function () {
   "use strict";
   if (typeof document === "undefined") return;
   const STORAGE_KEY = "dorang-season-theme.v1";
   const SEOUL_ZONE = "Asia/Seoul";
-  const NAMES = ["설원의 겨울","로맨틱 발렌타인","봄의 시작","벚꽃 축제","싱그러운 정원","청량한 초여름","트로피컬 바캉스","여름밤 축제","황금빛 가을","붉은 단풍","깊어가는 가을","크리스마스"];
+  const NAMES = ["설원의 겨울","로맨틱 발렌타인","민트 새싹","벚꽃 라벤더","햇살 정원","푸른 하늘","트로피컬 바다","여름밤 축제","황금빛 들판","붉은 단풍","버건디 늦가을","크리스마스"];
   const PALETTES = Object.freeze({
     "1":{"bg":"#eaf4fc","panel":"#ffffff","soft":"#e8f1fa","text":"#213c53","muted":"#4a6175","line":"#bacfdf","accent":"#285c85","onAccent":"#ffffff","glowA":"#bbdbefaa","glowB":"#dbe9f6aa","dark":false,"decor":["❄️","☃️","✦"],"icon":"❄️"},
-    "2":{"bg":"#fff1f5","panel":"#ffffff","soft":"#ffecf2","text":"#51293b","muted":"#745364","line":"#e8c7d4","accent":"#8b3558","onAccent":"#ffffff","glowA":"#f6bbcf99","glowB":"#f7d7e299","dark":false,"decor":["💝","💕","🎀"],"icon":"💕"},
-    "3":{"bg":"#f2faee","panel":"#ffffff","soft":"#e9f6e9","text":"#23462f","muted":"#466a53","line":"#bbd7c0","accent":"#2b6944","onAccent":"#ffffff","glowA":"#cbe9c099","glowB":"#ddf0c499","dark":false,"decor":["🌱","☘️","🌷"],"icon":"🌱"},
-    "4":{"bg":"#fff3f7","panel":"#ffffff","soft":"#ffeaf2","text":"#552d43","muted":"#75566a","line":"#e9c8d7","accent":"#8c4168","onAccent":"#ffffff","glowA":"#f3c5d599","glowB":"#f5e0ed99","dark":false,"decor":["🌸","🌸","✨"],"icon":"🌸"},
-    "5":{"bg":"#f2f9ed","panel":"#ffffff","soft":"#ebf6df","text":"#2a4732","muted":"#526653","line":"#cad9b9","accent":"#396e45","onAccent":"#ffffff","glowA":"#d9edb999","glowB":"#f7edbd99","dark":false,"decor":["🌼","🦋","🌿"],"icon":"🌼"},
-    "6":{"bg":"#edfaff","panel":"#ffffff","soft":"#e3f6fb","text":"#204657","muted":"#456879","line":"#bfdce6","accent":"#226986","onAccent":"#ffffff","glowA":"#bde7f299","glowB":"#daeeff99","dark":false,"decor":["☁️","🌊","☀️"],"icon":"☁️"},
-    "7":{"bg":"#edfafa","panel":"#ffffff","soft":"#e2f5f2","text":"#1f474a","muted":"#456c70","line":"#b6dcd6","accent":"#1f6c72","onAccent":"#ffffff","glowA":"#b4e9e399","glowB":"#ffe2c599","dark":false,"decor":["🏖️","🌴","🐚"],"icon":"🏖️"},
+    "2":{"bg":"#ffe4ed","panel":"#fffafd","soft":"#ffcfdf","text":"#592039","muted":"#813a54","line":"#eab0c6","accent":"#973252","onAccent":"#ffffff","glowA":"#ff94b09c","glowB":"#fdd0d9a8","dark":false,"decor":["💝","❤️","🎀"],"icon":"💝"},
+    "3":{"bg":"#e4faec","panel":"#fafffe","soft":"#cdf1e3","text":"#174b3a","muted":"#386957","line":"#96d1ba","accent":"#216750","onAccent":"#ffffff","glowA":"#a4edcfab","glowB":"#fff3b3b0","dark":false,"decor":["🌱","🍀","🌷"],"icon":"🌱"},
+    "4":{"bg":"#f5ecff","panel":"#fffaff","soft":"#ead8fa","text":"#4a2e64","muted":"#705286","line":"#d3b2e6","accent":"#774391","onAccent":"#ffffff","glowA":"#f5b9d999","glowB":"#d8c0ffa9","dark":false,"decor":["🌸","🪻","🌸"],"icon":"🌸"},
+    "5":{"bg":"#dfefb8","panel":"#fcfff2","soft":"#c9e293","text":"#263b1b","muted":"#425d31","line":"#9ac26e","accent":"#365c28","onAccent":"#ffffff","glowA":"#a9e27ac2","glowB":"#ffee9ebc","dark":false,"decor":["🌻","🦋","🌼"],"icon":"🌻"},
+    "6":{"bg":"#e3f5ff","panel":"#ffffff","soft":"#d7ebfa","text":"#20465e","muted":"#46697e","line":"#b5d2e9","accent":"#286487","onAccent":"#ffffff","glowA":"#b3dcfa99","glowB":"#d9f1ffa8","dark":false,"decor":["☁️","🫧","☀️"],"icon":"☁️"},
+    "7":{"bg":"#c9f4f0","panel":"#faffff","soft":"#a7e5db","text":"#154a4d","muted":"#30686c","line":"#7accc2","accent":"#17666d","onAccent":"#ffffff","glowA":"#66d4c7aa","glowB":"#ffdfad9e","dark":false,"decor":["🌴","🐚","🏖️"],"icon":"🌴"},
     "8":{"bg":"#101b31","panel":"#1a2b47","soft":"#243856","text":"#f5f8ff","muted":"#d2ddeb","line":"#4b6380","accent":"#f5ce83","onAccent":"#242b39","glowA":"#6c5db855","glowB":"#375c9c55","dark":true,"decor":["🎆","🌙","✦"],"icon":"🎆"},
-    "9":{"bg":"#fff8eb","panel":"#ffffff","soft":"#fbefd8","text":"#4c3725","muted":"#715940","line":"#e3d2af","accent":"#795125","onAccent":"#ffffff","glowA":"#f1d79c99","glowB":"#f6e1c099","dark":false,"decor":["🌾","🍂","☀️"],"icon":"🌾"},
-    "10":{"bg":"#fff7e7","panel":"#ffffff","soft":"#fbe9d0","text":"#472d22","muted":"#70503f","line":"#e2c5a0","accent":"#8c3e2a","onAccent":"#ffffff","glowA":"#eebc7c99","glowB":"#dba16a77","dark":false,"decor":["🍁","🍂","🍁"],"icon":"🍁"},
-    "11":{"bg":"#fff6ec","panel":"#ffffff","soft":"#f9eadc","text":"#503625","muted":"#745643","line":"#e5ccba","accent":"#844732","onAccent":"#ffffff","glowA":"#e9c6a899","glowB":"#eac59c99","dark":false,"decor":["🍁","🍂","☕"],"icon":"🍁"},
+    "9":{"bg":"#fff2bd","panel":"#fffdf3","soft":"#fae29a","text":"#49351a","muted":"#6d522a","line":"#d6b86c","accent":"#77511e","onAccent":"#ffffff","glowA":"#f4d17daa","glowB":"#f9e6aeb5","dark":false,"decor":["🌾","🌻","🌾"],"icon":"🌾"},
+    "10":{"bg":"#ffe1cb","panel":"#fff9f3","soft":"#f7c8aa","text":"#532a21","muted":"#794434","line":"#de9e7e","accent":"#923529","onAccent":"#ffffff","glowA":"#ee895ca8","glowB":"#ffd07cac","dark":false,"decor":["🍁","🌰","🍂"],"icon":"🍁"},
+    "11":{"bg":"#2b1727","panel":"#422436","soft":"#55374a","text":"#fff5f5","muted":"#e6cbd6","line":"#886579","accent":"#f3cda3","onAccent":"#3b2230","glowA":"#88486877","glowB":"#b0745c66","dark":true,"decor":["🕯️","☕","🍂"],"icon":"🕯️"},
     "12":{"bg":"#112820","panel":"#1b382c","soft":"#284738","text":"#f7fff9","muted":"#d3e7d9","line":"#4e7562","accent":"#ffdb96","onAccent":"#294334","glowA":"#3b8a6555","glowB":"#ba594e55","dark":true,"decor":["🎄","❄️","🎁"],"icon":"🎄"}
   });
   const DEFAULT = {mode:"auto",effect:"subtle"};
@@ -46,9 +46,9 @@
       scene=document.createElement("div");
       scene.id="season-scene"; scene.className="season-scene";
       scene.setAttribute("aria-hidden","true");
-      for(let i=0;i<3;i++)scene.appendChild(document.createElement("span"));
       document.body.appendChild(scene);
     }
+    while(scene.children.length<6)scene.appendChild(document.createElement("span"));
     return scene;
   }
   function applyShadowTheme(shadowRoot){
@@ -65,6 +65,7 @@
         ".spwn-body .tabs button,.prediction-body .btn:not(.primary){background:var(--season-module-soft)!important;color:var(--season-module-text)!important;border-color:var(--season-module-line)!important;}",
         ".spwn-body .tabs button.active,.prediction-body .btn.primary,.prediction-body .primary{background:var(--season-accent)!important;color:var(--season-on-accent)!important;border-color:var(--season-accent)!important;}",
         ".prediction-body .asl-title,.prediction-body .asl-row b{color:var(--season-module-text)!important;}",
+        ".spwn-body .brandtext h1::after,.prediction-body h1::after{content:var(--season-object-primary);display:inline-block;margin-left:9px;font-size:.83em;vertical-align:middle;pointer-events:none;}",
         ".spwn-body button:focus-visible,.prediction-body button:focus-visible{outline:3px solid var(--season-accent)!important;outline-offset:2px;}"
       ].join("\n");
       shadowRoot.appendChild(el);
@@ -82,11 +83,12 @@
     delete root.dataset.seasonTheme;
     delete root.dataset.seasonMonth;
     delete root.dataset.seasonEffect;
-    for(const n of cssNames.concat(varNames,["--season-module-bg","--season-module-panel","--season-module-soft","--season-module-line","--season-module-text","--season-module-muted"]))root.style.removeProperty(n);
+    for(const n of cssNames.concat(varNames,["--season-module-bg","--season-module-panel","--season-module-soft","--season-module-line","--season-module-text","--season-module-muted","--season-object-primary","--season-object-secondary","--season-object-tertiary"]))root.style.removeProperty(n);
     const scene=document.getElementById("season-scene");
     if(scene)scene.remove();
     activeMonth="";
     updateShadowModules();
+    renderSeasonDecorations();
   }
   function apply(){
     if(settings.mode==="off"){reset();updateTrigger();return;}
@@ -102,11 +104,15 @@
     for(const k of ["bg","panel","soft","text","muted","line"])root.style.setProperty("--season-module-"+k,modulePalette[k]);
     if(activeMonth!==month){
       const scene=ensureScene();
-      scene.querySelectorAll("span").forEach((el,i)=>{el.textContent=p.decor[i]});
+      scene.querySelectorAll("span").forEach((el,i)=>{el.textContent=p.decor[i%p.decor.length]});
       activeMonth=month;
     }
+    root.style.setProperty("--season-object-primary",JSON.stringify(p.decor[0]));
+    root.style.setProperty("--season-object-secondary",JSON.stringify(p.decor[1]));
+    root.style.setProperty("--season-object-tertiary",JSON.stringify(p.decor[2]));
     updateShadowModules();
     updateTrigger();
+    renderSeasonDecorations();
   }
   function updateTrigger(){
     const trigger=document.querySelector("[data-season-theme-open]");
@@ -134,7 +140,7 @@
     modeLabel.appendChild(modeSelect);
     const motionLabel=document.createElement("label");motionLabel.textContent="장식 효과";
     const motionSelect=document.createElement("select");motionSelect.dataset.seasonEffect="1";
-    [["off","끄기 · 최고 성능"],["subtle","은은하게 · 추천"],["full","풍성하게"]].forEach(o=>{const option=document.createElement("option");option.value=o[0];option.textContent=o[1];motionSelect.appendChild(option)});
+    [["off","배경 장식 끄기 · 최고 성능"],["subtle","은은하게 · 추천"],["full","풍성하게"]].forEach(o=>{const option=document.createElement("option");option.value=o[0];option.textContent=o[1];motionSelect.appendChild(option)});
     motionLabel.appendChild(motionSelect);
     const hint=document.createElement("small");hint.textContent="12개월 테마가 매월 1일 자동 전환돼. 글자 대비는 보호하고 승패·종족·일정 표시 색상은 유지해.";
     dialog.append(title,modeLabel,motionLabel,hint);
@@ -150,6 +156,55 @@
     dialog.hidden=false;
     dialog.querySelector("[data-season-mode]").focus();
   }
+
+  /* 오브젝트는 배경에만 숨기지 않고 실제 헤더·달력 제목에 표시한다. */
+  function renderSeasonDecorations(){
+    if(new URLSearchParams(location.search).get("broadcast")==="1")return;
+    const month = root.dataset.seasonMonth;
+    const p = PALETTES[month];
+    const oldHero=document.querySelector(".season-hero-badge");
+    const oldCalendar=document.querySelector(".season-calendar-symbol");
+    if(!p){
+      if(oldHero)oldHero.remove();
+      if(oldCalendar)oldCalendar.remove();
+      return;
+    }
+    const title=document.querySelector(".head > div:first-child");
+    if(title){
+      let badge=title.querySelector(".season-hero-badge");
+      if(!badge){
+        badge=document.createElement("div");
+        badge.className="season-hero-badge";
+        badge.setAttribute("aria-label","현재 시즌 테마");
+        const subtitle=title.querySelector(".sub");
+        if(subtitle)subtitle.insertAdjacentElement("afterend",badge);
+        else title.appendChild(badge);
+      }
+      const signature=month+"-"+p.icon;
+      if(badge.dataset.signature!==signature){
+        badge.dataset.signature=signature;
+        badge.replaceChildren();
+        const symbol=document.createElement("span");
+        symbol.className="season-hero-symbol";symbol.textContent=p.decor[0];
+        const content=document.createElement("span");content.className="season-hero-label";
+        const b=document.createElement("strong");b.textContent=Number(month)+"월 · "+NAMES[Number(month)-1];
+        const aside=document.createElement("small");aside.textContent=p.decor.join("  ");
+        content.append(b,aside);badge.append(symbol,content);
+      }
+    }
+    const calendarTitle=document.querySelector(".schedule-toolbar h2");
+    if(calendarTitle){
+      let mark=calendarTitle.querySelector(".season-calendar-symbol");
+      if(!mark){
+        mark=document.createElement("span");mark.className="season-calendar-symbol";
+        mark.setAttribute("aria-hidden","true");calendarTitle.appendChild(mark);
+      }
+      if(mark.dataset.month!==month){
+        mark.dataset.month=month;
+        mark.textContent=p.decor[0]+" "+p.decor[1];
+      }
+    }
+  }
   function installTrigger(){
     if(new URLSearchParams(location.search).get("broadcast")==="1")return;
     const actions=document.querySelector(".head .actions");
@@ -164,7 +219,8 @@
   apply();
   installTrigger();
   const app=document.getElementById("app");
-  if(app)new MutationObserver(installTrigger).observe(app,{childList:true,subtree:true});
+  renderSeasonDecorations();
+  if(app)new MutationObserver(()=>{installTrigger();renderSeasonDecorations()}).observe(app,{childList:true,subtree:true});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"&&dialog&&!dialog.hidden)dialog.hidden=true});
   document.addEventListener("pointerdown",e=>{if(dialog&&!dialog.hidden&&!dialog.contains(e.target)&&!e.target.closest("[data-season-theme-open]"))dialog.hidden=true});
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)apply()});

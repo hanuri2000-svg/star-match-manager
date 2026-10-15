@@ -42,8 +42,8 @@ test("KST 월별 전환과 수동/원본 전환을 지원한다",()=>{
   assert.match(engine,/dorang-season-theme\.v1/);
 });
 test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
-  assert.match(html,/season-theme\.css\?v=5\.23\.1/);
-  assert.match(html,/season-theme\.js\?v=5\.23\.1/);
+  assert.match(html,/season-theme\.css\?v=5\.23\.2/);
+  assert.match(html,/season-theme\.js\?v=5\.23\.2/);
   for(const path of ["spwn-native.js","prediction-native.js"]){
     assert.match(read(path),/applySeasonThemeToShadow\(root\)/,path+" 테마 연결 누락");
   }
@@ -52,17 +52,41 @@ test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
   assert.match(css,/\.calendar-day/);
 });
 test("기존 버전 검사와 초기 가벼운 로딩 구조를 유지한다",()=>{
-  assert.match(html,/const APP_VERSION='5\.23\.1'/);
-  assert.match(html,/const RELEASE_VERSION='5\.23\.1'/);
+  assert.match(html,/const APP_VERSION='5\.23\.2'/);
+  assert.match(html,/const RELEASE_VERSION='5\.23\.2'/);
   assert.ok(Buffer.byteLength(html)<300000);
-  assert.match(html,/script async src="\.\/spwn-native\.js\?v=5\.23\.1"/);
-  assert.match(html,/script async src="\.\/prediction-native\.js\?v=5\.23\.1"/);
+  assert.match(html,/script async src="\.\/spwn-native\.js\?v=5\.23\.2"/);
+  assert.match(html,/script async src="\.\/prediction-native\.js\?v=5\.23\.2"/);
 });
 
 test("10월 단풍, 12월 크리스마스 테마가 유지된다",()=>{
   assert.equal(palettes["10"].icon,"🍁");
   assert.equal(palettes["10"].dark,false);
-  assert.deepEqual(palettes["10"].decor,["🍁","🍂","🍁"]);
+  assert.deepEqual(palettes["10"].decor,["🍁","🌰","🍂"]);
   assert.equal(palettes["12"].icon,"🎄");
   assert.deepEqual(palettes["12"].decor,["🎄","❄️","🎁"]);
+});
+
+test("3월 새싹과 5월 정원은 명확히 다른 배경과 장식을 제공한다",()=>{
+  assert.notEqual(palettes["3"].bg,palettes["5"].bg);
+  assert.notEqual(palettes["3"].icon,palettes["5"].icon);
+  assert.notDeepEqual(palettes["3"].decor,palettes["5"].decor);
+});
+test("9~11월의 테마는 각각 황금·단풍·버건디로 차별화한다",()=>{
+  assert.equal(palettes["9"].icon,"🌾");
+  assert.equal(palettes["10"].icon,"🍁");
+  assert.equal(palettes["11"].icon,"🕯️");
+  assert.equal(palettes["11"].dark,true);
+  assert.notEqual(palettes["9"].bg,palettes["10"].bg);
+  assert.notEqual(palettes["10"].bg,palettes["11"].bg);
+});
+test("오브젝트를 헤더·달력·오늘 요약에 표시하고 탭 리렌더를 감지한다",()=>{
+  assert.match(engine,/renderSeasonDecorations\(\)/);
+  assert.match(engine,/season-hero-badge/);
+  assert.match(engine,/season-calendar-symbol/);
+  assert.match(engine,/new MutationObserver\(\(\)=>\{installTrigger\(\);renderSeasonDecorations\(\)\}\)/);
+  assert.match(css,/today-summary-card::after/);
+  assert.match(css,/season-hero-symbol/);
+  assert.match(css,/season-calendar-symbol/);
+  assert.match(css,/pointer-events:none/);
 });
