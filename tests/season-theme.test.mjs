@@ -42,8 +42,8 @@ test("KST 월별 전환과 수동/원본 전환을 지원한다",()=>{
   assert.match(engine,/dorang-season-theme\.v1/);
 });
 test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
-  assert.match(html,/season-theme\.css\?v=5\.23\.0/);
-  assert.match(html,/season-theme\.js\?v=5\.23\.0/);
+  assert.match(html,/season-theme\.css\?v=5\.23\.1/);
+  assert.match(html,/season-theme\.js\?v=5\.23\.1/);
   for(const path of ["spwn-native.js","prediction-native.js"]){
     assert.match(read(path),/applySeasonThemeToShadow\(root\)/,path+" 테마 연결 누락");
   }
@@ -52,9 +52,17 @@ test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
   assert.match(css,/\.calendar-day/);
 });
 test("기존 버전 검사와 초기 가벼운 로딩 구조를 유지한다",()=>{
-  assert.match(html,/const APP_VERSION='5\.23\.0'/);
-  assert.match(html,/const RELEASE_VERSION='5\.23\.0'/);
+  assert.match(html,/const APP_VERSION='5\.23\.1'/);
+  assert.match(html,/const RELEASE_VERSION='5\.23\.1'/);
   assert.ok(Buffer.byteLength(html)<300000);
-  assert.match(html,/script async src="\.\/spwn-native\.js\?v=5\.23\.0"/);
-  assert.match(html,/script async src="\.\/prediction-native\.js\?v=5\.23\.0"/);
+  assert.match(html,/script async src="\.\/spwn-native\.js\?v=5\.23\.1"/);
+  assert.match(html,/script async src="\.\/prediction-native\.js\?v=5\.23\.1"/);
+});
+
+test("10월 단풍, 12월 크리스마스 테마가 유지된다",()=>{
+  assert.equal(palettes["10"].icon,"🍁");
+  assert.equal(palettes["10"].dark,false);
+  assert.deepEqual(palettes["10"].decor,["🍁","🍂","🍁"]);
+  assert.equal(palettes["12"].icon,"🎄");
+  assert.deepEqual(palettes["12"].decor,["🎄","❄️","🎁"]);
 });

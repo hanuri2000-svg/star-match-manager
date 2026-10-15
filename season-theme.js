@@ -1,10 +1,10 @@
-/* 도랑이꺼야 12개월 시즌 테마 엔진 v5.23.0 */
+/* 도랑이꺼야 12개월 시즌 테마 엔진 v5.23.1 */
 (function () {
   "use strict";
   if (typeof document === "undefined") return;
   const STORAGE_KEY = "dorang-season-theme.v1";
   const SEOUL_ZONE = "Asia/Seoul";
-  const NAMES = ["설원의 겨울","로맨틱 발렌타인","봄의 시작","벚꽃 축제","싱그러운 정원","청량한 초여름","트로피컬 바캉스","여름밤 축제","황금빛 가을","할로윈","깊어가는 가을","크리스마스"];
+  const NAMES = ["설원의 겨울","로맨틱 발렌타인","봄의 시작","벚꽃 축제","싱그러운 정원","청량한 초여름","트로피컬 바캉스","여름밤 축제","황금빛 가을","붉은 단풍","깊어가는 가을","크리스마스"];
   const PALETTES = Object.freeze({
     "1":{"bg":"#eaf4fc","panel":"#ffffff","soft":"#e8f1fa","text":"#213c53","muted":"#4a6175","line":"#bacfdf","accent":"#285c85","onAccent":"#ffffff","glowA":"#bbdbefaa","glowB":"#dbe9f6aa","dark":false,"decor":["❄️","☃️","✦"],"icon":"❄️"},
     "2":{"bg":"#fff1f5","panel":"#ffffff","soft":"#ffecf2","text":"#51293b","muted":"#745364","line":"#e8c7d4","accent":"#8b3558","onAccent":"#ffffff","glowA":"#f6bbcf99","glowB":"#f7d7e299","dark":false,"decor":["💝","💕","🎀"],"icon":"💕"},
@@ -15,7 +15,7 @@
     "7":{"bg":"#edfafa","panel":"#ffffff","soft":"#e2f5f2","text":"#1f474a","muted":"#456c70","line":"#b6dcd6","accent":"#1f6c72","onAccent":"#ffffff","glowA":"#b4e9e399","glowB":"#ffe2c599","dark":false,"decor":["🏖️","🌴","🐚"],"icon":"🏖️"},
     "8":{"bg":"#101b31","panel":"#1a2b47","soft":"#243856","text":"#f5f8ff","muted":"#d2ddeb","line":"#4b6380","accent":"#f5ce83","onAccent":"#242b39","glowA":"#6c5db855","glowB":"#375c9c55","dark":true,"decor":["🎆","🌙","✦"],"icon":"🎆"},
     "9":{"bg":"#fff8eb","panel":"#ffffff","soft":"#fbefd8","text":"#4c3725","muted":"#715940","line":"#e3d2af","accent":"#795125","onAccent":"#ffffff","glowA":"#f1d79c99","glowB":"#f6e1c099","dark":false,"decor":["🌾","🍂","☀️"],"icon":"🌾"},
-    "10":{"bg":"#191526","panel":"#282038","soft":"#372c49","text":"#fcf7ff","muted":"#e1d2ed","line":"#695679","accent":"#ffc07d","onAccent":"#352235","glowA":"#7a488155","glowB":"#b56c2c55","dark":true,"decor":["🎃","👻","🦇"],"icon":"🎃"},
+    "10":{"bg":"#fff7e7","panel":"#ffffff","soft":"#fbe9d0","text":"#472d22","muted":"#70503f","line":"#e2c5a0","accent":"#8c3e2a","onAccent":"#ffffff","glowA":"#eebc7c99","glowB":"#dba16a77","dark":false,"decor":["🍁","🍂","🍁"],"icon":"🍁"},
     "11":{"bg":"#fff6ec","panel":"#ffffff","soft":"#f9eadc","text":"#503625","muted":"#745643","line":"#e5ccba","accent":"#844732","onAccent":"#ffffff","glowA":"#e9c6a899","glowB":"#eac59c99","dark":false,"decor":["🍁","🍂","☕"],"icon":"🍁"},
     "12":{"bg":"#112820","panel":"#1b382c","soft":"#284738","text":"#f7fff9","muted":"#d3e7d9","line":"#4e7562","accent":"#ffdb96","onAccent":"#294334","glowA":"#3b8a6555","glowB":"#ba594e55","dark":true,"decor":["🎄","❄️","🎁"],"icon":"🎄"}
   });
