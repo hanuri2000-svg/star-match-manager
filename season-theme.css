@@ -1,4 +1,4 @@
-/* 도랑이꺼야 월별 시즌 테마 v5.23.4. 기존 화면의 배치와 기록을 변경하지 않는다. */
+/* 도랑이꺼야 월별 시즌 테마 v5.23.5. 기존 화면의 배치와 기록을 변경하지 않는다. */
 html[data-season-theme] {
   --season-bg: #f4f0f7;
   --season-panel: #ffffff;
@@ -221,7 +221,7 @@ html[data-season-theme] body:not(.broadcast-only) .race-Z {
 }
 
 
-/* v5.23.4 · 확실히 보이는 계절 오브젝트와 월별 캐릭터 */
+/* v5.23.5 · 확실히 보이는 계절 오브젝트와 월별 캐릭터 */
 html[data-season-theme] body:not(.broadcast-only) .head {
   border-left:5px solid var(--season-accent)!important;
   background:
@@ -316,7 +316,7 @@ html[data-season-effect="off"] .season-scene{display:none!important}
   html[data-season-theme] .season-scene span {animation:none!important}
 }
 
-/* v5.23.4 · Local seasonal landscape, loaded only for the active month. */
+/* v5.23.5 · Local seasonal landscape, loaded only for the active month. */
 html[data-season-theme] body:not(.broadcast-only) #app > .head{
   background-image:linear-gradient(90deg,var(--season-banner-veil),transparent 42%,var(--season-banner-veil)),var(--season-banner-image)!important;
   background-color:var(--season-soft)!important;
@@ -340,4 +340,46 @@ html[data-season-theme] #app > .head .season-hero-badge{
 }
 html[data-season-effect="off"] body:not(.broadcast-only) #app > .head{
   background-image:linear-gradient(145deg,var(--season-panel),var(--season-soft))!important;
+}
+
+/* v5.23.5 · Dark calendar surfaces and their text must switch together. */
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-grid .calendar-day:nth-child(7n+1):not(.outside):not(.today):not(.selected):not(.holiday):not(.dorang-special){background:#392b3b!important}
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-grid .calendar-day:nth-child(7n):not(.outside):not(.today):not(.selected):not(.holiday):not(.dorang-special){background:#213e50!important}
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-grid .calendar-day:nth-child(7n+1) .calendar-number{
+  color:#ffb9ce!important;-webkit-text-fill-color:#ffb9ce!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-grid .calendar-day:nth-child(7n) .calendar-number{
+  color:#b9dcff!important;-webkit-text-fill-color:#b9dcff!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .calendar-holiday{
+  color:#ffb9ce!important;-webkit-text-fill-color:#ffb9ce!important;
+}
+html[data-season-theme] body:not(.broadcast-only) .schedule-detail-head h3,
+html[data-season-theme] body:not(.broadcast-only) .agenda-date b,
+html[data-season-theme] body:not(.broadcast-only) .schedule-day-list>strong,
+html[data-season-theme] body:not(.broadcast-only) .schedule-shell label{
+  color:var(--season-text)!important;-webkit-text-fill-color:var(--season-text)!important;
+}
+html[data-season-theme] body:not(.broadcast-only) .schedule-detail-head>span,
+html[data-season-theme] body:not(.broadcast-only) .agenda-date small,
+html[data-season-theme] body:not(.broadcast-only) .schedule-empty,
+html[data-season-theme] body:not(.broadcast-only) .agenda-arrow,
+html[data-season-theme] body:not(.broadcast-only) .calendar-more{
+  color:var(--season-muted)!important;-webkit-text-fill-color:var(--season-muted)!important;
+}
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda-row,
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda-row.active,
+html[data-season-theme] body:not(.broadcast-only) .schedule-agenda-row:hover{
+  background:var(--season-soft)!important;border-color:var(--season-line)!important;
+}
+html[data-season-theme="dark"] body:not(.broadcast-only) .schedule-shell .eyebrow{
+  color:var(--season-accent)!important;-webkit-text-fill-color:var(--season-accent)!important;
+}
+/* Event chips keep their light semantic colors and need dark text. */
+html[data-season-theme] body:not(.broadcast-only) .calendar-event,
+html[data-season-theme] body:not(.broadcast-only) .agenda-user,
+html[data-season-theme] body:not(.broadcast-only) .agenda-user b,
+html[data-season-theme] body:not(.broadcast-only) .agenda-user i,
+html[data-season-theme] body:not(.broadcast-only) .agenda-user small{
+  color:#45354f!important;-webkit-text-fill-color:#45354f!important;
 }
