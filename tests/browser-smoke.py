@@ -66,7 +66,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
         tabs = await page.locator('.app-tabs [data-tab]').evaluate_all("els => els.map(el => el.dataset.tab)")
         for tab_name in tabs:
             tab = page.locator(f'.app-tabs [data-tab="{tab_name}"]')
-            await tab.scroll_into_view_if_needed()
+            # Locator.click already scrolls and reacquires nodes after a render.
+            # A separate scroll resolves an ElementHandle that can detach.
             await tab.click()
             assert await page.locator(".season-hero-badge").count() == 0
         await page.locator('.app-tabs [data-tab="schedule"]').click()
@@ -102,7 +103,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
         # Check actual scroll reachability, including mobile visual viewports;
         # a full-page screenshot alone cannot prove that lower controls work.
         save = page.locator('.schedule-save')
-        await save.scroll_into_view_if_needed()
+        await save.hover()  # Auto-scroll with locator retry; do not submit data.
         reachability = await save.evaluate("""button => {
           const r=button.getBoundingClientRect();
           const x=r.left+r.width/2,y=r.top+r.height/2;
