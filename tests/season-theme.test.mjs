@@ -5,6 +5,8 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const read = path => fs.readFileSync(new URL(path,root),"utf8");
 const html = read("index.html");
+const version = JSON.parse(read("version.json")).version;
+assert.match(version, /^\d+\.\d+\.\d+$/, "version.json에 유효한 앱 버전이 있어야 한다");
 const css = read("season-theme.css");
 const engine = read("season-theme.js");
 const palettesMatch = engine.match(/const PALETTES = Object\.freeze\((\{[\s\S]*?\})\);/);
@@ -42,8 +44,8 @@ test("KST 월별 전환과 수동/원본 전환을 지원한다",()=>{
   assert.match(engine,/dorang-season-theme\.v1/);
 });
 test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
-  assert.match(html,/season-theme\.css\?v=5\.23\.6/);
-  assert.match(html,/season-theme\.js\?v=5\.23\.6/);
+  assert.ok(html.includes(`<link rel="stylesheet" href="./season-theme.css?v=${version}">`), "시즌 CSS 버전 불일치");
+  assert.ok(html.includes(`<script src="./season-theme.js?v=${version}"></script>`), "시즌 JS 버전 불일치");
   for(const path of ["spwn-native.js","prediction-native.js"]){
     assert.match(read(path),/applySeasonThemeToShadow\(root\)/,path+" 테마 연결 누락");
   }
@@ -52,11 +54,12 @@ test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
   assert.match(css,/\.calendar-day/);
 });
 test("기존 버전 검사와 초기 가벼운 로딩 구조를 유지한다",()=>{
-  assert.match(html,/const APP_VERSION='5\.23\.6'/);
-  assert.match(html,/const RELEASE_VERSION='5\.23\.6'/);
+  assert.equal(html.match(/const APP_VERSION=['"]([^'"]+)['"]/)?.[1],version);
+  assert.equal(html.match(/const RELEASE_VERSION=['"]([^'"]+)['"]/)?.[1],version);
   assert.ok(Buffer.byteLength(html)<300000);
-  assert.match(html,/script async src="\.\/spwn-native\.js\?v=5\.23\.6"/);
-  assert.match(html,/script async src="\.\/prediction-native\.js\?v=5\.23\.6"/);
+  for(const path of ["spwn-native.js","prediction-native.js"]){
+    assert.ok(html.includes(`<script async src="./${path}?v=${version}"></script>`),path+" 비동기 로딩 또는 버전 불일치");
+  }
 });
 
 test("10월 단풍, 12월 크리스마스 테마가 유지된다",()=>{
@@ -98,4 +101,9 @@ test('어두운 테마의 주말·공휴일 날짜는 기본/선택 배경에서
       for(const bg of [weekend,p.panel,p.soft])assert.ok(contrast(text,bg)>=4.5,`${month}월 ${text}/${bg}`);
     }
   }
+});
+
+test("아이패드 터치 화면에서 헤더 크기와 문서 스크롤을 유지한다",()=>{
+  assert.match(html,/#app > \.head,body\.app-fit-screen #app > \.head\{\s*height:auto!important;min-height:142px!important;flex-shrink:0/);
+  assert.match(html,/@media\(min-width:961px\) and \(hover:none\) and \(pointer:coarse\)\{\s*html,body\{height:auto!important;overflow:auto!important\}\s*body\.app-fit-screen #app\{height:auto;max-height:none;min-height:100svh;overflow:visible\}/);
 });
