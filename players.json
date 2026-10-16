@@ -3049,7 +3049,29 @@
       "active": true,
       "eloId": 763,
       "soopId": "",
-      "thumbUrl": "players/763_88f7911a.jpg?v=1791994012"
+      "thumbUrl": "players/763_88f7911a.jpg?v=1791994012",
+      "eloIdentityHistory": [
+        {
+          "previous": {
+            "name": "세월",
+            "tier": "7티어",
+            "tierLabel": "7티어",
+            "race": "T",
+            "aliases": [],
+            "active": true,
+            "eloId": 6029,
+            "soopId": "",
+            "thumbUrl": "players/6029.jpg?v=1788008345"
+          },
+          "canonicalId": 763,
+          "verifiedOn": "2026-10-16",
+          "evidence": [
+            "https://eloboard.com/players/6029",
+            "https://eloboard.com/players/763?as=T"
+          ],
+          "reason": "Official old profile redirects to 763; Terran view retains 561 matches (177 wins, 384 losses)."
+        }
+      ]
     },
     {
       "name": "단비송",
