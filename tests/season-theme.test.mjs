@@ -83,9 +83,10 @@ test("9~11월의 테마는 각각 황금·단풍·버건디로 차별화한다",
   assert.notEqual(palettes["9"].bg,palettes["10"].bg);
   assert.notEqual(palettes["10"].bg,palettes["11"].bg);
 });
-test("오브젝트를 헤더·달력·오늘 요약에 표시하고 탭 리렌더를 감지한다",()=>{
+test("달력·오늘 요약 장식을 유지하고 월별 안내 카드는 생성하지 않는다",()=>{
   assert.match(engine,/renderSeasonDecorations\(\)/);
-  assert.match(engine,/season-hero-badge/);
+  assert.match(engine,/if\(oldHero\)oldHero.remove\(\)/);
+  assert.doesNotMatch(engine,/badge.className="season-hero-badge"/);
   assert.match(engine,/season-calendar-symbol/);
   assert.match(engine,/new MutationObserver\(\(\)=>\{installTrigger\(\);renderSeasonDecorations\(\)\}\)/);
   assert.match(css,/today-summary-card::after/);

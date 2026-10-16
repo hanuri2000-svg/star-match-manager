@@ -158,7 +158,7 @@
     dialog.querySelector("[data-season-mode]").focus();
   }
 
-  /* 오브젝트는 배경에만 숨기지 않고 실제 헤더·달력 제목에 표시한다. */
+  /* 월별 안내 카드는 표시하지 않고 달력 장식만 유지한다. */
   function renderSeasonDecorations(){
     if(new URLSearchParams(location.search).get("broadcast")==="1")return;
     const month = root.dataset.seasonMonth;
@@ -170,29 +170,7 @@
       if(oldCalendar)oldCalendar.remove();
       return;
     }
-    const title=document.querySelector(".head > div:first-child");
-    if(title){
-      let badge=title.querySelector(".season-hero-badge");
-      if(!badge){
-        badge=document.createElement("div");
-        badge.className="season-hero-badge";
-        badge.setAttribute("aria-label","현재 시즌 테마");
-        const subtitle=title.querySelector(".sub");
-        if(subtitle)subtitle.insertAdjacentElement("afterend",badge);
-        else title.appendChild(badge);
-      }
-      const signature=month+"-"+p.icon;
-      if(badge.dataset.signature!==signature){
-        badge.dataset.signature=signature;
-        badge.replaceChildren();
-        const symbol=document.createElement("span");
-        symbol.className="season-hero-symbol";symbol.textContent=p.decor[0];
-        const content=document.createElement("span");content.className="season-hero-label";
-        const b=document.createElement("strong");b.textContent=Number(month)+"월 · "+NAMES[Number(month)-1];
-        const aside=document.createElement("small");aside.textContent=p.decor.join("  ");
-        content.append(b,aside);badge.append(symbol,content);
-      }
-    }
+    if(oldHero)oldHero.remove();
     const calendarTitle=document.querySelector(".schedule-toolbar h2");
     if(calendarTitle){
       let mark=calendarTitle.querySelector(".season-calendar-symbol");
