@@ -134,3 +134,59 @@ for (const scenario of [
     });
   });
 }
+
+for (const scenario of [
+  { name: 'normalized same-name replacement', change: (p, o) => { o[0].name = ' PLAYER-0 '; o[0].player_id = 999; } },
+  { name: 'inactive same-name replacement', change: (p, o) => { p[0].active = false; o[0].player_id = 999; } },
+  { name: 'late identity conflict after earlier valid changes', change: (p, o) => { o[0].race = 'P'; o[299].player_id = 999; } }
+]) {
+  test(`${scenario.name} preserves the complete DB on failure`, async () => {
+    await withSyncFixture(scenario.change, async ({ run, read, before }) => {
+      assert.throws(run, error => /identity conflict/.test(String(error.stderr)));
+      assert.equal(await read(), before);
+    });
+  });
+}
+
+test('known IDs keep separate metadata when local players share a name', async () => {
+  await withSyncFixture((players, official) => {
+    players[1].name = players[0].name;
+    official[1].name = 'renamed second player';
+  }, async ({ run, read }) => {
+    run();
+    const result = JSON.parse(await read()).players;
+    assert.equal(result.find(p => p.eloId === 1).soopId, 'soop-0');
+    assert.equal(result.find(p => p.eloId === 2).soopId, 'soop-1');
+    assert.equal(result.find(p => p.eloId === 2).name, 'renamed second player');
+  });
+});
+
+test('verified Sewol identity history and custom metadata survive repeated canonical-ID syncs', async () => {
+  const db = JSON.parse(await readFile(new URL('../players.json', import.meta.url), 'utf8'));
+  const canonical = db.players.find(p => p.eloId === 763);
+  assert.equal(db.players.some(p => p.eloId === 6029), false);
+  assert.equal(canonical.name, '세월');
+  const history = canonical.eloIdentityHistory;
+  assert.equal(history[0].previous.eloId, 6029);
+  assert.equal(history[0].previous.race, 'T');
+  assert.equal(history[0].previous.thumbUrl, 'players/6029.jpg?v=1788008345');
+  assert.equal(history[0].canonicalId, 763);
+  for (const key of ['name', 'tier', 'tierLabel', 'aliases', 'soopId', 'active']) {
+    assert.deepEqual(canonical[key], history[0].previous[key]);
+  }
+  await withSyncFixture((players, official) => {
+    players[0] = { ...canonical, soopId: 'local-account', aliases: ['local alias'], notes: { keep: true } };
+    official[0] = { player_id: 763, name: '세월', race: 'P', thumb_url: 'new-photo.jpg' };
+  }, async ({ run, read }) => {
+    run();
+    const first = await read();
+    const p = JSON.parse(first).players.find(p => p.eloId === 763);
+    assert.deepEqual(p.eloIdentityHistory, history);
+    assert.deepEqual(p.notes, { keep: true });
+    assert.deepEqual(p.aliases, ['local alias']);
+    assert.equal(p.soopId, 'local-account');
+    assert.equal(p.thumbUrl, 'new-photo.jpg');
+    run();
+    assert.equal(await read(), first);
+  });
+});
