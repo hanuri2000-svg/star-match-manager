@@ -89,12 +89,47 @@ async function main() {
   const source = parseSourceMeta(html);
   const official = parsePlayers(html);
   const db = JSON.parse(await readFile(PLAYER_FILE, 'utf8'));
-  const currentById = new Map(db.players.map(player => [Number(player.eloId), player]));
-  const currentByName = new Map(db.players.map(player => [player.name, player]));
+  // Stable IDs identify players. A shared name must never migrate an identity.
+  const validId = value => typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+  const nameKey = value => typeof value === 'string' ? value.normalize('NFKC').trim().toLowerCase() : '';
+  const currentById = new Map();
+  const currentByName = new Map();
+  for (const player of db.players) {
+    const key = nameKey(player.name);
+    if (!key) throw new Error('Unsafe player DB: empty name');
+    const id = player.eloId;
+    if (id != null && id !== '') {
+      if (!validId(id) || currentById.has(id)) throw new Error(`Unsafe player DB: invalid or duplicate ID ${id}`);
+      currentById.set(id, player);
+    }
+    currentByName.set(key, [...(currentByName.get(key) || []), player]);
+  }
+  const officialIds = new Set();
+  const officialNames = new Set();
+  for (const item of official) {
+    const key = nameKey(item.name);
+    if (!validId(item.id) || officialIds.has(item.id)) throw new Error(`Unsafe EloBoard ID: ${item.id}`);
+    if (!key || officialNames.has(key)) throw new Error(`Unsafe EloBoard name: ${item.name}`);
+    if (typeof item.tier !== 'string' || !item.tier.trim()) throw new Error(`Unsafe EloBoard tier: ${item.name}`);
+    officialIds.add(item.id);
+    officialNames.add(key);
+  }
   const used = new Set();
 
   const active = official.map(item => {
-    const found = currentById.get(item.id) || currentByName.get(item.name);
+    let found = currentById.get(item.id);
+    const sameName = currentByName.get(nameKey(item.name)) || [];
+    if (!found && sameName.length) {
+      // Only a unique legacy record without any ID may acquire an official ID.
+      if (sameName.length !== 1 || (sameName[0].eloId != null && sameName[0].eloId !== '')) {
+        throw new Error(`Player identity conflict: ${item.name}, existing IDs [${sameName.map(p => p.eloId).join(', ')}], incoming ID ${item.id}. Verify identities before syncing.`);
+      }
+      found = sameName[0];
+    }
+    if (!found && !['T', 'Z', 'P'].includes(item.race)) {
+      throw new Error(`Unsafe new player race: ${item.name} (${item.id})`);
+    }
+    if (found && used.has(found)) throw new Error(`Player matched twice: ${item.name}`);
     if (!found) {
       return {
         name: item.name, tier: item.tier, tierLabel: item.tier === '유스' ? '베이비' : item.tier,
@@ -112,6 +147,7 @@ async function main() {
     player.tierLabel = item.tier === '유스' ? '베이비' : item.tier;
     // Missing or unknown source values must not erase a known race.
     if (['T', 'Z', 'P'].includes(item.race)) player.race = item.race;
+    if (!['T', 'Z', 'P'].includes(player.race)) throw new Error(`Unsafe player race: ${item.name} (${item.id})`);
     player.active = true;
     player.eloId = item.id;
     if (item.thumbUrl) player.thumbUrl = item.thumbUrl;
@@ -119,7 +155,7 @@ async function main() {
   });
 
   const inactive = db.players
-    .filter(player => !used.has(player) && !official.some(item => item.id === Number(player.eloId) || item.name === player.name))
+    .filter(player => !used.has(player))
     .map(player => ({ ...player, active: false }));
 
   const nextSource = { name: '스타CK 밸런스 티어표', version: source.version, date: source.date };
