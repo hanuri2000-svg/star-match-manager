@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-13",
+  "updatedAt": "2026-10-16",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -3579,7 +3579,7 @@
       "active": true,
       "eloId": 841,
       "soopId": "zinsim",
-      "thumbUrl": "players/841.jpg?v=1787122152"
+      "thumbUrl": "players/841_ea9c48ca.jpg?v=1792106220"
     },
     {
       "name": "하윤",
