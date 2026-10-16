@@ -1263,6 +1263,9 @@ window.applyIntegratedUpdate=applyIntegratedUpdate;
 /* Keep every navigation button reachable at intermediate widths and zoom levels. */
 #app > .app-tabs{min-width:0;max-width:100%;height:auto;overflow-x:auto}
 #app > .app-tabs button{flex:1 0 auto;white-space:nowrap}
+body.app-fit-screen #app .schedule-toolbar{
+  height:auto;min-height:54px;flex-wrap:wrap;gap:8px;
+}
 @media(min-width:961px){
   #app > .head{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,300px) minmax(250px,1fr);gap:16px}
 }

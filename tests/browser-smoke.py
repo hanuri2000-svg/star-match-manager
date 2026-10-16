@@ -90,8 +90,32 @@ async def check_viewport(browser, origin, label, width, height, touch):
             await page.keyboard.press('Escape')
             assert await page.locator('.season-hero-badge').count() == 0
         await page.screenshot(path=str(OUTPUT / f'{label}.png'), full_page=True)
+        toolbar_geometry = await page.locator('.schedule-toolbar').evaluate("""toolbar => {
+          const r=toolbar.getBoundingClientRect();
+          return [...toolbar.querySelectorAll('button')].map(button => {
+            const b=button.getBoundingClientRect();
+            return {text:button.textContent,inside:b.top>=r.top && b.bottom<=r.bottom,
+              left:b.left,right:b.right};
+          });
+        }""")
+        assert all(button['inside'] for button in toolbar_geometry), toolbar_geometry
+        # Check actual scroll reachability, including mobile visual viewports;
+        # a full-page screenshot alone cannot prove that lower controls work.
+        save = page.locator('.schedule-save')
+        await save.scroll_into_view_if_needed()
+        reachability = await save.evaluate("""button => {
+          const r=button.getBoundingClientRect();
+          const x=r.left+r.width/2,y=r.top+r.height/2;
+          const hit=document.elementFromPoint(x,y);
+          return {top:r.top,bottom:r.bottom,height:innerHeight,
+            reachable:hit===button || button.contains(hit)};
+        }""")
+        assert reachability['reachable'], reachability
+        await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
         assert not errors, errors
-        return {"viewport": label, "geometry": geometry, "tabs": tabs, "months": 12, "pageErrors": errors}
+        return {"viewport": label, "geometry": geometry, "tabs": tabs, "months": 12,
+                "calendarButtons": toolbar_geometry, "saveReachability": reachability,
+                "pageErrors": errors}
     except Exception:
         await page.screenshot(path=str(OUTPUT / f'{label}-failure.png'), full_page=True)
         raise

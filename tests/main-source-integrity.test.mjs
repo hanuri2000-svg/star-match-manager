@@ -32,5 +32,6 @@ test('every inline script and local script dependency parses completely', () => 
 test('navigation can scroll and short desktop windows use document scrolling', () => {
   assert.match(html, /#app > \.app-tabs\{[^}]*overflow-x:auto/);
   assert.match(html, /#app > \.app-tabs button\{[^}]*white-space:nowrap/);
+  assert.match(html, /body\.app-fit-screen #app \.schedule-toolbar\{\s*height:auto;min-height:54px;flex-wrap:wrap/);
   assert.match(html, /@media\(min-width:961px\) and \(max-height:700px\)\{\s*html,body\{height:auto!important;overflow:auto!important\}\s*body\.app-fit-screen #app\{height:auto;max-height:none;min-height:100svh;overflow:visible\}/);
 });
