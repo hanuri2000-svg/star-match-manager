@@ -2271,6 +2271,17 @@
       "thumbUrl": "players/591.jpg?v=1787122132"
     },
     {
+      "name": "렘레미",
+      "tier": "4티어",
+      "tierLabel": "4티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 199,
+      "soopId": "",
+      "thumbUrl": "players/199.jpg?v=1787122103"
+    },
+    {
       "name": "내가먼지",
       "tier": "5티어",
       "tierLabel": "5티어",
@@ -3033,12 +3044,12 @@
       "name": "세월",
       "tier": "7티어",
       "tierLabel": "7티어",
-      "race": "T",
+      "race": "P",
       "aliases": [],
       "active": true,
-      "eloId": 6029,
+      "eloId": 763,
       "soopId": "",
-      "thumbUrl": "players/6029.jpg?v=1788008345"
+      "thumbUrl": "players/763_88f7911a.jpg?v=1791994012"
     },
     {
       "name": "단비송",
