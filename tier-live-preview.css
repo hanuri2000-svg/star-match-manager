@@ -1,0 +1,102 @@
+/* v5.23.10 - read-only SOOP tier-table live preview. */
+.tier-live-preview[hidden] { display: none !important; }
+.tier-live-preview {
+  position: fixed;
+  z-index: 999999;
+  width: min(440px, calc(100vw - 20px));
+  overflow: hidden;
+  border: 1px solid #d6bce5;
+  border-radius: 16px;
+  background: #fffaff;
+  color: #30223c;
+  box-shadow: 0 22px 64px rgba(26, 15, 48, .29);
+  font-family: Pretendard, "Noto Sans KR", Arial, sans-serif;
+  animation: tier-live-preview-appear 150ms ease-out;
+}
+.tier-live-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 45px;
+  padding: 9px 12px;
+  background: linear-gradient(110deg, #f6ebff, #fff5fb);
+}
+.tier-live-preview-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 900;
+  color: #362746;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tier-live-preview-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 950;
+  color: #c51c44;
+}
+.tier-live-preview-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #dfcee7;
+  border-radius: 9px;
+  background: #fff;
+  color: #523c5b;
+  font-size: 20px;
+  cursor: pointer;
+}
+.tier-live-preview-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  min-height: 192px;
+  background: #101018;
+}
+.tier-live-preview-video iframe {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.tier-live-preview-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fffaff;
+  color: #5b4d65;
+  font-size: 11px;
+  font-weight: 750;
+}
+.tier-live-preview-foot > span { flex: 1; min-width: 0; }
+.tier-live-preview-open {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: #6f5194;
+  color: #fff !important;
+  font-size: 11px;
+  font-weight: 900;
+  text-decoration: none;
+}
+@keyframes tier-live-preview-appear {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 560px) {
+  .tier-live-preview-head { padding: 8px 10px; }
+  .tier-live-preview-foot { padding: 8px 10px; font-size: 10px; }
+  .tier-live-preview-open { padding: 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tier-live-preview { animation: none; }
+}
