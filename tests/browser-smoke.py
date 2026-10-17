@@ -70,6 +70,26 @@ async def check_viewport(browser, origin, label, width, height, touch):
             # A separate scroll resolves an ElementHandle that can detach.
             await tab.click()
             assert await page.locator(".season-hero-badge").count() == 0
+            if tab_name == 'tier':
+                card = page.locator('.native-tier-player').first
+                await card.wait_for()
+                profile_layout = await card.evaluate("""card => {
+                  const a=card.querySelector('.native-avatar-link').getBoundingClientRect();
+                  const info=card.querySelector('.native-tier-identity').getBoundingClientRect();
+                  const badge=card.querySelector('.native-live')?.getBoundingClientRect();
+                  const parent=card.getBoundingClientRect();
+                  return {avatar:a.width, avatarHeight:a.height,
+                    identityRight:info.right, cardRight:parent.right,
+                    badgeBelow:badge ? badge.top >= info.bottom-2 : true,
+                    identityRightOfProfile:info.left >= a.right-2,
+                    columnCount:getComputedStyle(card).gridTemplateColumns.split(' ').length};
+                }""")
+                assert 59 <= profile_layout['avatar'] <= 61, profile_layout
+                assert 59 <= profile_layout['avatarHeight'] <= 61, profile_layout
+                assert profile_layout['columnCount'] == 2, profile_layout
+                assert profile_layout['identityRightOfProfile'], profile_layout
+                assert profile_layout['identityRight'] <= profile_layout['cardRight'] + 1, profile_layout
+                assert profile_layout['badgeBelow'], profile_layout
         await page.locator('.app-tabs [data-tab="schedule"]').click()
 
         # Change each month through the real controls, including repeated opens.

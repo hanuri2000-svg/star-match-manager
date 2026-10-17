@@ -31,11 +31,13 @@ test('only trusted SOOP iframe origins are accepted, and the viewer is muted', (
   assert.match(css, /max-width: 560px/);
 });
 
-test('tier player name and LIVE badge stay aligned in a single row', () => {
-  assert.match(html, /grid-template-columns:32px 25px minmax\(0,1fr\) max-content!important/);
-  assert.match(html, /\.native-tier-player>\.native-live\{grid-column:4!important;grid-row:1!important/);
-  assert.match(html, /\.native-tier-player>strong\{color:#2f2638!important;grid-column:3;grid-row:1/);
-  assert.match(html, /text-overflow:ellipsis!important;white-space:nowrap!important/);
-  assert.doesNotMatch(html, /\.native-tier-player>\.native-live\{grid-column:2\/-1/);
-  assert.match(html, /@media\(max-width:420px\)\{\.native-tier-players\{grid-template-columns:minmax\(0,1fr\)!important\}\}/);
+test('live preview remains compatible with the two-row profile card layout', () => {
+  const layout = read('tier-player-layout.css');
+  assert.ok(html.includes('<link rel="stylesheet" href="./tier-player-layout.css?v=' + version + '">'));
+  assert.match(html, /class="native-tier-identity"/);
+  assert.match(html, /\$\{live\?'is-live':''\}/);
+  assert.match(layout, /grid-template-columns: 60px minmax\(0, 1fr\) !important/);
+  assert.match(layout, /grid-row: 1 \/ span 2 !important/);
+  assert.match(layout, /grid-row: 2 !important/);
+  assert.match(layout, /grid-template-columns: minmax\(0, 1fr\) !important/);
 });

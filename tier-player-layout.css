@@ -1,0 +1,81 @@
+/* v5.23.12 - Larger profile + right-hand identity/LIVE, one player per row. */
+html body .native-tier-panel .native-tier-players,
+html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tier-players {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 5px !important;
+  padding: 7px !important;
+}
+html body .native-tier-panel .native-tier-player,
+html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tier-player {
+  display: grid !important;
+  grid-template-columns: 60px minmax(0, 1fr) !important;
+  grid-template-rows: minmax(28px, auto) minmax(26px, auto) !important;
+  column-gap: 10px !important;
+  row-gap: 2px !important;
+  align-items: center !important;
+  min-height: 78px !important;
+  min-width: 0 !important;
+  padding: 8px 10px !important;
+  border: 1px solid rgba(104, 83, 126, .10);
+  border-radius: 10px;
+}
+html body .native-tier-panel .native-tier-player > .native-avatar-link {
+  grid-column: 1 !important;
+  grid-row: 1 / span 2 !important;
+  width: 60px !important;
+  height: 60px !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+html body .native-tier-panel .native-tier-player .native-avatar {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+html body .native-tier-panel .native-tier-player .native-avatar-fallback {
+  font-size: 12px !important;
+}
+html body .native-tier-panel .native-tier-player > .native-tier-identity {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  max-width: 100%;
+}
+html body .native-tier-panel .native-tier-player > .native-tier-identity > .native-race {
+  flex: 0 0 23px !important;
+  width: 23px !important;
+  height: 23px !important;
+}
+html body .native-tier-panel .native-tier-player > .native-tier-identity > strong {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  color: #2f2638 !important;
+}
+html body .native-tier-panel .native-tier-player > .native-live,
+html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tier-player > .native-live {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  justify-self: start !important;
+  align-self: center !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+html body .native-tier-panel .native-tier-player:not(.is-live) > .native-tier-identity {
+  grid-row: 1 / span 2 !important;
+  align-self: center !important;
+}
+@media(max-width:560px) {
+  html body .native-tier-panel .native-tier-player {
+    padding: 7px 9px !important;
+  }
+}
