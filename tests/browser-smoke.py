@@ -84,8 +84,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
                     identityRightOfProfile:info.left >= a.right-2,
                     columnCount:getComputedStyle(card).gridTemplateColumns.split(' ').length};
                 }""")
-                assert 59 <= profile_layout['avatar'] <= 61, profile_layout
-                assert 59 <= profile_layout['avatarHeight'] <= 61, profile_layout
+                assert 71 <= profile_layout['avatar'] <= 73, profile_layout
+                assert 71 <= profile_layout['avatarHeight'] <= 73, profile_layout
                 assert profile_layout['columnCount'] == 2, profile_layout
                 assert profile_layout['identityRightOfProfile'], profile_layout
                 assert profile_layout['identityRight'] <= profile_layout['cardRight'] + 1, profile_layout

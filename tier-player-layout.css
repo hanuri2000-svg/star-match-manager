@@ -1,4 +1,4 @@
-/* v5.23.12 - Larger profile + right-hand identity/LIVE, one player per row. */
+/* v5.23.13 - Larger profile + right-hand identity/LIVE, one player per row. */
 html body .native-tier-panel .native-tier-players,
 html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tier-players {
   display: grid !important;
@@ -9,12 +9,12 @@ html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tie
 html body .native-tier-panel .native-tier-player,
 html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tier-player {
   display: grid !important;
-  grid-template-columns: 60px minmax(0, 1fr) !important;
+  grid-template-columns: 72px minmax(0, 1fr) !important;
   grid-template-rows: minmax(28px, auto) minmax(26px, auto) !important;
   column-gap: 10px !important;
   row-gap: 2px !important;
   align-items: center !important;
-  min-height: 78px !important;
+  min-height: 90px !important;
   min-width: 0 !important;
   padding: 8px 10px !important;
   border: 1px solid rgba(104, 83, 126, .10);
@@ -23,8 +23,8 @@ html[data-season-theme] body:not(.broadcast-only) .native-tier-panel .native-tie
 html body .native-tier-panel .native-tier-player > .native-avatar-link {
   grid-column: 1 !important;
   grid-row: 1 / span 2 !important;
-  width: 60px !important;
-  height: 60px !important;
+  width: 72px !important;
+  height: 72px !important;
   align-self: center !important;
   justify-self: center !important;
 }

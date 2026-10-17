@@ -36,7 +36,7 @@ test('live preview remains compatible with the two-row profile card layout', () 
   assert.ok(html.includes('<link rel="stylesheet" href="./tier-player-layout.css?v=' + version + '">'));
   assert.match(html, /class="native-tier-identity"/);
   assert.match(html, /\$\{live\?'is-live':''\}/);
-  assert.match(layout, /grid-template-columns: 60px minmax\(0, 1fr\) !important/);
+  assert.match(layout, /grid-template-columns: 72px minmax\(0, 1fr\) !important/);
   assert.match(layout, /grid-row: 1 \/ span 2 !important/);
   assert.match(layout, /grid-row: 2 !important/);
   assert.match(layout, /grid-template-columns: minmax\(0, 1fr\) !important/);
