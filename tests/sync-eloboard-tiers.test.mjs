@@ -45,7 +45,7 @@ test('tier sync preserves known races for invalid values and accepts valid race 
 });
 
 
-async function withSyncFixture(change, check) {
+async function withSyncFixture(change, check, metadata = '<h2>변경사항</h2><span>3.62</span><span>2026-10-16</span>') {
   const dir = await mkdtemp(join(tmpdir(), 'eloboard-identity-test-'));
   try {
     const players = Array.from({ length: 300 }, (_, index) => ({
@@ -57,8 +57,8 @@ async function withSyncFixture(change, check) {
     const sections = Array.from({ length: 15 }, (_, index) => ({
       key: String(index), label: '7티어', players: official.slice(index * 20, index * 20 + 20)
     }));
-    const html = `<h2>변경사항</h2><span>3.62</span><span>2026-10-16</span><script>self.__next_f.push([1,${JSON.stringify(JSON.stringify({ sections }))}])</script>`;
-    const before = JSON.stringify({ players });
+    const html = `${metadata}<script>self.__next_f.push([1,${JSON.stringify(JSON.stringify({ sections }))}])</script>`;
+    const before = JSON.stringify({ source: { name: '스타CK 밸런스 티어표', version: '3.62', date: '2026-10-16' }, players });
     await writeFile(join(dir, 'players.json'), before);
     await writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(html)} });`);
     const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir, stdio: 'pipe' });
@@ -67,6 +67,27 @@ async function withSyncFixture(change, check) {
     await rm(dir, { recursive: true, force: true });
   }
 }
+
+test('new EloBoard page metadata shape syncs complete player data and preserves last-known version', async () => {
+  await withSyncFixture(() => {}, async ({ run, read }) => {
+    run();
+    const result = JSON.parse(await read());
+    assert.equal(result.source.version, '3.62');
+    assert.equal(result.source.date, '2026-10-19');
+    assert.equal(result.players.filter(player => player.active).length, 300);
+  }, '<h3 class="page-meta">최종 갱신</h3><time datetime="2026-10-19">2026-10-19</time>');
+});
+
+test('incomplete EloBoard player list aborts without changing player IDs or custom data', async () => {
+  await withSyncFixture((players, official) => {
+    official.pop();
+    players[0].settings = { favorite: true, color: 'violet' };
+    players[0].aliases = ['preserve-me'];
+  }, async ({ run, read, before }) => {
+    assert.throws(run, error => /Unsafe EloBoard result: 299 players/.test(String(error.stderr)));
+    assert.equal(await read(), before);
+  });
+});
 
 test('same-name ID replacement (Sewol 6029 to 763) aborts without writing anything', async () => {
   await withSyncFixture((players, official) => {
