@@ -105,6 +105,27 @@ test('duplicate EloBoard display names stay separate when IDs are distinct', asy
   });
 });
 
+test('same-name players with separate IDs in official data remain separate', async () => {
+  await withSyncFixture((players, official) => {
+    players[0] = { ...players[0], name: '탱크', aliases: ['old alias'], notes: { keep: true } };
+    official[0] = { ...official[0], name: '탱크' };
+    official[1] = { ...official[1], player_id: 999, name: '탱크', race: 'P' };
+  }, async ({ run, read }) => {
+    run();
+    const result = JSON.parse(await read()).players;
+    const existing = result.find(player => player.eloId === 1);
+    const added = result.find(player => player.eloId === 999);
+    assert.equal(existing.name, '탱크');
+    assert.deepEqual(existing.aliases, ['old alias']);
+    assert.deepEqual(existing.notes, { keep: true });
+    assert.equal(existing.soopId, 'soop-0');
+    assert.equal(added.name, '탱크');
+    assert.equal(added.eloId, 999);
+    assert.equal(added.race, 'P');
+    assert.equal(result.find(player => player.eloId === 2).active, false);
+  });
+});
+
 test('same-name ID replacement (Sewol 6029 to 763) aborts without writing anything', async () => {
   await withSyncFixture((players, official) => {
     players[0] = { ...players[0], name: '세월', eloId: 6029 };
