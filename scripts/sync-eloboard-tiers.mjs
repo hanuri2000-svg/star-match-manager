@@ -141,7 +141,8 @@ async function main() {
     throw new Error(`Unsafe EloBoard coverage: ${retained.length}/${knownActive.length} known active IDs`);
   }
   const used = new Set();
-  const deferred = [];
+  const isKnownRace = race => ['T', 'Z', 'P'].includes(race);
+  const isUndecidedRace = race => race == null || (typeof race === 'string' && ['', '미정'].includes(race.trim()));
 
   const active = official.map(item => {
     let found = currentById.get(item.id);
@@ -162,20 +163,16 @@ async function main() {
         throw new Error(`Player identity conflict: ${item.name}, existing IDs [${sameName.map(p => p.eloId).join(', ')}], incoming ID ${item.id}. Verify identities before syncing.`);
       }
     }
-    if (!found && !['T', 'Z', 'P'].includes(item.race)) {
-      // A genuinely new player may not have selected a race yet. Defer only
-      // explicit unset values; malformed values still invalidate the snapshot.
-      if (item.race == null || (typeof item.race === 'string' && ['', '미정'].includes(item.race.trim()))) {
-        deferred.push({ id: item.id, name: item.name });
-        return null;
-      }
-      throw new Error(`Unsafe new player race: ${item.name} (${item.id})`);
+    // An explicit undecided race is valid roster data, stored consistently as null.
+    // Malformed values may only be ignored when a known local race can be kept.
+    if (!isKnownRace(item.race) && !isUndecidedRace(item.race) && !isKnownRace(found?.race)) {
+      throw new Error(`Unsafe player race: ${item.name} (${item.id})`);
     }
     if (found && used.has(found)) throw new Error(`Player matched twice: ${item.name}`);
     if (!found) {
       return {
         name: item.name, tier: item.tier, tierLabel: item.tier === '유스' ? '베이비' : item.tier,
-        race: item.race, aliases: [], active: true, eloId: item.id, soopId: '',
+        race: isKnownRace(item.race) ? item.race : null, aliases: [], active: true, eloId: item.id, soopId: '',
         thumbUrl: item.thumbUrl
       };
     }
@@ -188,20 +185,17 @@ async function main() {
     player.tier = item.tier;
     player.tierLabel = item.tier === '유스' ? '베이비' : item.tier;
     // Missing or unknown source values must not erase a known race.
-    if (['T', 'Z', 'P'].includes(item.race)) player.race = item.race;
-    if (!['T', 'Z', 'P'].includes(player.race)) throw new Error(`Unsafe player race: ${item.name} (${item.id})`);
+    if (isKnownRace(item.race)) player.race = item.race;
+    else if (!isKnownRace(player.race)) player.race = null;
     player.active = true;
     player.eloId = item.id;
     if (item.thumbUrl) player.thumbUrl = item.thumbUrl;
     return player;
-  }).filter(Boolean);
-  for (const item of deferred) {
-    console.warn(`Deferred new player with undecided race: ${item.name} (${item.id}); will retry next sync`);
-  }
+  });
 
   const inactive = db.players
     .filter(player => !used.has(player))
-    .map(player => deferred.length ? { ...player } : { ...player, active: false });
+    .map(player => ({ ...player, active: false }));
 
   const nextSource = {
     name: '스타CK 밸런스 티어표',
@@ -218,7 +212,7 @@ async function main() {
   const next = { ...db, updatedAt: koreaDate(), source: nextSource, players: nextPlayers };
   const after = JSON.stringify(next, null, 2) + '\n';
   await writeFile(PLAYER_FILE, after);
-  console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} retained outside imported roster, ${deferred.length} deferred`);
+  console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} retained outside imported roster, ${active.filter(player => player.race == null).length} undecided`);
 }
 
 main().catch(error => {

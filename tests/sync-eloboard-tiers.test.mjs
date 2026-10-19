@@ -249,7 +249,7 @@ test('verified Sewol identity history and custom metadata survive repeated canon
 });
 
 for (const race of [null, undefined, '', ' ', '미정']) {
-  test(`undecided new race ${String(race)} is deferred while existing metadata stays intact`, async () => {
+  test(`undecided new race ${String(race)} is registered while existing metadata stays intact`, async () => {
     await withSyncFixture((players, official) => {
       players[0].notes = { keep: true };
       players[0].aliases = ['keep alias'];
@@ -259,8 +259,9 @@ for (const race of [null, undefined, '', ' ', '미정']) {
       run();
       const first = await read();
       const result = JSON.parse(first).players;
-      assert.equal(result.some(p => p.eloId === 999), false);
-      assert.deepEqual(result.find(p => p.eloId === 1), JSON.parse(before).players[0]);
+      assert.equal(result.find(p => p.eloId === 999).race, null);
+      assert.equal(result.find(p => p.eloId === 999).active, true);
+      assert.deepEqual(result.find(p => p.eloId === 1), { ...JSON.parse(before).players[0], active: false });
       assert.equal(result.find(p => p.eloId === 2).race, 'P');
       run();
       assert.equal(await read(), first);
@@ -268,18 +269,22 @@ for (const race of [null, undefined, '', ' ', '미정']) {
   });
 }
 
-test('deferred newcomer is automatically imported when race becomes valid', async () => {
+test('undecided newcomer keeps its ID and is automatically updated when race becomes valid', async () => {
   await withSyncFixture((players, official) => {
     official.push({ player_id: 6627, name: '스깅이', race: null });
   }, async ({ run, read, html, setHtml }) => {
     run();
-    assert.equal(JSON.parse(await read()).players.some(p => p.eloId === 6627), false);
+    const registered = JSON.parse(await read()).players.find(p => p.eloId === 6627);
+    assert.equal(registered.race, null);
+    run();
+    assert.deepEqual(JSON.parse(await read()).players.find(p => p.eloId === 6627), registered);
     const flight = JSON.parse(html.slice(html.indexOf('[1,') + 3, html.indexOf('])</script>')));
     const payload = JSON.parse(flight);
     payload.sections.flatMap(section => section.players).find(player => player.player_id === 6627).race = 'P';
     await setHtml('<h2>변경사항</h2><span>3.62</span><span>2026-10-16</span><script>self.__next_f.push([1,' + JSON.stringify(JSON.stringify(payload)) + '])</script>');
     run();
-    assert.equal(JSON.parse(await read()).players.find(p => p.eloId === 6627)?.race, 'P');
+    const updated = JSON.parse(await read()).players.filter(p => p.eloId === 6627);
+    assert.deepEqual(updated, [{ ...registered, race: 'P' }]);
   });
 });
 
@@ -288,6 +293,17 @@ test('source missing many known active IDs is rejected even above the absolute f
     for (let id = 301; id <= 340; id++) players.push({ name: `player-${id}`, eloId: id, race: 'T', active: true });
   }, async ({ run, read, before }) => {
     assert.throws(run, error => /Unsafe EloBoard coverage/.test(String(error.stderr)));
+    assert.equal(await read(), before);
+  });
+});
+
+test('malformed incoming race for an undecided existing player aborts without writes', async () => {
+  await withSyncFixture((players, official) => {
+    players[1].race = null;
+    official[0].race = 'P';
+    official[1].race = 'bogus';
+  }, async ({ run, read, before }) => {
+    assert.throws(run);
     assert.equal(await read(), before);
   });
 });
