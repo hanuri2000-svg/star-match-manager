@@ -30,7 +30,9 @@ jobs:
       - name: Install pinned browser test tooling
         run: |
           python -m pip install playwright==1.56.0
-          python -m playwright install --with-deps chromium
+          python -m playwright install --with-deps chromium webkit
+      - name: Check iPhone profile navigation in WebKit
+        run: python tests/tier-profile-browser.py
       - name: Check desktop, tablet, and all monthly themes
         run: python tests/browser-smoke.py
       - name: Save viewport screenshots and results

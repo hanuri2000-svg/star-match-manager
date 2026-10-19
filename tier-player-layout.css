@@ -79,3 +79,6 @@ html body .native-tier-panel .native-tier-player:not(.is-live) > .native-tier-id
     padding: 7px 9px !important;
   }
 }
+
+/* Keep native button fallbacks the same size as profile links. */
+html body .native-tier-panel button.native-avatar-link { padding: 0; cursor: pointer; }
