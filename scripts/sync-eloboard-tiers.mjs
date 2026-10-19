@@ -139,11 +139,20 @@ async function main() {
     let found = currentById.get(item.id);
     const sameName = currentByName.get(nameKey(item.name)) || [];
     if (!found && sameName.length) {
-      // Only a unique legacy record without any ID may acquire an official ID.
-      if (sameName.length !== 1 || (sameName[0].eloId != null && sameName[0].eloId !== '')) {
+      // A same-name player with a different ID is never used as the match.
+      // Keep both records only when every existing same-name ID is also
+      // present in this official snapshot, proving these are concurrent IDs.
+      const existingIdentitiesRemainOfficial = sameName.every(player =>
+        validId(player.eloId) && officialIds.has(player.eloId)
+      );
+      if (existingIdentitiesRemainOfficial) {
+        found = undefined; // create a separate record for this distinct ID
+      } else if (sameName.length === 1 && (sameName[0].eloId == null || sameName[0].eloId === '')) {
+        // Only a unique legacy record without any ID may acquire an official ID.
+        found = sameName[0];
+      } else {
         throw new Error(`Player identity conflict: ${item.name}, existing IDs [${sameName.map(p => p.eloId).join(', ')}], incoming ID ${item.id}. Verify identities before syncing.`);
       }
-      found = sameName[0];
     }
     if (!found && !['T', 'Z', 'P'].includes(item.race)) {
       throw new Error(`Unsafe new player race: ${item.name} (${item.id})`);
