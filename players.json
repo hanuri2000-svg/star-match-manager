@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-16",
+  "updatedAt": "2026-10-20",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
-    "date": "2026-09-21"
+    "date": "2026-10-19"
   },
   "tierOrder": [
     "갓",
@@ -67,17 +67,6 @@
       "eloId": 10,
       "soopId": "neverdieyj",
       "thumbUrl": "players/10.jpg?v=1787122092"
-    },
-    {
-      "name": "김재현",
-      "tier": "갓",
-      "tierLabel": "갓",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 77,
-      "soopId": "onlysibar",
-      "thumbUrl": "players/77.jpg?v=1787122097"
     },
     {
       "name": "박상현",
@@ -146,17 +135,6 @@
       "thumbUrl": "players/35.jpg?v=1787122094"
     },
     {
-      "name": "김경모",
-      "tier": "갓",
-      "tierLabel": "갓",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 8,
-      "soopId": "kkmkhh1234",
-      "thumbUrl": "players/8.jpg?v=1787122092"
-    },
-    {
       "name": "이영한",
       "tier": "갓",
       "tierLabel": "갓",
@@ -201,20 +179,9 @@
       "thumbUrl": "players/4.jpg?v=1787122092"
     },
     {
-      "name": "이영웅",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 17,
-      "soopId": "rfvtgb778",
-      "thumbUrl": "players/17.jpg?v=1787122093"
-    },
-    {
       "name": "조기석",
-      "tier": "킹",
-      "tierLabel": "킹",
+      "tier": "갓",
+      "tierLabel": "갓",
       "race": "T",
       "aliases": [],
       "active": true,
@@ -223,20 +190,20 @@
       "thumbUrl": "players/3.jpg?v=1787122091"
     },
     {
-      "name": "최호선",
-      "tier": "킹",
-      "tierLabel": "킹",
+      "name": "이영웅",
+      "tier": "갓",
+      "tierLabel": "갓",
       "race": "T",
       "aliases": [],
       "active": true,
-      "eloId": 11,
-      "soopId": "ghtjs3833",
-      "thumbUrl": "players/11.jpg?v=1787122092"
+      "eloId": 17,
+      "soopId": "rfvtgb778",
+      "thumbUrl": "players/17.jpg?v=1787122093"
     },
     {
       "name": "김지성",
-      "tier": "킹",
-      "tierLabel": "킹",
+      "tier": "갓",
+      "tierLabel": "갓",
       "race": "T",
       "aliases": [],
       "active": true,
@@ -245,31 +212,9 @@
       "thumbUrl": "players/29.jpg?v=1787122090"
     },
     {
-      "name": "황병영",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 31,
-      "soopId": "hby0724",
-      "thumbUrl": "players/31.jpg?v=1787122093"
-    },
-    {
-      "name": "윤찬희",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 24,
-      "soopId": "cksgmldbs",
-      "thumbUrl": "players/24.jpg?v=1787122093"
-    },
-    {
       "name": "이영호",
-      "tier": "킹",
-      "tierLabel": "킹",
+      "tier": "갓",
+      "tierLabel": "갓",
       "race": "T",
       "aliases": [],
       "active": true,
@@ -278,15 +223,103 @@
       "thumbUrl": "players/37.jpg?v=1787122094"
     },
     {
+      "name": "황병영",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 31,
+      "soopId": "hby0724",
+      "thumbUrl": "players/31.jpg?v=1787122093"
+    },
+    {
+      "name": "최호선",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 11,
+      "soopId": "ghtjs3833",
+      "thumbUrl": "players/11.jpg?v=1787122092"
+    },
+    {
       "name": "박성균",
-      "tier": "킹",
-      "tierLabel": "킹",
+      "tier": "갓",
+      "tierLabel": "갓",
       "race": "T",
       "aliases": [],
       "active": true,
       "eloId": 61,
       "soopId": "peros777",
       "thumbUrl": "players/61.jpg?v=1787122095"
+    },
+    {
+      "name": "윤찬희",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 24,
+      "soopId": "cksgmldbs",
+      "thumbUrl": "players/24.jpg?v=1787122093"
+    },
+    {
+      "name": "김성대",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 33,
+      "soopId": "tjdeosks",
+      "thumbUrl": "players/33.jpg?v=1787122094"
+    },
+    {
+      "name": "임홍규",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 2,
+      "soopId": "dpfgc3",
+      "thumbUrl": "players/2.jpg?v=1787122091"
+    },
+    {
+      "name": "김택용",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 36,
+      "soopId": "rlaxordyd",
+      "thumbUrl": "players/36.jpg?v=1787122094"
+    },
+    {
+      "name": "변현제",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 34,
+      "soopId": "bye1013",
+      "thumbUrl": "players/34.jpg?v=1787122094"
+    },
+    {
+      "name": "송병구",
+      "tier": "갓",
+      "tierLabel": "갓",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 16,
+      "soopId": "koreasbg",
+      "thumbUrl": "players/16.jpg?v=1787122092"
     },
     {
       "name": "임진묵",
@@ -331,28 +364,6 @@
       "eloId": 54,
       "soopId": "rladuddo99",
       "thumbUrl": "players/54.png?v=1787122095"
-    },
-    {
-      "name": "김성대",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 33,
-      "soopId": "tjdeosks",
-      "thumbUrl": "players/33.jpg?v=1787122094"
-    },
-    {
-      "name": "임홍규",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 2,
-      "soopId": "dpfgc3",
-      "thumbUrl": "players/2.jpg?v=1787122091"
     },
     {
       "name": "박준오",
@@ -410,39 +421,6 @@
       "thumbUrl": "players/1.jpg?v=1787122102"
     },
     {
-      "name": "김택용",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 36,
-      "soopId": "rlaxordyd",
-      "thumbUrl": "players/36.jpg?v=1787122094"
-    },
-    {
-      "name": "변현제",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 34,
-      "soopId": "bye1013",
-      "thumbUrl": "players/34.jpg?v=1787122094"
-    },
-    {
-      "name": "송병구",
-      "tier": "킹",
-      "tierLabel": "킹",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 16,
-      "soopId": "koreasbg",
-      "thumbUrl": "players/16.jpg?v=1787122092"
-    },
-    {
       "name": "윤수철",
       "tier": "킹",
       "tierLabel": "킹",
@@ -496,6 +474,52 @@
       "eloId": 38,
       "soopId": "ioioiobb",
       "thumbUrl": "players/38.jpg?v=1787122094"
+    },
+    {
+      "name": "정명훈",
+      "tier": "킹",
+      "tierLabel": "킹",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 168,
+      "soopId": "",
+      "thumbUrl": "players/168.jpg?v=1787122101"
+    },
+    {
+      "name": "김수식",
+      "tier": "킹",
+      "tierLabel": "킹",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 145,
+      "soopId": "kss33325",
+      "thumbUrl": "players/145.jpg?v=1787122091"
+    },
+    {
+      "name": "샤이니",
+      "tier": "킹",
+      "tierLabel": "킹",
+      "race": "T",
+      "aliases": [
+        "김재현"
+      ],
+      "active": true,
+      "eloId": 77,
+      "soopId": "onlysibar",
+      "thumbUrl": "players/77.jpg?v=1787122097"
+    },
+    {
+      "name": "김경모",
+      "tier": "킹",
+      "tierLabel": "킹",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 8,
+      "soopId": "kkmkhh1234",
+      "thumbUrl": "players/8.jpg?v=1787122092"
     },
     {
       "name": "염보성",
@@ -685,17 +709,6 @@
       "thumbUrl": "players/27.jpg?v=1787122093"
     },
     {
-      "name": "김수식",
-      "tier": "잭",
-      "tierLabel": "잭",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 145,
-      "soopId": "kss33325",
-      "thumbUrl": "players/145.jpg?v=1787122091"
-    },
-    {
       "name": "선우도현",
       "tier": "잭",
       "tierLabel": "잭",
@@ -850,6 +863,17 @@
       "thumbUrl": "players/47.jpg?v=1787122095"
     },
     {
+      "name": "조성호",
+      "tier": "잭",
+      "tierLabel": "잭",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6536,
+      "soopId": "",
+      "thumbUrl": "players/6536_d7c1f67b.jpg?v=1788869745"
+    },
+    {
       "name": "전상욱",
       "tier": "조커",
       "tierLabel": "조커",
@@ -982,17 +1006,6 @@
       "thumbUrl": "players/153.jpg?v=1787122091"
     },
     {
-      "name": "인치호",
-      "tier": "조커",
-      "tierLabel": "조커",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 138,
-      "soopId": "spark123",
-      "thumbUrl": "players/138.jpg?v=1787122090"
-    },
-    {
       "name": "김상곤",
       "tier": "조커",
       "tierLabel": "조커",
@@ -1002,17 +1015,6 @@
       "eloId": 146,
       "soopId": "byspire",
       "thumbUrl": "players/146.jpg?v=1787122091"
-    },
-    {
-      "name": "문기호",
-      "tier": "조커",
-      "tierLabel": "조커",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 161,
-      "soopId": "",
-      "thumbUrl": "players/161.jpg?v=1787122100"
     },
     {
       "name": "라박이",
@@ -1070,17 +1072,6 @@
       "thumbUrl": "players/49.jpg?v=1787122095"
     },
     {
-      "name": "박재현",
-      "tier": "조커",
-      "tierLabel": "조커",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 117,
-      "soopId": "",
-      "thumbUrl": "players/117.jpg?v=1787122099"
-    },
-    {
       "name": "박준혁",
       "tier": "조커",
       "tierLabel": "조커",
@@ -1134,6 +1125,41 @@
       "eloId": 86,
       "soopId": "",
       "thumbUrl": "players/86.jpg?v=1787122097"
+    },
+    {
+      "name": "최성원",
+      "tier": "조커",
+      "tierLabel": "조커",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6610,
+      "soopId": "",
+      "thumbUrl": ""
+    },
+    {
+      "name": "김유진",
+      "tier": "조커",
+      "tierLabel": "조커",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 133,
+      "soopId": "",
+      "thumbUrl": "players/133.jpg?v=1787122090"
+    },
+    {
+      "name": "쿰신",
+      "tier": "조커",
+      "tierLabel": "조커",
+      "race": "P",
+      "aliases": [
+        "박재현"
+      ],
+      "active": true,
+      "eloId": 117,
+      "soopId": "",
+      "thumbUrl": "players/117.jpg?v=1787122099"
     },
     {
       "name": "이윤열",
@@ -1378,17 +1404,6 @@
       "thumbUrl": ""
     },
     {
-      "name": "윤호준",
-      "tier": "스페이드",
-      "tierLabel": "스페이드",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 82,
-      "soopId": "",
-      "thumbUrl": "players/82.jpg?v=1787122097"
-    },
-    {
       "name": "하얀눈길",
       "tier": "스페이드",
       "tierLabel": "스페이드",
@@ -1398,6 +1413,30 @@
       "eloId": 104,
       "soopId": "",
       "thumbUrl": "players/104.jpg?v=1787122102"
+    },
+    {
+      "name": "고도준",
+      "tier": "스페이드",
+      "tierLabel": "스페이드",
+      "race": "P",
+      "aliases": [
+        "윤호준"
+      ],
+      "active": true,
+      "eloId": 82,
+      "soopId": "",
+      "thumbUrl": "players/82.jpg?v=1787122097"
+    },
+    {
+      "name": "탱크",
+      "tier": "스페이드",
+      "tierLabel": "스페이드",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6312,
+      "soopId": "",
+      "thumbUrl": "players/6312.jpg?v=1788008345"
     },
     {
       "name": "서지수",
@@ -1508,6 +1547,28 @@
       "eloId": 6488,
       "soopId": "",
       "thumbUrl": "players/6488_a129f095.jpg?v=1791498612"
+    },
+    {
+      "name": "베트남테란",
+      "tier": "0티어",
+      "tierLabel": "0티어",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 6452,
+      "soopId": "",
+      "thumbUrl": "players/6452_e0634452.jpg?v=1788443928"
+    },
+    {
+      "name": "시라소니",
+      "tier": "0티어",
+      "tierLabel": "0티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 185,
+      "soopId": "",
+      "thumbUrl": "players/185.jpg?v=1787122102"
     },
     {
       "name": "다린",
@@ -1862,17 +1923,6 @@
       "thumbUrl": "players/512.jpg?v=1787122126"
     },
     {
-      "name": "다예",
-      "tier": "3티어",
-      "tierLabel": "3티어",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 273,
-      "soopId": "",
-      "thumbUrl": "players/273.jpg?v=1787122109"
-    },
-    {
       "name": "요닝",
       "tier": "3티어",
       "tierLabel": "3티어",
@@ -1881,7 +1931,7 @@
       "active": true,
       "eloId": 326,
       "soopId": "tjgpdus97",
-      "thumbUrl": "players/326.jpg?v=1787122112"
+      "thumbUrl": "players/326_2226b04e.jpg?v=1792419315"
     },
     {
       "name": "박듀듀",
@@ -1981,6 +2031,39 @@
       "eloId": 216,
       "soopId": "soonhani",
       "thumbUrl": "players/216.jpg?v=1787122104"
+    },
+    {
+      "name": "추르미",
+      "tier": "3티어",
+      "tierLabel": "3티어",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 240,
+      "soopId": "",
+      "thumbUrl": "players/240.jpg?v=1787122106"
+    },
+    {
+      "name": "별비",
+      "tier": "3티어",
+      "tierLabel": "3티어",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 315,
+      "soopId": "",
+      "thumbUrl": "players/315.jpg?v=1787122112"
+    },
+    {
+      "name": "유복실",
+      "tier": "3티어",
+      "tierLabel": "3티어",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 296,
+      "soopId": "",
+      "thumbUrl": "players/296.jpg?v=1787122110"
     },
     {
       "name": "태영",
@@ -2304,17 +2387,6 @@
       "thumbUrl": "players/619.jpg?v=1787122134"
     },
     {
-      "name": "뚜비",
-      "tier": "5티어",
-      "tierLabel": "5티어",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 582,
-      "soopId": "lkim12",
-      "thumbUrl": "players/582.jpg?v=1787122131"
-    },
-    {
       "name": "깨림이",
       "tier": "5티어",
       "tierLabel": "5티어",
@@ -2458,28 +2530,6 @@
       "thumbUrl": "players/689.jpg?v=1787122139"
     },
     {
-      "name": "박하악",
-      "tier": "5티어",
-      "tierLabel": "5티어",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 501,
-      "soopId": "qkrgkdms01",
-      "thumbUrl": "players/501.jpg?v=1787122125"
-    },
-    {
-      "name": "란란",
-      "tier": "5티어",
-      "tierLabel": "5티어",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 372,
-      "soopId": "rhf104",
-      "thumbUrl": "players/372.jpg?v=1787122116"
-    },
-    {
       "name": "백갑숙",
       "tier": "5티어",
       "tierLabel": "5티어",
@@ -2489,17 +2539,6 @@
       "eloId": 698,
       "soopId": "zzzz809",
       "thumbUrl": "players/698.jpg?v=1787122140"
-    },
-    {
-      "name": "쵸이",
-      "tier": "5티어",
-      "tierLabel": "5티어",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 578,
-      "soopId": "",
-      "thumbUrl": "players/578.jpg?v=1787122131"
     },
     {
       "name": "주하랑",
@@ -2543,7 +2582,7 @@
       "active": true,
       "eloId": 544,
       "soopId": "dptmfl1258",
-      "thumbUrl": "players/544.jpg?v=1787122128"
+      "thumbUrl": "players/544_e6e92247.jpg?v=1792419843"
     },
     {
       "name": "라운이",
@@ -2577,6 +2616,30 @@
       "eloId": 673,
       "soopId": "aybjc2319",
       "thumbUrl": "players/673.jpg?v=1787122138"
+    },
+    {
+      "name": "루비",
+      "tier": "5티어",
+      "tierLabel": "5티어",
+      "race": "T",
+      "aliases": [
+        "뚜비"
+      ],
+      "active": true,
+      "eloId": 582,
+      "soopId": "lkim12",
+      "thumbUrl": "players/582.jpg?v=1787122131"
+    },
+    {
+      "name": "남수댕",
+      "tier": "5티어",
+      "tierLabel": "5티어",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 668,
+      "soopId": "mew030709",
+      "thumbUrl": "players/668.jpg?v=1787122138"
     },
     {
       "name": "메옹",
@@ -2621,17 +2684,6 @@
       "eloId": 661,
       "soopId": "moguleave",
       "thumbUrl": "players/661.jpg?v=1787122137"
-    },
-    {
-      "name": "연수",
-      "tier": "6티어",
-      "tierLabel": "6티어",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 534,
-      "soopId": "qocnrhdwn1",
-      "thumbUrl": "players/534.jpg?v=1787122127"
     },
     {
       "name": "려원님",
@@ -2920,15 +2972,26 @@
       "thumbUrl": "players/387.jpg?v=1787122117"
     },
     {
-      "name": "하랑",
+      "name": "서윤",
+      "tier": "6티어",
+      "tierLabel": "6티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 417,
+      "soopId": "",
+      "thumbUrl": "players/417.jpg?v=1787122119"
+    },
+    {
+      "name": "류하",
       "tier": "6티어",
       "tierLabel": "6티어",
       "race": "P",
       "aliases": [],
       "active": true,
-      "eloId": 595,
-      "soopId": "candyrang00",
-      "thumbUrl": "players/595.jpg?v=1787122132"
+      "eloId": 364,
+      "soopId": "",
+      "thumbUrl": "players/364.jpg?v=1787122115"
     },
     {
       "name": "제갈츄빈",
@@ -3138,17 +3201,6 @@
       "eloId": 675,
       "soopId": "shj06170",
       "thumbUrl": "players/675.jpg?v=1787122138"
-    },
-    {
-      "name": "다뉴",
-      "tier": "7티어",
-      "tierLabel": "7티어",
-      "race": "Z",
-      "aliases": [],
-      "active": true,
-      "eloId": 601,
-      "soopId": "danu619",
-      "thumbUrl": ""
     },
     {
       "name": "냥냥코기",
@@ -3393,17 +3445,6 @@
       "thumbUrl": "players/849.jpg?v=1787122160"
     },
     {
-      "name": "이응씨",
-      "tier": "8티어",
-      "tierLabel": "8티어",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 823,
-      "soopId": "onzzang",
-      "thumbUrl": ""
-    },
-    {
       "name": "밤하밍",
       "tier": "8티어",
       "tierLabel": "8티어",
@@ -3593,17 +3634,6 @@
       "thumbUrl": "players/824.jpg?v=1787122151"
     },
     {
-      "name": "히요코",
-      "tier": "8티어",
-      "tierLabel": "8티어",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 714,
-      "soopId": "hiyoko040",
-      "thumbUrl": "players/714.jpg?v=1787122142"
-    },
-    {
       "name": "봄덕이",
       "tier": "8티어",
       "tierLabel": "8티어",
@@ -3736,6 +3766,28 @@
       "thumbUrl": "players/6479.jpg?v=1787197169"
     },
     {
+      "name": "여지니",
+      "tier": "8티어",
+      "tierLabel": "8티어",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 851,
+      "soopId": "",
+      "thumbUrl": "players/851.jpg?v=1787122153"
+    },
+    {
+      "name": "온도이",
+      "tier": "8티어",
+      "tierLabel": "8티어",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 843,
+      "soopId": "",
+      "thumbUrl": "players/843_a8ab39ca.jpg?v=1791580142"
+    },
+    {
       "name": "요괴버스",
       "tier": "유스",
       "tierLabel": "베이비",
@@ -3745,17 +3797,6 @@
       "eloId": 6485,
       "soopId": "",
       "thumbUrl": "players/6485_ec1ad0cb.jpg?v=1789033676"
-    },
-    {
-      "name": "온도이",
-      "tier": "유스",
-      "tierLabel": "베이비",
-      "race": "T",
-      "aliases": [],
-      "active": true,
-      "eloId": 843,
-      "soopId": "",
-      "thumbUrl": "players/843_a8ab39ca.jpg?v=1791580142"
     },
     {
       "name": "럭키위키",
@@ -3771,28 +3812,6 @@
       "thumbUrl": "players/6486_63ba4e95.jpg?v=1791522764"
     },
     {
-      "name": "이나",
-      "tier": "유스",
-      "tierLabel": "베이비",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 6489,
-      "soopId": "",
-      "thumbUrl": ""
-    },
-    {
-      "name": "여지니",
-      "tier": "유스",
-      "tierLabel": "베이비",
-      "race": "P",
-      "aliases": [],
-      "active": true,
-      "eloId": 851,
-      "soopId": "",
-      "thumbUrl": "players/851.jpg?v=1787122153"
-    },
-    {
       "name": "진서",
       "tier": "유스",
       "tierLabel": "베이비",
@@ -3804,15 +3823,224 @@
       "thumbUrl": "players/850.jpg?v=1787122153"
     },
     {
-      "name": "남수댕",
+      "name": "양혜원",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 6614,
+      "soopId": "",
+      "thumbUrl": ""
+    },
+    {
+      "name": "세니",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 6612,
+      "soopId": "",
+      "thumbUrl": "players/6612_599c015f.jpg?v=1791537496"
+    },
+    {
+      "name": "뽀깽이",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6624,
+      "soopId": "",
+      "thumbUrl": ""
+    },
+    {
+      "name": "예린",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6626,
+      "soopId": "",
+      "thumbUrl": "players/6626_5f1b6934.jpg?v=1791658785"
+    },
+    {
+      "name": "미지믄",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6616,
+      "soopId": "",
+      "thumbUrl": "players/6616_90bdc26c.jpg?v=1791880368"
+    },
+    {
+      "name": "찌효",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 6611,
+      "soopId": "",
+      "thumbUrl": "players/6611_efa02788.jpg?v=1791498919"
+    },
+    {
+      "name": "또치",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 6620,
+      "soopId": "",
+      "thumbUrl": ""
+    },
+    {
+      "name": "카나에",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 6622,
+      "soopId": "",
+      "thumbUrl": "players/6622_4c3ddbc7.jpg?v=1791499056"
+    },
+    {
+      "name": "인치호",
+      "tier": "조커",
+      "tierLabel": "조커",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 138,
+      "soopId": "spark123",
+      "thumbUrl": "players/138.jpg?v=1787122090"
+    },
+    {
+      "name": "문기호",
+      "tier": "조커",
+      "tierLabel": "조커",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 161,
+      "soopId": "",
+      "thumbUrl": "players/161.jpg?v=1787122100"
+    },
+    {
+      "name": "다예",
+      "tier": "3티어",
+      "tierLabel": "3티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 273,
+      "soopId": "",
+      "thumbUrl": "players/273.jpg?v=1787122109"
+    },
+    {
+      "name": "박하악",
+      "tier": "5티어",
+      "tierLabel": "5티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 501,
+      "soopId": "qkrgkdms01",
+      "thumbUrl": "players/501.jpg?v=1787122125"
+    },
+    {
+      "name": "란란",
+      "tier": "5티어",
+      "tierLabel": "5티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 372,
+      "soopId": "rhf104",
+      "thumbUrl": "players/372.jpg?v=1787122116"
+    },
+    {
+      "name": "쵸이",
       "tier": "5티어",
       "tierLabel": "5티어",
       "race": "P",
       "aliases": [],
-      "active": false,
-      "eloId": 668,
-      "soopId": "mew030709",
-      "thumbUrl": "players/668.jpg?v=1787122138"
+      "active": true,
+      "eloId": 578,
+      "soopId": "",
+      "thumbUrl": "players/578.jpg?v=1787122131"
+    },
+    {
+      "name": "연수",
+      "tier": "6티어",
+      "tierLabel": "6티어",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 534,
+      "soopId": "qocnrhdwn1",
+      "thumbUrl": "players/534.jpg?v=1787122127"
+    },
+    {
+      "name": "하랑",
+      "tier": "6티어",
+      "tierLabel": "6티어",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 595,
+      "soopId": "candyrang00",
+      "thumbUrl": "players/595.jpg?v=1787122132"
+    },
+    {
+      "name": "다뉴",
+      "tier": "7티어",
+      "tierLabel": "7티어",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": 601,
+      "soopId": "danu619",
+      "thumbUrl": ""
+    },
+    {
+      "name": "이응씨",
+      "tier": "8티어",
+      "tierLabel": "8티어",
+      "race": "T",
+      "aliases": [],
+      "active": true,
+      "eloId": 823,
+      "soopId": "onzzang",
+      "thumbUrl": ""
+    },
+    {
+      "name": "히요코",
+      "tier": "8티어",
+      "tierLabel": "8티어",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 714,
+      "soopId": "hiyoko040",
+      "thumbUrl": "players/714.jpg?v=1787122142"
+    },
+    {
+      "name": "이나",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "P",
+      "aliases": [],
+      "active": true,
+      "eloId": 6489,
+      "soopId": "",
+      "thumbUrl": ""
     },
     {
       "name": "파이",
