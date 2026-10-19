@@ -3856,6 +3856,17 @@
       "thumbUrl": ""
     },
     {
+      "name": "스깅이",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": null,
+      "aliases": [],
+      "active": true,
+      "eloId": 6627,
+      "soopId": "",
+      "thumbUrl": ""
+    },
+    {
       "name": "예린",
       "tier": "유스",
       "tierLabel": "베이비",
@@ -3916,7 +3927,7 @@
       "tierLabel": "조커",
       "race": "Z",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 138,
       "soopId": "spark123",
       "thumbUrl": "players/138.jpg?v=1787122090"
@@ -3927,7 +3938,7 @@
       "tierLabel": "조커",
       "race": "Z",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 161,
       "soopId": "",
       "thumbUrl": "players/161.jpg?v=1787122100"
@@ -3938,7 +3949,7 @@
       "tierLabel": "3티어",
       "race": "Z",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 273,
       "soopId": "",
       "thumbUrl": "players/273.jpg?v=1787122109"
@@ -3949,7 +3960,7 @@
       "tierLabel": "5티어",
       "race": "Z",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 501,
       "soopId": "qkrgkdms01",
       "thumbUrl": "players/501.jpg?v=1787122125"
@@ -3960,7 +3971,7 @@
       "tierLabel": "5티어",
       "race": "Z",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 372,
       "soopId": "rhf104",
       "thumbUrl": "players/372.jpg?v=1787122116"
@@ -3971,7 +3982,7 @@
       "tierLabel": "5티어",
       "race": "P",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 578,
       "soopId": "",
       "thumbUrl": "players/578.jpg?v=1787122131"
@@ -3982,7 +3993,7 @@
       "tierLabel": "6티어",
       "race": "T",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 534,
       "soopId": "qocnrhdwn1",
       "thumbUrl": "players/534.jpg?v=1787122127"
@@ -3993,7 +4004,7 @@
       "tierLabel": "6티어",
       "race": "P",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 595,
       "soopId": "candyrang00",
       "thumbUrl": "players/595.jpg?v=1787122132"
@@ -4004,7 +4015,7 @@
       "tierLabel": "7티어",
       "race": "Z",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 601,
       "soopId": "danu619",
       "thumbUrl": ""
@@ -4015,7 +4026,7 @@
       "tierLabel": "8티어",
       "race": "T",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 823,
       "soopId": "onzzang",
       "thumbUrl": ""
@@ -4026,7 +4037,7 @@
       "tierLabel": "8티어",
       "race": "P",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 714,
       "soopId": "hiyoko040",
       "thumbUrl": "players/714.jpg?v=1787122142"
@@ -4037,7 +4048,7 @@
       "tierLabel": "베이비",
       "race": "P",
       "aliases": [],
-      "active": true,
+      "active": false,
       "eloId": 6489,
       "soopId": "",
       "thumbUrl": ""
