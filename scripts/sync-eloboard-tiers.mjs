@@ -49,16 +49,37 @@ function parseJsonValue(source, marker) {
 }
 
 function parseSourceMeta(html) {
-  const match = html.match(/<h2>변경사항<\/h2>\s*<span[^>]*>([^<]+)<\/span>\s*<span[^>]*>(\d{4}-\d{2}-\d{2})<\/span>/);
-  if (!match) throw new Error('EloBoard version metadata was not found');
-  return { version: decodeHtml(match[1]), date: match[2] };
+  // EloBoard has changed this visible block over time (from a version/date pair
+  // under "변경사항" to a plain "최종 갱신" date). Treat metadata as optional:
+  // valid player data may still sync, while the caller keeps the last-known
+  // values when the page no longer publishes them.
+  const visible = decodeHtml(html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' '));
+  const normalized = visible.replace(/\s+/g, ' ').trim();
+  const contexts = [...normalized.matchAll(/(?:변경사항|최종\s*갱신|최종\s*업데이트|버전|version)[\s\S]{0,240}/gi)]
+    .map(match => match[0]);
+  const versionMatch = contexts
+    .map(context => context.match(/(?:version|버전)\s*[:：]?\s*v?(\d{1,3}\.\d+(?:\.\d+){0,2})|(?:변경사항)[^0-9]{0,40}(\d{1,3}\.\d+(?:\.\d+){0,2})/i))
+    .find(Boolean);
+  const dateContexts = contexts.filter(context => /최종\s*(?:갱신|업데이트)/i.test(context));
+  const dateMatch = [...(dateContexts.length ? dateContexts : contexts)]
+    .map(context => context.match(/\b(20\d{2}-\d{2}-\d{2})\b/))
+    .find(Boolean);
+  return {
+    version: versionMatch ? (versionMatch[1] || versionMatch[2]) : null,
+    date: dateMatch ? dateMatch[1] : null
+  };
 }
-
 function parsePlayers(html) {
   const flightData = parseFlightData(html);
   const sections = parseJsonValue(flightData, '"sections":');
-  if (!Array.isArray(sections) || sections.length !== 15) {
-    throw new Error(`Unsafe EloBoard result: ${sections?.length || 0} tier sections`);
+  if (!Array.isArray(sections) || sections.length === 0 || sections.some(section =>
+    !section || !Array.isArray(section.players) ||
+    typeof section.label !== 'string' || !section.label.trim()
+  )) {
+    throw new Error('Unsafe EloBoard result: invalid tier sections');
   }
   const players = sections.flatMap(section => section.players.map(player => ({
     id: Number(player.player_id),
@@ -158,18 +179,22 @@ async function main() {
     .filter(player => !used.has(player))
     .map(player => ({ ...player, active: false }));
 
-  const nextSource = { name: '스타CK 밸런스 티어표', version: source.version, date: source.date };
+  const nextSource = {
+    name: '스타CK 밸런스 티어표',
+    version: source.version || db.source?.version || null,
+    date: source.date || db.source?.date || null
+  };
   const nextPlayers = [...active, ...inactive];
   const unchanged = JSON.stringify(db.source) === JSON.stringify(nextSource)
     && JSON.stringify(db.players) === JSON.stringify(nextPlayers);
   if (unchanged) {
-    console.log(`EloBoard v${source.version}: already current (${active.length} active)`);
+    console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: already current (${active.length} active)`);
     return;
   }
   const next = { ...db, updatedAt: koreaDate(), source: nextSource, players: nextPlayers };
   const after = JSON.stringify(next, null, 2) + '\n';
   await writeFile(PLAYER_FILE, after);
-  console.log(`EloBoard v${source.version}: synced ${active.length} active, ${inactive.length} inactive`);
+  console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} inactive`);
 }
 
 main().catch(error => {
