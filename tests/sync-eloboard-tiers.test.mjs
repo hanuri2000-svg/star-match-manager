@@ -89,6 +89,22 @@ test('incomplete EloBoard player list aborts without changing player IDs or cust
   });
 });
 
+test('duplicate EloBoard display names stay separate when IDs are distinct', async () => {
+  await withSyncFixture((players, official) => {
+    players[0].name = '탱크';
+    players[1].name = '탱크';
+    official[0].name = '탱크';
+    official[1].name = '탱크';
+  }, async ({ run, read }) => {
+    run();
+    const result = JSON.parse(await read()).players;
+    assert.equal(result.find(player => player.eloId === 1).name, '탱크');
+    assert.equal(result.find(player => player.eloId === 2).name, '탱크');
+    assert.equal(result.find(player => player.eloId === 1).soopId, 'soop-0');
+    assert.equal(result.find(player => player.eloId === 2).soopId, 'soop-1');
+  });
+});
+
 test('same-name ID replacement (Sewol 6029 to 763) aborts without writing anything', async () => {
   await withSyncFixture((players, official) => {
     players[0] = { ...players[0], name: '세월', eloId: 6029 };
@@ -140,7 +156,6 @@ test('new ID adds a separate player and missing ID remains inactive with its met
 });
 
 for (const scenario of [
-  { name: 'duplicate normalized source names', change: (p, o) => { o[1].name = ' PLAYER-0 '; } },
   { name: 'duplicate source IDs', change: (p, o) => { o[1].player_id = 1; } },
   { name: 'invalid source IDs', change: (p, o) => { o[0].player_id = 0; } },
   { name: 'duplicate DB IDs', change: (p, o) => { p[1].eloId = 1; } },
