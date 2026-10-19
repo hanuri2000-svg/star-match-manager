@@ -133,7 +133,15 @@ async function main() {
     if (typeof item.tier !== 'string' || !item.tier.trim()) throw new Error(`Unsafe EloBoard tier: ${item.name}`);
     officialIds.add(item.id);
   }
+  // A large loss of known active IDs can indicate a partial source response,
+  // even when the absolute 300-player floor still passes.
+  const knownActive = db.players.filter(player => player.active !== false && validId(player.eloId));
+  const retained = knownActive.filter(player => officialIds.has(player.eloId));
+  if (knownActive.length >= 300 && retained.length < Math.ceil(knownActive.length * 0.95)) {
+    throw new Error(`Unsafe EloBoard coverage: ${retained.length}/${knownActive.length} known active IDs`);
+  }
   const used = new Set();
+  const deferred = [];
 
   const active = official.map(item => {
     let found = currentById.get(item.id);
@@ -155,6 +163,12 @@ async function main() {
       }
     }
     if (!found && !['T', 'Z', 'P'].includes(item.race)) {
+      // A genuinely new player may not have selected a race yet. Defer only
+      // explicit unset values; malformed values still invalidate the snapshot.
+      if (item.race == null || (typeof item.race === 'string' && ['', '미정'].includes(item.race.trim()))) {
+        deferred.push({ id: item.id, name: item.name });
+        return null;
+      }
       throw new Error(`Unsafe new player race: ${item.name} (${item.id})`);
     }
     if (found && used.has(found)) throw new Error(`Player matched twice: ${item.name}`);
@@ -180,11 +194,14 @@ async function main() {
     player.eloId = item.id;
     if (item.thumbUrl) player.thumbUrl = item.thumbUrl;
     return player;
-  });
+  }).filter(Boolean);
+  for (const item of deferred) {
+    console.warn(`Deferred new player with undecided race: ${item.name} (${item.id}); will retry next sync`);
+  }
 
   const inactive = db.players
     .filter(player => !used.has(player))
-    .map(player => ({ ...player, active: false }));
+    .map(player => deferred.length ? { ...player } : { ...player, active: false });
 
   const nextSource = {
     name: '스타CK 밸런스 티어표',
@@ -201,7 +218,7 @@ async function main() {
   const next = { ...db, updatedAt: koreaDate(), source: nextSource, players: nextPlayers };
   const after = JSON.stringify(next, null, 2) + '\n';
   await writeFile(PLAYER_FILE, after);
-  console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} inactive`);
+  console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} retained outside imported roster, ${deferred.length} deferred`);
 }
 
 main().catch(error => {

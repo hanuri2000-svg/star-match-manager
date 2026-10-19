@@ -55,14 +55,14 @@ async function withSyncFixture(change, check, metadata = '<h2>변경사항</h2><
     const official = players.map(p => ({ player_id: p.eloId, name: p.name, race: p.race }));
     change(players, official);
     const sections = Array.from({ length: 15 }, (_, index) => ({
-      key: String(index), label: '7티어', players: official.slice(index * 20, index * 20 + 20)
+      key: String(index), label: '7티어', players: official.slice(index * 20, index === 14 ? undefined : index * 20 + 20)
     }));
     const html = `${metadata}<script>self.__next_f.push([1,${JSON.stringify(JSON.stringify({ sections }))}])</script>`;
     const before = JSON.stringify({ source: { name: '스타CK 밸런스 티어표', version: '3.62', date: '2026-10-16' }, players });
     await writeFile(join(dir, 'players.json'), before);
     await writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(html)} });`);
     const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir, stdio: 'pipe' });
-    await check({ run, before, read: () => readFile(join(dir, 'players.json'), 'utf8') });
+    await check({ run, before, setHtml: value => writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(value)} });`), html, read: () => readFile(join(dir, 'players.json'), 'utf8') });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -180,7 +180,7 @@ for (const scenario of [
   { name: 'duplicate source IDs', change: (p, o) => { o[1].player_id = 1; } },
   { name: 'invalid source IDs', change: (p, o) => { o[0].player_id = 0; } },
   { name: 'duplicate DB IDs', change: (p, o) => { p[1].eloId = 1; } },
-  { name: 'invalid new player race', change: (p, o) => { o[0] = { player_id: 999, name: 'new', race: null }; } },
+  { name: 'invalid new player race', change: (p, o) => { o[0] = { player_id: 999, name: 'new', race: 'bogus' }; } },
   { name: 'empty source name', change: (p, o) => { o[0].name = ''; } },
   { name: 'ambiguous legacy names', change: (p, o) => { p[0].eloId = null; p.push({ ...p[0] }); } }
 ]) {
@@ -245,5 +245,49 @@ test('verified Sewol identity history and custom metadata survive repeated canon
     assert.equal(p.thumbUrl, 'new-photo.jpg');
     run();
     assert.equal(await read(), first);
+  });
+});
+
+for (const race of [null, undefined, '', ' ', '미정']) {
+  test(`undecided new race ${String(race)} is deferred while existing metadata stays intact`, async () => {
+    await withSyncFixture((players, official) => {
+      players[0].notes = { keep: true };
+      players[0].aliases = ['keep alias'];
+      official[0] = { player_id: 999, name: 'undecided newcomer', race };
+      official[1].race = 'P';
+    }, async ({ run, read, before }) => {
+      run();
+      const first = await read();
+      const result = JSON.parse(first).players;
+      assert.equal(result.some(p => p.eloId === 999), false);
+      assert.deepEqual(result.find(p => p.eloId === 1), JSON.parse(before).players[0]);
+      assert.equal(result.find(p => p.eloId === 2).race, 'P');
+      run();
+      assert.equal(await read(), first);
+    });
+  });
+}
+
+test('deferred newcomer is automatically imported when race becomes valid', async () => {
+  await withSyncFixture((players, official) => {
+    official.push({ player_id: 6627, name: '스깅이', race: null });
+  }, async ({ run, read, html, setHtml }) => {
+    run();
+    assert.equal(JSON.parse(await read()).players.some(p => p.eloId === 6627), false);
+    const flight = JSON.parse(html.slice(html.indexOf('[1,') + 3, html.indexOf('])</script>')));
+    const payload = JSON.parse(flight);
+    payload.sections.flatMap(section => section.players).find(player => player.player_id === 6627).race = 'P';
+    await setHtml('<h2>변경사항</h2><span>3.62</span><span>2026-10-16</span><script>self.__next_f.push([1,' + JSON.stringify(JSON.stringify(payload)) + '])</script>');
+    run();
+    assert.equal(JSON.parse(await read()).players.find(p => p.eloId === 6627)?.race, 'P');
+  });
+});
+
+test('source missing many known active IDs is rejected even above the absolute floor', async () => {
+  await withSyncFixture((players) => {
+    for (let id = 301; id <= 340; id++) players.push({ name: `player-${id}`, eloId: id, race: 'T', active: true });
+  }, async ({ run, read, before }) => {
+    assert.throws(run, error => /Unsafe EloBoard coverage/.test(String(error.stderr)));
+    assert.equal(await read(), before);
   });
 });
