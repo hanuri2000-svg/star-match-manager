@@ -126,14 +126,12 @@ async function main() {
     currentByName.set(key, [...(currentByName.get(key) || []), player]);
   }
   const officialIds = new Set();
-  const officialNames = new Set();
   for (const item of official) {
     const key = nameKey(item.name);
     if (!validId(item.id) || officialIds.has(item.id)) throw new Error(`Unsafe EloBoard ID: ${item.id}`);
-    if (!key || officialNames.has(key)) throw new Error(`Unsafe EloBoard name: ${item.name}`);
+    if (!key) throw new Error(`Unsafe EloBoard name: ${item.name}`);
     if (typeof item.tier !== 'string' || !item.tier.trim()) throw new Error(`Unsafe EloBoard tier: ${item.name}`);
     officialIds.add(item.id);
-    officialNames.add(key);
   }
   const used = new Set();
 
