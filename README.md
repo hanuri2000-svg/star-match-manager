@@ -56,7 +56,17 @@
 
 ## 업데이트 방식
 
-`main` 브랜치의 파일이 변경되면 GitHub Pages에 자동으로 배포됩니다. 페이지를 열어둔 사용자는 1분 간격으로 새 버전을 확인하며, 새 버전이 확인되면 자동으로 새로고침됩니다. 사용자 입력 데이터는 브라우저에 별도로 저장되어 업데이트 후에도 유지됩니다.
+`main` 변경은 `JavaScript regression tests` 워크플로의 Node.js 전체 회귀검사와 브라우저 검사(데스크톱·태블릿·아이폰/iPad WebKit, 12개월 테마, 방송 연결)를 모두 통과한 뒤 GitHub Pages에 배포됩니다. 검사·패키징·배포는 동일한 커밋 SHA에 고정됩니다. 실패·취소·검사 누락 시 기존 정상 사이트를 유지합니다. 페이지를 열어둔 사용자는 1분 간격으로 새 버전을 확인하며, 새 버전이 확인되면 자동으로 새로고침됩니다. 사용자 입력 데이터는 브라우저에 별도로 저장되어 업데이트 후에도 유지됩니다.
+
+### Pages 배포 설정과 검증
+
+- 저장소 **Settings → Pages → Build and deployment → Source**는 반드시 **GitHub Actions**로 설정합니다. `Deploy from a branch`는 검사를 우회하므로 사용하지 않습니다. 새 배포 작업도 실제 설정이 `workflow`인지 API로 확인하며, 아니면 실패합니다. 최초 전환은 이 설정을 바꾼 후 변경을 `main`에 반영합니다.
+- `build-pages`는 두 필수 검사에, `deploy-pages`는 검사와 패키징에 모두 의존합니다. PR과 다른 브랜치는 운영 배포를 실행하지 않습니다.
+- 배포는 `github-pages` 동시 실행 그룹에서 하나씩 진행합니다. 패키징 전과 배포 직전에 최신 `main` SHA를 확인하며, 그사이 뒤처진 커밋은 건너뜁니다. 이미 제출된 원자적 배포는 중단하지 않습니다. 확인 직후 새 커밋이 들어오는 극히 짧은 구간에는 검증된 이전 커밋이 먼저 배포될 수 있고, 새 커밋도 별도 전체 검사를 거칩니다.
+- 자동동기화 및 기존 DB/앱 업데이트 워크플로 완료 시 `workflow_run`으로 새 `main` 스냅샷을 검사합니다. `GITHUB_TOKEN`의 push가 다음 push 워크플로를 시작하지 않는 경우도 처리합니다. upstream의 변경 전 `head_sha`를 배포 대상으로 사용하지 않습니다.
+- 사이트의 `deployment.json`에서 배포 커밋과 실행 ID를 확인할 수 있습니다. 아티팩트 이름에도 SHA와 실행 시도 번호를 넣어 다른 커밋·재실행 결과와 섞이지 않게 합니다.
+- 로컬 확인: `node --test tests/*.test.mjs`, `python -m pip install PyYAML==6.0.3 playwright==1.56.0`, `python tests/pages-workflow.py`, `python -m playwright install --with-deps chromium webkit`, `python tests/tier-profile-browser.py`, `python tests/browser-smoke.py`.
+- 배포 가드 검사는 정상·실패·취소·누락·연속 커밋·오래된 실행 재시도·API 오류·이전 배포 방식·자동동기화 완료 이벤트를 검증합니다. 운영 브랜치에 의도적으로 실패 코드를 올리지 않습니다.
 
 GitHub Pages 주소: https://hanuri2000-svg.github.io/star-match-manager/
 

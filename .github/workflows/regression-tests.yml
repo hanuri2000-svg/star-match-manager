@@ -5,25 +5,48 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # GITHUB_TOKEN pushes do not trigger another push workflow. Test the main
+  # snapshot captured by this event, including commits made by these writers.
+  workflow_run:
+    workflows: [Sync EloBoard tiers, Apply shared player master DB, Refresh integrated shared apps v5.12.1]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   test:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Run all regression tests
         run: node --test tests/*.test.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate deployment workflow wiring
+        run: |
+          python -m pip install PyYAML==6.0.3
+          python tests/pages-workflow.py
 
   browser-smoke:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -42,3 +65,81 @@ jobs:
           name: main-screen-browser-smoke
           path: test-results/browser-smoke/
           retention-days: 7
+
+  build-pages:
+    needs: [test, browser-smoke]
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      current: ${{ steps.guard.outputs.current }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check required results, latest main, and Actions publishing source
+        id: guard
+        uses: actions/github-script@v7
+        env:
+          REQUIRED_RESULTS: ${{ toJSON(needs) }}
+        with:
+          script: |
+            const guard = require('./scripts/pages-deploy-guard.cjs');
+            core.setOutput('current', await guard({github, context, core}));
+      - name: Package the exact tested commit
+        if: steps.guard.outputs.current == 'true'
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir _site
+          git archive "$GITHUB_SHA" -- . ':!.github' ':!tests' ':!scripts' ':!docs' ':!README.md' ':!.deploy-*' | tar -x -C _site
+          node -e 'require("fs").writeFileSync("_site/deployment.json", JSON.stringify({sha:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID}) + "\n")'
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.guard.outputs.current == 'true'
+        with:
+          name: github-pages-${{ github.sha }}-${{ github.run_attempt }}
+          path: _site
+
+  deploy-pages:
+    needs: [test, browser-smoke, build-pages]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build-pages.outputs.current == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # Serialize promotions. Do not cancel an in-flight atomic Pages deployment.
+    # Older runs re-check main after acquiring this slot and cannot roll it back.
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Recheck latest commit immediately before deployment
+        id: guard
+        uses: actions/github-script@v7
+        env:
+          REQUIRED_RESULTS: ${{ toJSON(needs) }}
+        with:
+          script: |
+            const guard = require('./scripts/pages-deploy-guard.cjs');
+            core.setOutput('current', await guard({github, context, core}));
+      - name: Deploy verified commit
+        id: deployment
+        if: steps.guard.outputs.current == 'true'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.sha }}-${{ github.run_attempt }}
