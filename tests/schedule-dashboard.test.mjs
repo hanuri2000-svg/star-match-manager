@@ -66,8 +66,8 @@ test('달력 위에 카드 영역을 두고 모바일과 PC 배치 및 릴리스
 });
 test('동기화 상태는 갱신 중·성공·실패를 구분하고 마지막 성공 시점을 보존한다',async()=>{
  let fail=false;const f=fixture({fetcher:async()=>{if(fail)throw new Error('offline');return{ok:true,json:async()=>({player:{name:'최도랑',elo:'1200'}})}}});
- assert.match(f.syncHost.innerHTML,/ELO 전적.*업데이트 중/);await settle();
- assert.match(f.syncHost.innerHTML,/ELO 전적.*정상/);const last=f.syncHost.innerHTML.match(/마지막 성공 ([^<]+)/)[1];assert.notEqual(last,'없음');
+ assert.match(f.syncHost.innerHTML,/ELO 점수.*업데이트 중/);await settle();
+ assert.match(f.syncHost.innerHTML,/ELO 점수.*정상/);const last=f.syncHost.innerHTML.match(/마지막 성공 ([^<]+)/)[1];assert.notEqual(last,'없음');
  fail=true;await f.window.ScheduleDashboard.refresh(true);assert.match(f.syncHost.innerHTML,/오류.*마지막 성공.*offline · 이전 자료 유지/);assert.ok(f.syncHost.innerHTML.includes('마지막 성공 '+last));
  assert.match(f.host.innerHTML,/1,200/);
 });
@@ -76,12 +76,12 @@ test('수동 새로고침은 ELO와 티어표를 갱신하며 중복 클릭을 �
  f.window.HARINA_LOAD_PLAYER_MASTER=()=>{calls++;f.window.HARINA_MASTER_SYNC_STATUS={status:'loading'};return new Promise(resolve=>finish=resolve)};
  const pending=f.window.ScheduleDashboard.refreshAll();await settle();await f.window.ScheduleDashboard.refreshAll();assert.equal(calls,1);assert.match(f.syncHost.innerHTML,/data-sync-refresh disabled/);
  f.window.HARINA_MASTER_SYNC_STATUS={status:'error',lastSuccess:123,error:'티어 서버 오류'};finish();await pending;
- assert.match(f.syncHost.innerHTML,/ELO 전적.*정상.*티어표.*오류.*티어 서버 오류/);assert.doesNotMatch(f.syncHost.innerHTML,/data-sync-refresh disabled/);
+ assert.match(f.syncHost.innerHTML,/ELO 점수.*정상.*티어표.*오류.*티어 서버 오류/);assert.doesNotMatch(f.syncHost.innerHTML,/data-sync-refresh disabled/);
  f.window.HARINA_MASTER_SYNC_STATUS={status:'ok',lastSuccess:Date.now(),version:'3.62',sourceDate:'2026-10-03'};f.events['harina-player-master-sync']();assert.match(f.syncHost.innerHTML,/자료 v3.62 · 2026-10-03 기준/);
 });
 test('저장된 자료와 오프라인 상태를 정상 동기화로 표시하지 않는다',async()=>{
  const f=fixture({cache:{player:'최도랑',data:{player:{elo:'1200'}},checkedAt:Date.now()}});await settle();
- assert.match(f.syncHost.innerHTML,/ELO 전적.*저장된 자료/);f.window.navigator={onLine:false};f.events.offline();assert.match(f.syncHost.innerHTML,/인터넷 연결 없음/);
+ assert.match(f.syncHost.innerHTML,/ELO 점수.*저장된 자료/);f.window.navigator={onLine:false};f.events.offline();assert.match(f.syncHost.innerHTML,/인터넷 연결 없음/);
 });
 
 test('전체 경기 통계가 지연·실패해도 경량 조회에 성공한 ELO 상태를 덮어쓰지 않는다',async()=>{

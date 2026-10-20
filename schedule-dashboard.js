@@ -28,7 +28,7 @@
     const row=(label,state,detail='')=>`<div class="sync-source"><div><b>${label}</b><span class="sync-badge sync-${state.status}">${syncLabels[state.status]||'확인 전'}</span></div><span>마지막 성공 ${esc(time(state.lastSuccess))}</span>${state.status==='error'?`<small class="sync-error">${esc(state.error||'갱신 실패')} · 이전 자료 유지</small>`:detail?`<small>${esc(detail)}</small>`:''}</div>`;
     const busy=manualRefreshing||loading||eloSync.status==='loading'||tier.status==='loading';
     const offline=global.navigator?.onLine===false;
-    return `<div class="sync-heading"><strong>동기화 상태</strong><button type="button" class="secondary" data-sync-refresh ${busy?'disabled':''}>${busy?'확인 중…':'새로고침'}</button></div><div class="sync-sources">${row('ELO 전적',eloSync,eloSync.status==='cached'?'저장된 점수 표시 중':'최도랑 점수·공식전 통계')}${row('티어표',tier,tier.version?`자료 v${tier.version}${tier.sourceDate?' · '+tier.sourceDate+' 기준':''}`:'선수 DB')}</div>${offline?'<p class="sync-offline">인터넷 연결 없음 · 저장된 자료를 표시해.</p>':''}`;
+    return `<div class="sync-heading"><strong>동기화 상태</strong><button type="button" class="secondary" data-sync-refresh ${busy?'disabled':''}>${busy?'확인 중…':'새로고침'}</button></div><div class="sync-sources">${row('ELO 점수',eloSync,eloSync.status==='cached'?'저장된 점수 표시 중':'최도랑 현재 ELO · 전체 통계는 스폰노트에서 확인')}${row('티어표',tier,tier.version?`자료 v${tier.version}${tier.sourceDate?' · '+tier.sourceDate+' 기준':''}`:'선수 DB')}</div>${offline?'<p class="sync-offline">인터넷 연결 없음 · 저장된 자료를 표시해.</p>':''}`;
   }
   const statText = stat => `${stat.games}전 ${stat.wins}승 ${stat.losses}패`;
   function card(label, value, detail, action, extra = '') {
