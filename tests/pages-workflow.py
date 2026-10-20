@@ -56,7 +56,12 @@ publish = deploy['steps'][-1]
 assert publish['uses'] == 'actions/deploy-pages@v4'
 assert deploy['steps'][-2]['id'] == 'guard'
 assert upload['if'] == publish['if'] == "steps.guard.outputs.current == 'true'"
-assert upload['with']['name'] == publish['with']['artifact_name'] == 'github-pages-${{ github.sha }}-${{ github.run_attempt }}'
+assert upload['with']['name'] == '${{ steps.package.outputs.artifact-name }}'
+assert jobs['build-pages']['outputs']['artifact-name'] == '${{ steps.package.outputs.artifact-name }}'
+assert publish['with']['artifact_name'] == '${{ needs.build-pages.outputs.artifact-name }}'
+package = next(s for s in jobs['build-pages']['steps'] if s.get('id') == 'package')
+assert 'artifact-name=github-pages-$GITHUB_SHA-$GITHUB_RUN_ATTEMPT' in package['run']
+assert '>> "$GITHUB_OUTPUT"' in package['run']
 assert upload['with']['path'] == '_site'
 assert any('git archive "$GITHUB_SHA"' in s.get('run', '') for s in jobs['build-pages']['steps'])
 print('PASS: parsed workflow — required checks, pinned SHA/artifact, serialized guarded deployment, bot update coverage')

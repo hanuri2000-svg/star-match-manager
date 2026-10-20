@@ -79,6 +79,7 @@ jobs:
       pages: read
     outputs:
       current: ${{ steps.guard.outputs.current }}
+      artifact-name: ${{ steps.package.outputs.artifact-name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,16 +95,18 @@ jobs:
             const guard = require('./scripts/pages-deploy-guard.cjs');
             core.setOutput('current', await guard({github, context, core}));
       - name: Package the exact tested commit
+        id: package
         if: steps.guard.outputs.current == 'true'
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           mkdir _site
           git archive "$GITHUB_SHA" -- . ':!.github' ':!tests' ':!scripts' ':!docs' ':!README.md' ':!.deploy-*' | tar -x -C _site
           node -e 'require("fs").writeFileSync("_site/deployment.json", JSON.stringify({sha:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID}) + "\n")'
+          echo "artifact-name=github-pages-$GITHUB_SHA-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v3
         if: steps.guard.outputs.current == 'true'
         with:
-          name: github-pages-${{ github.sha }}-${{ github.run_attempt }}
+          name: ${{ steps.package.outputs.artifact-name }}
           path: _site
 
   deploy-pages:
@@ -142,4 +145,5 @@ jobs:
         if: steps.guard.outputs.current == 'true'
         uses: actions/deploy-pages@v4
         with:
-          artifact_name: github-pages-${{ github.sha }}-${{ github.run_attempt }}
+          # Reuse the producing job's name when only a failed deploy is rerun.
+          artifact_name: ${{ needs.build-pages.outputs.artifact-name }}
