@@ -485,7 +485,7 @@ function tierPlayerCard(player) {
         imageUrl
           ? `<img class="tier-avatar" src="${esc(imageUrl)}" alt="${esc(
               player.name,
-            )} 프로필" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`
+            )} 프로필" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='grid'">`
           : ""
       }
       <span class="tier-avatar-fallback" style="${imageUrl ? "display:none" : ""}">${esc(
