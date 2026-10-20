@@ -160,6 +160,18 @@ async def main():
                     print(json.dumps(results[-1], ensure_ascii=False), flush=True)
             finally:
                 await browser.close()
+            # Check the complete app on Safari's engine too, not just a phone-
+            # sized Chromium viewport or the isolated tier-link fixture.
+            browser = await playwright.webkit.launch()
+            try:
+                for viewport in [
+                    ('iphone-webkit', 390, 844, True),
+                    ('ipad-webkit', 1180, 820, True),
+                ]:
+                    results.append(await check_viewport(browser, origin, *viewport))
+                    print(json.dumps(results[-1], ensure_ascii=False), flush=True)
+            finally:
+                await browser.close()
     finally:
         server.shutdown()
         (OUTPUT / 'results.json').write_text(json.dumps(results, ensure_ascii=False, indent=2))
