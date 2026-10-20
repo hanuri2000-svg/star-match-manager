@@ -37,7 +37,15 @@
     }
   }
   function observeFailure(state,source,status,error,now=Date.now()){
-    if(status==='ok'){state.baseline.failures[source]=false;return}
+    if(status==='ok'){
+      state.baseline.failures[source]=false;
+      for(const item of state.items){
+        if(item.id.startsWith(`failure:${source}:`)&&!item.resolvedAt){
+          item.resolvedAt=now;item.title=`${source} 동기화 복구됨`;item.read=true;
+        }
+      }
+      return;
+    }
     if(status!=='error'||state.baseline.failures[source])return;
     state.baseline.failures[source]=true;
     add(state,`failure:${source}:${++state.baseline.sequence}`,`${source} 동기화 오류`,error||'자료를 갱신하지 못했어. 저장된 자료를 유지해.',{kind:'sync'},now);
@@ -69,7 +77,7 @@
     if(actions){let button=actions.querySelector('[data-open-notifications]');if(!button){button=global.document.createElement('button');button.type='button';button.className='secondary';button.dataset.openNotifications='1';actions.appendChild(button)}const label=`🔔 알림${unread?' '+unread:''}`;if(button.textContent!==label)button.textContent=label;button.setAttribute('aria-label',`알림센터 · 읽지 않은 알림 ${unread}개`)}
     const host=global.document.querySelector('[data-notification-center]');if(!host)return;
     const items=state.items.filter(item=>!unreadOnly||!item.read);
-    const content=`<details class="notification-details"><summary><strong>알림센터</strong><span class="notification-count" aria-live="polite">${unread?'읽지 않음 '+unread+'개':'새 알림 없음'}</span></summary><div class="notification-body"><p class="notification-note">페이지가 열려 있을 때 확인해. 일정 임박 알림은 시작 30분 전부터 기기 시간 기준으로 표시돼.</p><div class="notification-tools"><button type="button" class="secondary" data-notification-all ${unread?'':'disabled'}>모두 읽음</button><button type="button" class="secondary" data-notification-clear ${state.items.some(item=>item.read)?'':'disabled'}>읽은 알림 정리</button><button type="button" class="secondary" data-notification-filter aria-pressed="${unreadOnly}">${unreadOnly?'전체 보기':'읽지 않음만'}</button></div><div class="notification-list">${items.map(item=>`<article class="notification-item ${item.read?'is-read':'is-unread'}"><button type="button" class="notification-link" data-notification-open="${esc(item.id)}"><b>${esc(item.title)}</b><span>${esc(item.body)}</span><small>${esc(new Date(item.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${item.read?' · 읽음':''}</small></button>${!item.read?`<button type="button" class="secondary notification-read" data-notification-read="${esc(item.id)}">읽음</button>`:''}</article>`).join('')||'<p class="notification-empty">확인할 알림이 없어.</p>'}</div>${storageError?`<p role="status">${esc(storageError)}</p>`:''}</div></details>`;
+    const content=`<details class="notification-details"><summary><strong>알림센터</strong><span class="notification-count" aria-live="polite">${unread?'읽지 않음 '+unread+'개':'새 알림 없음'}</span></summary><div class="notification-body"><p class="notification-note">페이지가 열려 있을 때 확인해. 일정 임박 알림은 시작 30분 전부터 기기 시간 기준으로 표시돼.</p><div class="notification-tools"><button type="button" class="secondary" data-notification-all ${unread?'':'disabled'}>모두 읽음</button><button type="button" class="secondary" data-notification-clear ${state.items.some(item=>item.read)?'':'disabled'}>읽은 알림 정리</button><button type="button" class="secondary" data-notification-filter aria-pressed="${unreadOnly}">${unreadOnly?'전체 보기':'읽지 않음만'}</button></div><div class="notification-list">${items.map(item=>`<article class="notification-item ${item.read?'is-read':'is-unread'}"><button type="button" class="notification-link" data-notification-open="${esc(item.id)}"><b>${esc(item.title)}</b><span>${item.resolvedAt?'이전 오류: ':''}${esc(item.body)}</span>${item.resolvedAt?`<small>복구 확인 ${esc(new Date(item.resolvedAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}</small>`:''}<small>${esc(new Date(item.createdAt).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}))}${item.read?' · 읽음':''}</small></button>${!item.read?`<button type="button" class="secondary notification-read" data-notification-read="${esc(item.id)}">읽음</button>`:''}</article>`).join('')||'<p class="notification-empty">확인할 알림이 없어.</p>'}</div>${storageError?`<p role="status">${esc(storageError)}</p>`:''}</div></details>`;
     if(host._notificationContent===content)return;
     expanded=host.querySelector('details')?.open??expanded;host._notificationContent=content;host.innerHTML=content;host.querySelector('details').open=expanded;
   }

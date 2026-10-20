@@ -6,22 +6,23 @@
     const storage = options.storage || global.localStorage;
     const now = options.now || Date.now;
     const isOnline = options.isOnline || (() => global.navigator?.onLine !== false);
-    const timeoutMs = options.timeoutMs ?? 12000;
+    // Full history can take over 30 seconds; the score has its own small route.
+    const timeoutMs = options.timeoutMs ?? 60000;
+    const profileTimeoutMs = options.profileTimeoutMs ?? 20000;
     const retryDelay = options.retryDelay ?? 600;
     const ttl = options.ttl ?? 5 * 60 * 1000;
-    const cacheKey = 'spawnNote.eloDashboard.v1';
     const pending = new Map(), cache = new Map(), failures = new Map();
     const score = value => value !== '' && value != null && String(value).trim() !== '' && Number.isFinite(Number(String(value).replace(/,/g,'')));
     const valid = (data, player) => data?.player?.name === player && score(data.player.elo);
     const failure = (message, retryable = false) => Object.assign(new Error(message), {retryable});
-    async function attempt(url, player) {
+    async function attempt(url, player, limit = timeoutMs) {
       const controller = new AbortController();
       let timer;
       const deadline = new Promise((_, reject) => {
         timer = setTimeout(() => {
           reject(failure('응답 시간 초과', true));
           controller.abort();
-        }, timeoutMs);
+        }, limit);
       });
       try {
         return await Promise.race([deadline, (async () => {
@@ -30,7 +31,7 @@
           catch (error) { throw failure(error?.message || 'ELO 서버 연결 실패', true); }
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
-            throw failure(data.error || `ELO 조회 실패 (${response.status})`, [408,429,500,502,503,504].includes(response.status));
+            throw Object.assign(failure(data.error || `ELO 조회 실패 (${response.status})`, [408,429,500,502,503,504].includes(response.status)), {status:response.status});
           }
           let data;
           try { data = await response.json(); }
@@ -40,11 +41,12 @@
         })()]);
       } finally { clearTimeout(timer); }
     }
-    function get({player, today, base, force = false}) {
+    function request(kind, {player, today, base, force = false}) {
       player = String(player || '').trim();
       base = String(base || '').replace(/\/$/, '');
       if (!player || !today || !base) return Promise.reject(failure('ELO 조회 기준 확인 불가'));
-      const key = JSON.stringify([base,player,today]);
+      const cacheKey = kind === 'profile' ? 'spawnNote.eloProfile.v1' : 'spawnNote.eloDashboard.v1';
+      const key = JSON.stringify([kind,base,player,today]);
       // 강제 새로고침도 이미 진행 중인 요청은 공유한다.
       if (pending.has(key)) return pending.get(key);
       if (!cache.has(key)) {
@@ -61,15 +63,21 @@
         try {
           if (!isOnline()) throw failure('인터넷 연결 없음');
           const query = new URLSearchParams({player,today});
-          let data;
+          let data, checkedAt, cached = false;
           for (let index = 0; index < 2; index++) {
-            try { data = await attempt(`${base}/api/elo/dashboard?${query}`,player); break; }
+            try { data = await attempt(`${base}/api/elo/${kind}?${query}`,player,kind === 'profile' ? profileTimeoutMs : timeoutMs); break; }
             catch (error) {
+              // Allow the page and Worker to roll out in either order. Share the
+              // full request with the stats tab on an older Worker, never fake a score.
+              if (kind === 'profile' && error.status === 404 && error.message === 'not found') {
+                const result = await get({player,today,base,force});
+                data = {player:result.data.player}; checkedAt = result.checkedAt; cached = result.cached; break;
+              }
               if (index === 1 || !error.retryable || !isOnline()) throw error;
               await new Promise(resolve => setTimeout(resolve,retryDelay));
             }
           }
-          const result = {player,today,base,data,checkedAt:now(),cached:false};
+          const result = {player,today,base,data,checkedAt:checkedAt ?? now(),cached};
           cache.set(key,result); failures.delete(key);
           try { storage?.setItem(cacheKey,JSON.stringify(result)); } catch {}
           return result;
@@ -79,7 +87,9 @@
       pending.set(key,request);
       return request;
     }
-    return {get};
+    const get = query => request('dashboard',query);
+    const getProfile = query => request('profile',query);
+    return {get,getProfile};
   }
   if (typeof module === 'object' && module.exports) module.exports = {createClient};
   else global.EloDashboardClient = createClient();

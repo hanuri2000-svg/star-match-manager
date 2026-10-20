@@ -76,7 +76,7 @@
     loading = true; error = ''; eloSync={...eloSync,status:'loading',error:''};render();
     try {
       const base = String(global.SPAWN_NOTE_ELO_API_BASE || 'https://spawn-note-elo-relay.hajimayo8130.workers.dev').replace(/\/$/,'');
-      const {data,checkedAt,cached} = await global.EloDashboardClient.get({player:PLAYER,today:dateKey(),base,force});
+      const {data,checkedAt,cached} = await global.EloDashboardClient.getProfile({player:PLAYER,today:dateKey(),base,force});
       const previous = numeric(snapshot?.data?.player?.elo), current = numeric(data.player.elo);
       const delta = snapshot?.checkedAt===checkedAt&&previous===current?snapshot.delta:previous==null?null:Number((current-previous).toFixed(1));
       snapshot = {player:PLAYER,data,checkedAt,delta};
@@ -116,12 +116,8 @@
   global.addEventListener('harina-player-master-sync',render);
   global.addEventListener('online',()=>{render();refreshAll()});
   global.addEventListener('offline',render);
-  global.addEventListener('spawn-note:dashboard-sync',event=>{
-    if(event.detail?.player!==PLAYER)return;
-    error=event.detail.error||'';
-    eloSync={...eloSync,status:event.detail.status,error};render();
-    publishElo();
-  });
+  // Detailed statistics have their own state in the sponsor-note tab. A slow
+  // history request must not turn a successfully refreshed score into an error.
   global.addEventListener('spawn-note:dashboard-changed',event=>{
     const {player,data,checkedAt=Date.now()}=event.detail||{};
     if(player!==PLAYER || numeric(data?.player?.elo)==null)return;

@@ -58,3 +58,46 @@ test('오프라인에서는 요청하지 않고 연결 복구 후 강제 갱신�
  await assert.rejects(client.get(query),/인터넷 연결 없음/);assert.equal(calls,0);
  online=true;await client.get({...query,force:true});assert.equal(calls,1);
 });
+
+test('점수는 전체 통계가 끝나기 전에 별도 경로로 받고 캐시를 섞지 않는다',async()=>{
+ const store=storage(),calls=[];let finish;
+ const client=createClient({storage:store,fetch:async url=>{
+  calls.push(url);if(url.includes('/profile?'))return response(payload(1289.4));
+  return new Promise(resolve=>finish=resolve);
+ }});
+ const full=client.get(query);const a=client.getProfile(query),b=client.getProfile({...query,force:true});
+ assert.equal(a,b);assert.equal((await a).data.player.elo,'1289.4');assert.equal(calls.length,2);
+ assert.equal(store.getItem('spawnNote.eloDashboard.v1'),undefined);
+ assert.equal(JSON.parse(store.getItem('spawnNote.eloProfile.v1')).data.player.elo,'1289.4');
+ finish(response({...payload(1289.4),detailGames:2845}));await full;
+ assert.equal((await client.getProfile(query)).data.detailGames,undefined);
+ assert.equal((await client.get(query)).data.detailGames,2845);
+});
+
+test('구형 서버에 경량 경로가 없으면 전체 통계의 진행 중 요청을 공유한다',async()=>{
+ let calls=0,finish;const client=createClient({fetch:async url=>{
+  calls++;if(url.includes('/profile?'))return {ok:false,status:404,json:async()=>({error:'not found'})};
+  return new Promise(resolve=>finish=resolve);
+ }});
+ const full=client.get(query),profile=client.getProfile(query);await new Promise(resolve=>setTimeout(resolve,0));
+ assert.equal(calls,2);finish(response(payload(1289.4)));
+ const [one,two]=await Promise.all([full,profile]);assert.equal(one.checkedAt,two.checkedAt);assert.equal(two.data.player.elo,'1289.4');
+});
+
+test('없는 선수는 전체 통계 재조회로 우회하지 않고 캐시 재사용을 새 성공으로 꾸미지 않는다',async()=>{
+ let calls=0,time=1000000;const client=createClient({now:()=>time,storage:storage(),fetch:async url=>{
+  calls++;return url.includes('/profile?')?{ok:false,status:404,json:async()=>({error:'not found'})}:response(payload(1289.4));
+ }});
+ const first=await client.get(query);time+=1000;
+ const result=await client.getProfile(query);assert.equal(calls,2);assert.equal(result.checkedAt,first.checkedAt);assert.equal(result.cached,true);
+ let missingCalls=0;const missing=createClient({fetch:async()=>{missingCalls++;return {ok:false,status:404,json:async()=>({error:'선수 없음'})}}});
+ await assert.rejects(missing.getProfile(query),/선수 없음/);assert.equal(missingCalls,1);
+});
+
+test('전체 통계는 기존 12초를 지나도 취소하지 않고 60초 제한을 사용한다',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ let finish,signal;const client=createClient({fetch:(_url,options)=>{signal=options.signal;return new Promise(resolve=>finish=resolve)}});
+ const pending=client.get(query);await Promise.resolve();
+ t.mock.timers.tick(34545);assert.equal(signal.aborted,false);
+ finish(response(payload(1289.4)));assert.equal((await pending).data.player.elo,'1289.4');
+});

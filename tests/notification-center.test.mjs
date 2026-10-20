@@ -29,6 +29,20 @@ test('같은 오류는 중복 알리지 않고 성공 후 다시 실패하면 �
  const s=api.blank();for(let i=0;i<5;i++){api.observeFailure(s,'ELO','loading');api.observeFailure(s,'ELO','error','오류')};assert.equal(s.items.length,1);
  api.observeFailure(s,'ELO','ok');api.observeFailure(s,'ELO','error','다시 오류');assert.equal(s.items.length,2);
 });
+
+test('실제 조회 성공 시 이전 오류를 복구됨으로 표시하고 읽음으로 바꾸며 기록은 보존한다',()=>{
+ const s=api.blank();api.observeFailure(s,'ELO','error','응답 시간 초과',1000);
+ api.observeFailure(s,'티어표','error','티어 연결 오류',1500);
+ api.observeFailure(s,'ELO','cached','',2000);
+ assert.equal(s.items.find(x=>x.title==='ELO 동기화 오류').resolvedAt,undefined);
+ api.observeFailure(s,'ELO','ok','',3000);
+ const fixed=s.items.find(x=>x.title==='ELO 동기화 복구됨');
+ assert.equal(fixed.resolvedAt,3000);assert.equal(fixed.createdAt,1000);assert.equal(fixed.body,'응답 시간 초과');assert.equal(fixed.read,true);
+ assert.equal(s.items.find(x=>x.title==='티어표 동기화 오류').read,false);
+ api.observeFailure(s,'ELO','ok','',4000);assert.equal(fixed.resolvedAt,3000);
+ api.observeFailure(s,'ELO','error','새 오류',5000);assert.equal(s.items[0].title,'ELO 동기화 오류');assert.equal(s.items[0].read,false);
+ const restored=api.load({getItem:()=>JSON.stringify(s)});assert.equal(restored.items.find(x=>x.id===fixed.id).resolvedAt,3000);
+});
 test('현재 버전보다 새로운 버전만 한 번 알린다',()=>{
  const s=api.blank();api.observeVersion(s,{version:'5.18.0'},'5.19.0');api.observeVersion(s,{version:'5.19.0'},'5.19.0');assert.equal(s.items.length,0);
  api.observeVersion(s,{version:'5.20.0',notes:'새 기능'},'5.19.0');api.observeVersion(s,{version:'5.20.0'},'5.19.0');assert.equal(s.items.length,1);assert.equal(s.items[0].target.version,'5.20.0');assert.equal(api.newer('invalid','5.19.0'),false);
