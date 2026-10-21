@@ -168,10 +168,18 @@ async def check_screen_mode(browser, origin, label, width, height):
         assert 'maximum-scale' not in await page.locator('meta[name="viewport"]').get_attribute('content')
         columns = await page.locator('.schedule-main-layout').evaluate("el => getComputedStyle(el).gridTemplateColumns.split(' ').length")
         assert columns == 2, columns
-        # Verify the actual viewport can pan, not just a wide screenshot.
-        await page.evaluate('window.scrollTo(400, 200)')
-        await page.wait_for_timeout(100)
-        assert await page.evaluate('scrollX + visualViewport.offsetLeft') > 0
+        # Mobile pans the visual viewport inside the wide layout viewport;
+        # window.scrollTo only moves the latter and cannot simulate a swipe.
+        geometry = await page.evaluate('({visual:visualViewport.width, layout:document.documentElement.clientWidth, scale:visualViewport.scale})')
+        assert geometry['layout'] > geometry['visual'], geometry
+        if browser.browser_type.name == 'chromium':
+            session = await context.new_cdp_session(page)
+            await session.send('Input.synthesizeScrollGesture', {
+                'x': 200, 'y': 400, 'xDistance': -300, 'yDistance': 0,
+                'speed': 600, 'gestureSourceType': 'touch'})
+            await page.wait_for_timeout(200)
+            assert await page.evaluate('scrollX + visualViewport.offsetLeft') > 0, geometry
+            await session.detach()
         await page.screenshot(path=str(OUTPUT / f'{label}-pc-panned.png'))
         await page.locator('.screen-mode-return').click()
         await page.wait_for_function("document.documentElement.dataset.screenMode==='mobile'")
