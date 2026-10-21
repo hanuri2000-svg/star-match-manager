@@ -181,6 +181,13 @@ async def check_screen_mode(browser, origin, label, width, height):
             assert await page.evaluate('scrollX + visualViewport.offsetLeft') > 0, geometry
             await session.detach()
         await page.screenshot(path=str(OUTPUT / f'{label}-pc-panned.png'))
+        back_geometry = await page.locator('.screen-mode-return').evaluate('''el => {
+          const r=el.getBoundingClientRect(),v=visualViewport;
+          return {visible:r.left>=v.offsetLeft && r.right<=v.offsetLeft+v.width &&
+            r.top>=v.offsetTop && r.bottom<=v.offsetTop+v.height,
+            left:r.left,top:r.top,visualWidth:v.width,visualHeight:v.height};
+        }''')
+        assert back_geometry['visible'], back_geometry
         await page.locator('.screen-mode-return').click()
         await page.wait_for_function("document.documentElement.dataset.screenMode==='mobile'")
         assert await page.locator('#schedule-title').input_value() == '화면 전환 중 작성 내용'
