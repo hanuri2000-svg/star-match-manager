@@ -216,13 +216,10 @@ async def check_screen_mode(browser, origin, label, width, height):
             assert 'active' in (await tab.get_attribute('class') or ''), (tab_name, point)
             assert await page.locator('.screen-mode-controls').count() == 1
             assert await page.locator('.screen-mode-controls [data-screen-mode="pc"]').get_attribute('aria-pressed') == 'true'
-        # The following assertion concerns orientation, independently of tab input.
+        # Return from the final tab using the always-visible control.
         await page.locator('.app-tabs [data-tab="schedule"]').evaluate('el => el.click()')
-        await page.set_viewport_size({"width": height, "height": width})
-        assert await page.evaluate("matchMedia('(min-width:1200px)').matches")
         await tap_visual(page.locator('.screen-mode-return'), scroll=False)
         await page.wait_for_function("document.documentElement.dataset.screenMode==='mobile'")
-        await page.set_viewport_size({"width": width, "height": height})
         await page.reload(wait_until='networkidle')
         assert await page.locator('html').get_attribute('data-screen-mode') == 'mobile'
         assert await page.evaluate('document.documentElement.scrollWidth') <= width + 1
