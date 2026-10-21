@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-20",
+  "updatedAt": "2026-10-21",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -3365,7 +3365,7 @@
       "active": true,
       "eloId": 825,
       "soopId": "chuwari13",
-      "thumbUrl": "players/825.jpg?v=1787122151"
+      "thumbUrl": "players/825_25b0a686.jpg?v=1792572733"
     },
     {
       "name": "구키",
