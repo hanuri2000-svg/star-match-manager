@@ -11,8 +11,11 @@
     root.style.setProperty('--screen-visible-height',(visible?.height||innerHeight)+'px');
     const back=document.querySelector('.screen-mode-return');
     if(back){
-      back.style.left=((visible?.offsetLeft||0)+12)+'px';
-      back.style.top=((visible?.offsetTop||0)+(visible?.height||innerHeight)-back.offsetHeight-16)+'px';
+      const scale=visible?.scale||1;
+      back.style.transform='scale('+(1/scale)+')';
+      back.style.transformOrigin='top left';
+      back.style.left=((visible?.offsetLeft||0)+12/scale)+'px';
+      back.style.top=((visible?.offsetTop||0)+(visible?.height||innerHeight)-(back.offsetHeight+16)/scale)+'px';
     }
   }
   function apply(){
