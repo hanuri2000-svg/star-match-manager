@@ -29,7 +29,7 @@
   style.textContent=`
     .screen-mode-controls{display:inline-flex;gap:3px;align-items:center;flex-wrap:nowrap;padding:3px;border:1px solid var(--line,#d8c6e4);border-radius:10px;background:#fff}
     .screen-mode-controls button{white-space:nowrap;min-height:34px!important;font-size:12px!important}
-    .screen-mode-controls button[aria-pressed="true"]{background:#7351a1!important;border-color:#7351a1!important;color:#fff!important}
+    #app .screen-mode-controls button[aria-pressed="true"]{background:#7351a1!important;border-color:#7351a1!important;color:#fff!important}
     .screen-mode-return{display:none}
     @media(hover:none) and (pointer:coarse){
       html[data-screen-mode="pc"],html[data-screen-mode="pc"] body{height:auto!important;overflow:auto!important}

@@ -200,10 +200,20 @@ async def check_screen_mode(browser, origin, label, width, height):
         assert await page.locator('html').get_attribute('data-screen-mode') == 'pc'
         assert await page.evaluate("matchMedia('(min-width:1200px)').matches")
         for tab_name in await page.locator('.app-tabs [data-tab]').evaluate_all('els => els.map(el => el.dataset.tab)'):
-            await page.locator(f'.app-tabs [data-tab="{tab_name}"]').click()
+            tab = page.locator(f'.app-tabs [data-tab="{tab_name}"]')
+            await tab.evaluate("el => el.scrollIntoView({block:'center',inline:'center',behavior:'instant'})")
+            await page.wait_for_timeout(100)
+            point = await tab.evaluate('''el => {
+              const r=el.getBoundingClientRect(),v=visualViewport;
+              return {x:(r.left+r.width/2-v.offsetLeft)*v.scale,
+                y:(r.top+r.height/2-v.offsetTop)*v.scale};
+            }''')
+            await page.touchscreen.tap(point['x'], point['y'])
+            assert 'active' in (await tab.get_attribute('class') or ''), (tab_name, point)
             assert await page.locator('.screen-mode-controls').count() == 1
             assert await page.locator('.screen-mode-controls [data-screen-mode="pc"]').get_attribute('aria-pressed') == 'true'
-        await page.locator('.app-tabs [data-tab="schedule"]').click()
+        # The following assertion concerns orientation, independently of tab input.
+        await page.locator('.app-tabs [data-tab="schedule"]').evaluate('el => el.click()')
         await page.set_viewport_size({"width": height, "height": width})
         assert await page.evaluate("matchMedia('(min-width:1200px)').matches")
         await page.locator('.screen-mode-return').click()
