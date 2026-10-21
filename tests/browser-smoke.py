@@ -157,16 +157,24 @@ async def check_screen_mode(browser, origin, label, width, height):
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     async def tap_visual(locator, scroll=True):
-        if scroll:
-            await locator.evaluate("el => el.scrollIntoView({block:'center',inline:'center',behavior:'instant'})")
-        await page.wait_for_timeout(100)
-        point = await locator.evaluate('''el => {
-          const r=el.getBoundingClientRect(),v=visualViewport;
-          return {x:(r.left+r.width/2-v.offsetLeft)*v.scale,
-            y:(r.top+r.height/2-v.offsetTop)*v.scale};
-        }''')
-        await page.touchscreen.tap(point['x'], point['y'])
-        return point
+        # Renders replace the header, and WebKit can report a zero viewport
+        # scale during that transition. Reacquire a visible target before tap.
+        for attempt in range(5):
+            await locator.wait_for(state='visible')
+            if scroll:
+                await locator.evaluate("el => el.scrollIntoView({block:'center',inline:'center',behavior:'instant'})")
+            await page.wait_for_timeout(100)
+            point = await locator.evaluate('''el => {
+              const r=el.getBoundingClientRect(),v=visualViewport;
+              if(!el.isConnected || !r.width || !r.height || !v.scale)return null;
+              const x=(r.left+r.width/2-v.offsetLeft)*v.scale;
+              const y=(r.top+r.height/2-v.offsetTop)*v.scale;
+              return x>0 && y>0 ? {x,y} : null;
+            }''')
+            if point:
+                await page.touchscreen.tap(point['x'], point['y'])
+                return point
+        raise AssertionError('Mobile tap target did not stabilize')
     try:
         await page.goto(origin, wait_until='networkidle')
         assert await page.locator('html').get_attribute('data-screen-mode') == 'mobile'
@@ -215,6 +223,7 @@ async def check_screen_mode(browser, origin, label, width, height):
         for tab_name in await page.locator('.app-tabs [data-tab]').evaluate_all('els => els.map(el => el.dataset.tab)'):
             tab = page.locator(f'.app-tabs [data-tab="{tab_name}"]')
             point = await tap_visual(tab)
+            await page.wait_for_function("name => document.querySelector('.app-tabs [data-tab=\"'+name+'\"]')?.classList.contains('active')", arg=tab_name, timeout=5000)
             assert 'active' in (await tab.get_attribute('class') or ''), (tab_name, point)
             assert await page.locator('.screen-mode-controls').count() == 1
             assert await page.locator('.screen-mode-controls [data-screen-mode="pc"]').get_attribute('aria-pressed') == 'true'
