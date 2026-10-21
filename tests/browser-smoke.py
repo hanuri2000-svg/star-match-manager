@@ -156,6 +156,17 @@ async def check_screen_mode(browser, origin, label, width, height):
     page = await context.new_page()
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
+    async def tap_visual(locator, scroll=True):
+        if scroll:
+            await locator.evaluate("el => el.scrollIntoView({block:'center',inline:'center',behavior:'instant'})")
+        await page.wait_for_timeout(100)
+        point = await locator.evaluate('''el => {
+          const r=el.getBoundingClientRect(),v=visualViewport;
+          return {x:(r.left+r.width/2-v.offsetLeft)*v.scale,
+            y:(r.top+r.height/2-v.offsetTop)*v.scale};
+        }''')
+        await page.touchscreen.tap(point['x'], point['y'])
+        return point
     try:
         await page.goto(origin, wait_until='networkidle')
         assert await page.locator('html').get_attribute('data-screen-mode') == 'mobile'
@@ -192,7 +203,7 @@ async def check_screen_mode(browser, origin, label, width, height):
             left:r.left,top:r.top,visualWidth:v.width,visualHeight:v.height};
         }''')
         assert back_geometry['visible'], back_geometry
-        await page.locator('.screen-mode-return').click()
+        await tap_visual(page.locator('.screen-mode-return'), scroll=False)
         await page.wait_for_function("document.documentElement.dataset.screenMode==='mobile'")
         assert await page.locator('#schedule-title').input_value() == '화면 전환 중 작성 내용'
         await page.locator('.screen-mode-controls [data-screen-mode="pc"]').click()
@@ -201,14 +212,7 @@ async def check_screen_mode(browser, origin, label, width, height):
         assert await page.evaluate("matchMedia('(min-width:1200px)').matches")
         for tab_name in await page.locator('.app-tabs [data-tab]').evaluate_all('els => els.map(el => el.dataset.tab)'):
             tab = page.locator(f'.app-tabs [data-tab="{tab_name}"]')
-            await tab.evaluate("el => el.scrollIntoView({block:'center',inline:'center',behavior:'instant'})")
-            await page.wait_for_timeout(100)
-            point = await tab.evaluate('''el => {
-              const r=el.getBoundingClientRect(),v=visualViewport;
-              return {x:(r.left+r.width/2-v.offsetLeft)*v.scale,
-                y:(r.top+r.height/2-v.offsetTop)*v.scale};
-            }''')
-            await page.touchscreen.tap(point['x'], point['y'])
+            point = await tap_visual(tab)
             assert 'active' in (await tab.get_attribute('class') or ''), (tab_name, point)
             assert await page.locator('.screen-mode-controls').count() == 1
             assert await page.locator('.screen-mode-controls [data-screen-mode="pc"]').get_attribute('aria-pressed') == 'true'
@@ -216,7 +220,8 @@ async def check_screen_mode(browser, origin, label, width, height):
         await page.locator('.app-tabs [data-tab="schedule"]').evaluate('el => el.click()')
         await page.set_viewport_size({"width": height, "height": width})
         assert await page.evaluate("matchMedia('(min-width:1200px)').matches")
-        await page.locator('.screen-mode-return').click()
+        await tap_visual(page.locator('.screen-mode-return'), scroll=False)
+        await page.wait_for_function("document.documentElement.dataset.screenMode==='mobile'")
         await page.set_viewport_size({"width": width, "height": height})
         await page.reload(wait_until='networkidle')
         assert await page.locator('html').get_attribute('data-screen-mode') == 'mobile'
@@ -248,24 +253,24 @@ async def main():
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch()
             try:
+                results.append(await check_screen_mode(browser, origin, 'phone-chromium', 390, 844))
                 for viewport in VIEWPORTS:
                     results.append(await check_viewport(browser, origin, *viewport))
                     print(json.dumps(results[-1], ensure_ascii=False), flush=True)
-                results.append(await check_screen_mode(browser, origin, 'phone-chromium', 390, 844))
             finally:
                 await browser.close()
             # Check the complete app on Safari's engine too, not just a phone-
             # sized Chromium viewport or the isolated tier-link fixture.
             browser = await playwright.webkit.launch()
             try:
+                results.append(await check_screen_mode(browser, origin, 'iphone-webkit', 390, 844))
+                results.append(await check_screen_mode(browser, origin, 'ipad-webkit', 820, 1180))
                 for viewport in [
                     ('iphone-webkit', 390, 844, True),
                     ('ipad-webkit', 1180, 820, True),
                 ]:
                     results.append(await check_viewport(browser, origin, *viewport))
                     print(json.dumps(results[-1], ensure_ascii=False), flush=True)
-                results.append(await check_screen_mode(browser, origin, 'iphone-webkit', 390, 844))
-                results.append(await check_screen_mode(browser, origin, 'ipad-webkit', 820, 1180))
             finally:
                 await browser.close()
     finally:
