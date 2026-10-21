@@ -34,7 +34,7 @@
     @media(hover:none) and (pointer:coarse){
       html[data-screen-mode="pc"],html[data-screen-mode="pc"] body{height:auto!important;overflow:auto!important}
       html[data-screen-mode="pc"] body.app-fit-screen #app{height:auto!important;max-height:none!important;min-height:var(--screen-visible-height,100svh);overflow:visible!important;padding-bottom:72px!important}
-      html[data-screen-mode="pc"] body.app-fit-screen #app>.tab-view[style*="display:block"]{flex:none;overflow:visible!important}
+      html[data-screen-mode="pc"] body.app-fit-screen #app>.tab-view[style*="display:block"]{flex:none;overflow:visible!important;overscroll-behavior:auto!important}
       html[data-screen-mode="pc"] .screen-mode-return{display:block;position:fixed;left:12px;bottom:auto;z-index:1000;min-height:44px;padding:10px 14px!important;background:#fff!important;color:#513c60!important;border:2px solid #a68bc1!important;box-shadow:0 3px 14px #0003!important;font-size:14px!important}
     }
   `;

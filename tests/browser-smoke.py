@@ -174,9 +174,13 @@ async def check_screen_mode(browser, origin, label, width, height):
         assert geometry['layout'] > geometry['visual'], geometry
         if browser.browser_type.name == 'chromium':
             session = await context.new_cdp_session(page)
-            await session.send('Input.synthesizeScrollGesture', {
-                'x': 200, 'y': 400, 'xDistance': -300, 'yDistance': 0,
-                'speed': 600, 'gestureSourceType': 'touch'})
+            await session.send('Input.dispatchTouchEvent', {
+                'type':'touchStart','touchPoints':[{'x':340,'y':80}]})
+            for x in [300,260,220,180,140,100,60]:
+                await session.send('Input.dispatchTouchEvent', {
+                    'type':'touchMove','touchPoints':[{'x':x,'y':80}]})
+                await page.wait_for_timeout(40)
+            await session.send('Input.dispatchTouchEvent', {'type':'touchEnd','touchPoints':[]})
             await page.wait_for_timeout(200)
             assert await page.evaluate('scrollX + visualViewport.offsetLeft') > 0, geometry
             await session.detach()
