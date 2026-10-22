@@ -1,7 +1,26 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 const SOURCE_URL = 'https://eloboard.co.kr/tiers';
+const THUMB_BASE_URL = 'https://eloboard.co.kr/static/';
 const PLAYER_FILE = 'players.json';
+
+async function isUsableThumbnail(path) {
+  // Only accept EloBoard's relative player images; a source field must not
+  // cause the scheduled job to request an arbitrary URL.
+  if (!/^players\/[a-zA-Z0-9._-]+\.(?:jpe?g|png|webp|gif)(?:\?v=\d+)?$/.test(path)) return false;
+  try {
+    const response = await fetch(new URL(path, THUMB_BASE_URL), {
+      headers: { accept: 'image/*', 'user-agent': 'star-match-manager-tier-sync/1.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    const contentType = response.headers?.get('content-type')?.trim() || '';
+    await response.body?.cancel?.();
+    // EloBoard can return its HTML fallback with HTTP 200 for a missing image.
+    return response.ok && /^image\/(?:jpeg|png|webp|gif|avif)(?:;|$)/i.test(contentType);
+  } catch {
+    return false;
+  }
+}
 
 function decodeHtml(value = '') {
   return value
@@ -140,6 +159,16 @@ async function main() {
   if (knownActive.length >= 300 && retained.length < Math.ceil(knownActive.length * 0.95)) {
     throw new Error(`Unsafe EloBoard coverage: ${retained.length}/${knownActive.length} known active IDs`);
   }
+  const thumbnailCandidates = [...new Set(official
+    .filter(item => item.thumbUrl && item.thumbUrl !== currentById.get(item.id)?.thumbUrl)
+    .map(item => item.thumbUrl))];
+  const validThumbnails = new Set();
+  for (let index = 0; index < thumbnailCandidates.length; index += 4) {
+    await Promise.all(thumbnailCandidates.slice(index, index + 4).map(async path => {
+      if (await isUsableThumbnail(path)) validThumbnails.add(path);
+      else console.warn(`Skipping unavailable EloBoard thumbnail: ${path}`);
+    }));
+  }
   const used = new Set();
   const isKnownRace = race => ['T', 'Z', 'P'].includes(race);
   const isUndecidedRace = race => race == null || (typeof race === 'string' && ['', '미정'].includes(race.trim()));
@@ -173,7 +202,7 @@ async function main() {
       return {
         name: item.name, tier: item.tier, tierLabel: item.tier === '유스' ? '베이비' : item.tier,
         race: isKnownRace(item.race) ? item.race : null, aliases: [], active: true, eloId: item.id, soopId: '',
-        thumbUrl: item.thumbUrl
+        thumbUrl: validThumbnails.has(item.thumbUrl) ? item.thumbUrl : ''
       };
     }
     used.add(found);
@@ -189,7 +218,7 @@ async function main() {
     else if (!isKnownRace(player.race)) player.race = null;
     player.active = true;
     player.eloId = item.id;
-    if (item.thumbUrl) player.thumbUrl = item.thumbUrl;
+    if (validThumbnails.has(item.thumbUrl)) player.thumbUrl = item.thumbUrl;
     return player;
   });
 

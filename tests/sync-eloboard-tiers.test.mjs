@@ -60,9 +60,12 @@ async function withSyncFixture(change, check, metadata = '<h2>변경사항</h2><
     const html = `${metadata}<script>self.__next_f.push([1,${JSON.stringify(JSON.stringify({ sections }))}])</script>`;
     const before = JSON.stringify({ source: { name: '스타CK 밸런스 티어표', version: '3.62', date: '2026-10-16' }, players });
     await writeFile(join(dir, 'players.json'), before);
-    await writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(html)} });`);
+    const mockFetch = value => `globalThis.fetch = async url => String(url).endsWith('/tiers')
+      ? { ok: true, text: async () => ${JSON.stringify(value)} }
+      : { ok: !String(url).includes('/missing.'), headers: { get: () => String(url).includes('/broken.') ? 'text/html' : 'image/jpeg' } };`;
+    await writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(html));
     const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir, stdio: 'pipe' });
-    await check({ run, before, setHtml: value => writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(value)} });`), html, read: () => readFile(join(dir, 'players.json'), 'utf8') });
+    await check({ run, before, setHtml: value => writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(value)), html, read: () => readFile(join(dir, 'players.json'), 'utf8') });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -151,6 +154,25 @@ test('same-ID rename retains local metadata and adds the previous name as an ali
   });
 });
 
+test('HTML fallback and missing thumbnails do not overwrite an existing photo or blank', async () => {
+  await withSyncFixture((players, official) => {
+    official[0].thumb_url = 'players/broken.jpg?v=123';
+    official[1].thumb_url = 'players/missing.jpg?v=123';
+    official[2].thumb_url = 'players/valid.jpg?v=123';
+    players[1].thumbUrl = '';
+    players[2].thumbUrl = '';
+  }, async ({ run, read }) => {
+    run();
+    const first = await read();
+    const result = JSON.parse(first).players;
+    assert.equal(result[0].thumbUrl, 'old-0.jpg');
+    assert.equal(result[1].thumbUrl, '');
+    assert.equal(result[2].thumbUrl, 'players/valid.jpg?v=123');
+    run();
+    assert.equal(await read(), first);
+  });
+});
+
 test('unique ID-less legacy player may acquire its official ID', async () => {
   await withSyncFixture(players => { players[0].eloId = null; }, async ({ run, read }) => {
     run();
@@ -233,7 +255,7 @@ test('verified Sewol identity history and custom metadata survive repeated canon
   }
   await withSyncFixture((players, official) => {
     players[0] = { ...canonical, soopId: 'local-account', aliases: ['local alias'], notes: { keep: true } };
-    official[0] = { player_id: 763, name: '세월', race: 'P', thumb_url: 'new-photo.jpg' };
+    official[0] = { player_id: 763, name: '세월', race: 'P', thumb_url: 'players/new-photo.jpg' };
   }, async ({ run, read }) => {
     run();
     const first = await read();
@@ -242,7 +264,7 @@ test('verified Sewol identity history and custom metadata survive repeated canon
     assert.deepEqual(p.notes, { keep: true });
     assert.deepEqual(p.aliases, ['local alias']);
     assert.equal(p.soopId, 'local-account');
-    assert.equal(p.thumbUrl, 'new-photo.jpg');
+    assert.equal(p.thumbUrl, 'players/new-photo.jpg');
     run();
     assert.equal(await read(), first);
   });
