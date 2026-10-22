@@ -62,10 +62,12 @@ async function withSyncFixture(change, check, metadata = '<h2>변경사항</h2><
     await writeFile(join(dir, 'players.json'), before);
     const mockFetch = value => `globalThis.fetch = async url => String(url).endsWith('/tiers')
       ? { ok: true, text: async () => ${JSON.stringify(value)} }
-      : { ok: !String(url).includes('/missing.'), headers: { get: () => String(url).includes('/broken.') ? 'text/html' : 'image/jpeg' } };`;
+      : { ok: !String(url).includes('/missing.'), headers: { get: name => name === 'content-type' ? (String(url).includes('/broken.') ? 'text/html' : 'image/jpeg') : null },
+          arrayBuffer: async () => Uint8Array.from([255, 216, 255, 224, 12, 34, 56, 255, 217]).buffer };`;
     await writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(html));
     const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir, stdio: 'pipe' });
-    await check({ run, before, setHtml: value => writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(value)), html, read: () => readFile(join(dir, 'players.json'), 'utf8') });
+    await check({ run, before, setHtml: value => writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(value)), html,
+      read: () => readFile(join(dir, 'players.json'), 'utf8'), readAsset: path => readFile(join(dir, path)) });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -173,22 +175,36 @@ test('HTML fallback and missing thumbnails do not overwrite an existing photo or
   });
 });
 
-test('browser-rejected thumbnail stays blank even when the Actions runner sees an image', async () => {
+test('browser-rejected thumbnail is mirrored when the Actions runner can download an image', async () => {
   await withSyncFixture((players, official) => {
     players[0].thumbUrl = '';
     players[0].rejectedThumbUrls = ['players/448_dc7eeec8.jpg?v=1792645915'];
     official[0].thumb_url = 'players/448_dc7eeec8.jpg?v=1792645915';
     players[1].thumbUrl = '';
     official[1].thumb_url = 'players/new-photo.jpg?v=123';
-  }, async ({ run, read }) => {
+  }, async ({ run, read, readAsset }) => {
     run();
     const first = await read();
     const result = JSON.parse(first).players;
-    assert.equal(result[0].thumbUrl, '');
+    assert.equal(result[0].thumbUrl, 'assets/eloboard-players/1-448_dc7eeec8.jpg');
+    assert.deepEqual([...await readAsset(result[0].thumbUrl)], [255, 216, 255, 224, 12, 34, 56, 255, 217]);
     assert.deepEqual(result[0].rejectedThumbUrls, ['players/448_dc7eeec8.jpg?v=1792645915']);
     assert.equal(result[1].thumbUrl, 'players/new-photo.jpg?v=123');
     run();
     assert.equal(await read(), first);
+  });
+});
+
+test('browser-rejected thumbnail remains blank when EloBoard returns HTML', async () => {
+  await withSyncFixture((players, official) => {
+    players[0].thumbUrl = '';
+    players[0].rejectedThumbUrls = ['players/broken.jpg?v=123'];
+    official[0].thumb_url = 'players/broken.jpg?v=123';
+  }, async ({ run, read }) => {
+    run();
+    const result = JSON.parse(await read()).players;
+    assert.equal(result[0].thumbUrl, '');
+    assert.deepEqual(result[0].rejectedThumbUrls, ['players/broken.jpg?v=123']);
   });
 });
 
