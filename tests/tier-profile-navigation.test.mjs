@@ -5,11 +5,11 @@ import vm from 'node:vm';
 
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const renderer=html.slice(html.indexOf('function tierPanel(){'),html.indexOf("document.addEventListener('click',event=>{",html.indexOf('function tierPanel(){')));
-function render(soopId, live='') {
+function render(soopId, live='', thumb='players/1.jpg') {
   const context=vm.createContext({
     s:{tierLevels:[],tierFilter:'ALL'},window:{},
     TIER_DATA:[{tier:'8티어',players:[{name:'선수',race:'P'}]}],
-    PLAYER_META:{'선수':{s:soopId,t:'players/1.jpg'}},
+    PLAYER_META:{'선수':{s:soopId,t:thumb}},
     liveForTierPlayer:()=>live,tierLiveStatus:'확인',tierLiveLoading:false,
     esc:value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;')
   });
@@ -24,6 +24,11 @@ test('live profile retains the actual broadcast link',()=>{
   const result=render('123rhaxld','https://play.sooplive.com/123rhaxld/12345');
   assert.match(result,/href="https:\/\/play.sooplive.com\/123rhaxld\/12345" target="_blank"/);
   assert.match(result,/class="native-live"/);
+});
+test('mirrored EloBoard photo loads from the same site',()=>{
+  const result=render('123rhaxld','','assets/eloboard-players/448-448_dc7eeec8.jpg');
+  assert.match(result,/src="\.\/assets\/eloboard-players\/448-448_dc7eeec8\.jpg"/);
+  assert.doesNotMatch(result,/eloboard\.co\.kr\/static\/assets\/eloboard-players/);
 });
 for(const id of ['',undefined,'bad/id','"><script>']) {
   test('missing or invalid channel '+String(id)+' renders an explanatory button',()=>{

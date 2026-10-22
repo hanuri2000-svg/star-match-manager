@@ -1,8 +1,38 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const SOURCE_URL = 'https://eloboard.co.kr/tiers';
 const THUMB_BASE_URL = 'https://eloboard.co.kr/static/';
 const PLAYER_FILE = 'players.json';
+const MIRROR_DIR = 'assets/eloboard-players';
+
+function mirroredThumbnailPath(id, path) {
+  const match = path.match(/^players\/([a-zA-Z0-9._-]+\.(?:jpe?g|png|webp|gif))(?:\?v=\d+)?$/);
+  return match ? `${MIRROR_DIR}/${id}-${match[1]}` : null;
+}
+
+async function downloadThumbnail(path) {
+  try {
+    const response = await fetch(new URL(path, THUMB_BASE_URL), {
+      headers: { accept: 'image/*', 'user-agent': 'star-match-manager-tier-sync/1.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    const type = response.headers?.get('content-type')?.trim() || '';
+    const size = Number(response.headers?.get('content-length') || 0);
+    if (!response.ok || !/^image\/(?:jpeg|png|webp|gif)(?:;|$)/i.test(type) || size > 5_000_000) {
+      await response.body?.cancel?.();
+      return null;
+    }
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length > 5_000_000) return null;
+    const jpeg = bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    const png = bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    const gif = bytes.subarray(0, 6).toString('ascii').match(/^GIF8[79]a$/);
+    const webp = bytes.subarray(0, 4).toString('ascii') === 'RIFF' && bytes.subarray(8, 12).toString('ascii') === 'WEBP';
+    return jpeg || png || gif || webp ? bytes : null;
+  } catch {
+    return null;
+  }
+}
 
 async function isUsableThumbnail(path) {
   // Only accept EloBoard's relative player images; a source field must not
@@ -164,6 +194,24 @@ async function main() {
   // publishes a different URL, regardless of the runner's response.
   const isRejectedThumbnail = (player, path) => Array.isArray(player?.rejectedThumbUrls)
     && player.rejectedThumbUrls.includes(path);
+  const mirroredThumbnails = new Map();
+  const newMirrors = new Map();
+  for (const item of official) {
+    const current = currentById.get(item.id);
+    if (!item.thumbUrl || !isRejectedThumbnail(current, item.thumbUrl)) continue;
+    const localPath = mirroredThumbnailPath(item.id, item.thumbUrl);
+    if (!localPath) continue;
+    try {
+      await access(localPath);
+      mirroredThumbnails.set(item.id, localPath);
+    } catch {
+      const bytes = await downloadThumbnail(item.thumbUrl);
+      if (bytes) {
+        mirroredThumbnails.set(item.id, localPath);
+        newMirrors.set(localPath, bytes);
+      } else console.warn(`Skipping unavailable EloBoard mirror: ${item.thumbUrl}`);
+    }
+  }
   const thumbnailCandidates = [...new Set(official
     .filter(item => item.thumbUrl && item.thumbUrl !== currentById.get(item.id)?.thumbUrl
       && !isRejectedThumbnail(currentById.get(item.id), item.thumbUrl))
@@ -224,7 +272,8 @@ async function main() {
     else if (!isKnownRace(player.race)) player.race = null;
     player.active = true;
     player.eloId = item.id;
-    if (validThumbnails.has(item.thumbUrl) && !isRejectedThumbnail(found, item.thumbUrl)) {
+    if (mirroredThumbnails.has(item.id)) player.thumbUrl = mirroredThumbnails.get(item.id);
+    else if (validThumbnails.has(item.thumbUrl) && !isRejectedThumbnail(found, item.thumbUrl)) {
       player.thumbUrl = item.thumbUrl;
     }
     return player;
@@ -242,12 +291,14 @@ async function main() {
   const nextPlayers = [...active, ...inactive];
   const unchanged = JSON.stringify(db.source) === JSON.stringify(nextSource)
     && JSON.stringify(db.players) === JSON.stringify(nextPlayers);
-  if (unchanged) {
+  if (unchanged && !newMirrors.size) {
     console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: already current (${active.length} active)`);
     return;
   }
   const next = { ...db, updatedAt: koreaDate(), source: nextSource, players: nextPlayers };
   const after = JSON.stringify(next, null, 2) + '\n';
+  if (newMirrors.size) await mkdir(MIRROR_DIR, { recursive: true });
+  for (const [path, bytes] of newMirrors) await writeFile(path, bytes);
   await writeFile(PLAYER_FILE, after);
   console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} retained outside imported roster, ${active.filter(player => player.race == null).length} undecided`);
 }

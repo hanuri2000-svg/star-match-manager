@@ -32,12 +32,13 @@ jobs:
         run: node scripts/sync-eloboard-tiers.mjs
       - name: Commit updated tier data
         run: |
-          if git diff --quiet -- players.json; then
+          git add players.json
+          if [ -d assets/eloboard-players ]; then git add assets/eloboard-players; fi
+          if git diff --cached --quiet; then
             echo "No tier changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add players.json
           git commit -m "Auto-sync EloBoard tier table"
           git push
