@@ -173,6 +173,25 @@ test('HTML fallback and missing thumbnails do not overwrite an existing photo or
   });
 });
 
+test('browser-rejected thumbnail stays blank even when the Actions runner sees an image', async () => {
+  await withSyncFixture((players, official) => {
+    players[0].thumbUrl = '';
+    players[0].rejectedThumbUrls = ['players/448_dc7eeec8.jpg?v=1792645915'];
+    official[0].thumb_url = 'players/448_dc7eeec8.jpg?v=1792645915';
+    players[1].thumbUrl = '';
+    official[1].thumb_url = 'players/new-photo.jpg?v=123';
+  }, async ({ run, read }) => {
+    run();
+    const first = await read();
+    const result = JSON.parse(first).players;
+    assert.equal(result[0].thumbUrl, '');
+    assert.deepEqual(result[0].rejectedThumbUrls, ['players/448_dc7eeec8.jpg?v=1792645915']);
+    assert.equal(result[1].thumbUrl, 'players/new-photo.jpg?v=123');
+    run();
+    assert.equal(await read(), first);
+  });
+});
+
 test('unique ID-less legacy player may acquire its official ID', async () => {
   await withSyncFixture(players => { players[0].eloId = null; }, async ({ run, read }) => {
     run();

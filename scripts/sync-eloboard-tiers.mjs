@@ -159,8 +159,14 @@ async function main() {
   if (knownActive.length >= 300 && retained.length < Math.ceil(knownActive.length * 0.95)) {
     throw new Error(`Unsafe EloBoard coverage: ${retained.length}/${knownActive.length} known active IDs`);
   }
+  // A photo may work from the Actions runner while serving HTML to visitors.
+  // Keep browser-confirmed failures on their player record until the source
+  // publishes a different URL, regardless of the runner's response.
+  const isRejectedThumbnail = (player, path) => Array.isArray(player?.rejectedThumbUrls)
+    && player.rejectedThumbUrls.includes(path);
   const thumbnailCandidates = [...new Set(official
-    .filter(item => item.thumbUrl && item.thumbUrl !== currentById.get(item.id)?.thumbUrl)
+    .filter(item => item.thumbUrl && item.thumbUrl !== currentById.get(item.id)?.thumbUrl
+      && !isRejectedThumbnail(currentById.get(item.id), item.thumbUrl))
     .map(item => item.thumbUrl))];
   const validThumbnails = new Set();
   for (let index = 0; index < thumbnailCandidates.length; index += 4) {
@@ -218,7 +224,9 @@ async function main() {
     else if (!isKnownRace(player.race)) player.race = null;
     player.active = true;
     player.eloId = item.id;
-    if (validThumbnails.has(item.thumbUrl)) player.thumbUrl = item.thumbUrl;
+    if (validThumbnails.has(item.thumbUrl) && !isRejectedThumbnail(found, item.thumbUrl)) {
+      player.thumbUrl = item.thumbUrl;
+    }
     return player;
   });
 
