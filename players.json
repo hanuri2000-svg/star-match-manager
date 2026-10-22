@@ -1942,7 +1942,10 @@
       "active": true,
       "eloId": 448,
       "soopId": "parkle1006",
-      "thumbUrl": "players/448_dc7eeec8.jpg?v=1792645915"
+      "thumbUrl": "",
+      "rejectedThumbUrls": [
+        "players/448_dc7eeec8.jpg?v=1792645915"
+      ]
     },
     {
       "name": "토마토",
