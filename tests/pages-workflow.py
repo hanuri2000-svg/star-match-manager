@@ -30,6 +30,7 @@ for name, job in jobs.items():
             assert step['with']['persist-credentials'] is False
 assert any(s.get('run') == 'node --test tests/*.test.mjs' for s in jobs['test']['steps'])
 assert any('python tests/pages-workflow.py' in s.get('run', '') for s in jobs['test']['steps'])
+assert jobs['browser-smoke']['runs-on'] == 'ubuntu-24.04'
 browser_commands = '\n'.join(s.get('run', '') for s in jobs['browser-smoke']['steps'])
 assert 'python tests/tier-profile-browser.py' in browser_commands
 assert 'python tests/browser-smoke.py' in browser_commands
