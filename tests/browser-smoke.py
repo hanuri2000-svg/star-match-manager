@@ -7,6 +7,7 @@ from pathlib import Path
 import threading
 
 from playwright.async_api import async_playwright
+from party_scoreboard import check_party_scoreboard
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "test-results" / "browser-smoke"
@@ -90,6 +91,9 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert profile_layout['identityRightOfProfile'], profile_layout
                 assert profile_layout['identityRight'] <= profile_layout['cardRight'] + 1, profile_layout
                 assert profile_layout['badgeBelow'], profile_layout
+        await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
+        party = await check_party_scoreboard(page, width)
+        await page.screenshot(path=str(OUTPUT / f'{label}-duck-scoreboard.png'), full_page=True)
         await page.locator('.app-tabs [data-tab="schedule"]').click()
 
         # Change each month through the real controls, including repeated opens.
@@ -136,7 +140,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
         assert not errors, errors
         return {"viewport": label, "geometry": geometry, "tabs": tabs, "months": 12,
                 "calendarButtons": toolbar_geometry, "saveReachability": reachability,
-                "pageErrors": errors}
+                "partyScoreboard": party, "pageErrors": errors}
     except Exception:
         await page.screenshot(path=str(OUTPUT / f'{label}-failure.png'), full_page=True)
         raise
