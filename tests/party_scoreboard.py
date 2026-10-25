@@ -9,6 +9,12 @@ async def check_party_scoreboard(page, width):
     for name in ['최도랑', '단솔', '유즈']:
         await page.locator('#partyPlayerName').fill(name)
         await page.locator('[data-party-act="add-player"]').click()
+    # Switching games with freshly added, unassigned Duck participants must
+    # still use the original Fall Guys table without a missing-team error.
+    await page.locator('[data-party="game"]').select_option('폴가이즈')
+    assert await page.locator('[data-party-team-add]').count() == 2
+    await page.locator('[data-party="game"]').select_option('덕몽어스')
+    assert await page.locator('[data-duck-pinball-team]').count() == 0
     ids = await page.locator('[data-duck-player]').evaluate_all(
         "rows => Object.fromEntries(rows.map(row => [row.querySelector('.party-name').textContent.trim(), row.dataset.duckPlayer]))")
 

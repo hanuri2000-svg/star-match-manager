@@ -13,7 +13,11 @@
       });
   };
   partyScorePanel = function () {
-    if (s.partyScore.game !== '덕몽어스') return previousPanel();
+    if (s.partyScore.game !== '덕몽어스') {
+      // The existing Fall Guys table expects its usual A/B team field.
+      s.partyScore.players.forEach(player => { player.team = player.team || 'A'; });
+      return previousPanel();
+    }
     const board = s.partyScore, ranked = rankedPlayers();
     const rounds = Array.from({length: board.rounds}, (_, index) => index);
     const current = Math.max(0, Math.min(board.rounds - 1, Number(board.scoreRound) || 0));
