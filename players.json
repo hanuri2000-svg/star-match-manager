@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-28",
+  "updatedAt": "2026-10-30",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -2796,7 +2796,7 @@
       "active": true,
       "eloId": 723,
       "soopId": "imducko3o",
-      "thumbUrl": "players/723.jpg?v=1787122143"
+      "thumbUrl": "players/723_b5b5deee.jpg?v=1793358344"
     },
     {
       "name": "진니",
