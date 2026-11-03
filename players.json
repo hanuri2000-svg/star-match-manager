@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-02",
+  "updatedAt": "2026-11-03",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -3049,7 +3049,7 @@
       "active": true,
       "eloId": 360,
       "soopId": "kittysh1",
-      "thumbUrl": "players/360.jpg?v=1787122115"
+      "thumbUrl": "players/360_cf07c01a.jpg?v=1793695500"
     },
     {
       "name": "지우리",
