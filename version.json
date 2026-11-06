@@ -1,5 +1,5 @@
 {
-  "version": "5.23.20",
-  "releasedAt": "2026-11-06T04:31:43Z",
-  "notes": "EloBoard 선수 자료 검토 후 반영 · LIVE 조회 실패 표시 및 동명이인 프로필 분리"
+  "version": "5.23.21",
+  "releasedAt": "2026-11-06T05:17:00Z",
+  "notes": "LIVE 조회 실패 시 저장된 LIVE만 필터 해제 · 전체 선수 카드 표시"
 }
