@@ -93,9 +93,19 @@ test('전체 경기 통계가 지연·실패해도 경량 조회에 성공한 EL
 });
 function masterFixture(fetcher,render){
  const code=main.slice(main.indexOf('let sharedPlayerMasterRequest=null;'),main.indexOf('window.HARINA_LOAD_PLAYER_MASTER=loadSharedPlayerMaster;')+'window.HARINA_LOAD_PLAYER_MASTER=loadSharedPlayerMaster;'.length);
- const window={dispatchEvent(){}};const directory={최도랑:{name:'최도랑',tier:'4티어'}};const groups=[{tier:'4티어',players:[{name:'최도랑'}]}];
- vm.runInNewContext(code,{window,fetch:fetcher,render,console:{warn(){}},SHARED_PLAYER_MASTER_URL:'./players.json',PLAYER_DIRECTORY:directory,PLAYER_META:{},TIER_DATA:groups,normalizePlayerDirectoryName:v=>v,AbortController,CustomEvent:class{},setTimeout:fn=>setTimeout(fn,5),clearTimeout,Date});return{window,directory,groups};
+ const window={dispatchEvent(){}};const directory={최도랑:{name:'최도랑',tier:'4티어'}};const groups=[{tier:'4티어',players:[{name:'최도랑'}]}];const metaById={};
+ vm.runInNewContext(code,{window,fetch:fetcher,render,console:{warn(){}},SHARED_PLAYER_MASTER_URL:'./players.json',PLAYER_DIRECTORY:directory,PLAYER_META:{},PLAYER_META_BY_ID:metaById,TIER_DATA:groups,normalizePlayerDirectoryName:v=>v,AbortController,CustomEvent:class{},setTimeout:fn=>setTimeout(fn,5),clearTimeout,Date});return{window,directory,groups,metaById};
 }
+test('DB loader keeps same-name identities separate by Elo ID',async()=>{
+ const f=masterFixture(async()=>({ok:true,json:async()=>({players:[
+  {name:'탱크',tier:'스페이드',race:'P',eloId:170,soopId:'dkwkal',thumbUrl:'players/170.jpg'},
+  {name:'탱크',tier:'스페이드',race:'P',eloId:6312,soopId:'',thumbUrl:'players/6312.jpg'}
+ ]})}));
+ await f.window.HARINA_LOAD_PLAYER_MASTER(true);
+ assert.deepEqual(Array.from(f.groups[0].players,p=>p.eloId),[170,6312]);
+ assert.equal(f.metaById[170].s,'dkwkal');assert.equal(f.metaById[6312].s,'');
+ assert.equal(f.metaById[170].t,'players/170.jpg');assert.equal(f.metaById[6312].t,'players/6312.jpg');
+});
 test('화면 표시 실패가 성공한 티어표 동기화를 오류로 바꾸지 않는다',async()=>{
  const f=masterFixture(async()=>({ok:true,json:async()=>({source:{version:'3.62'},players:[{name:'최도랑',tier:'3티어',race:'P'}]})}),()=>{throw new SyntaxError('The string did not match the expected pattern.')});
  await f.window.HARINA_LOAD_PLAYER_MASTER(true);

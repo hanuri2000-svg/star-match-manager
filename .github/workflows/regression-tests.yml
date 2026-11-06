@@ -8,7 +8,7 @@ on:
   # GITHUB_TOKEN pushes do not trigger another push workflow. Test the main
   # snapshot captured by this event, including commits made by these writers.
   workflow_run:
-    workflows: [Sync EloBoard tiers, Apply shared player master DB, Refresh integrated shared apps v5.12.1]
+    workflows: [Apply shared player master DB, Refresh integrated shared apps v5.12.1]
     types: [completed]
     branches: [main]
 
@@ -41,19 +41,16 @@ jobs:
   browser-smoke:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.56.0-noble
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Install pinned browser test tooling
-        run: |
-          python -m pip install playwright==1.56.0
-          python -m playwright install --with-deps chromium webkit
+        run: python -m pip install playwright==1.56.0
       - name: Check iPhone profile navigation in WebKit
         run: python tests/tier-profile-browser.py
       - name: Check desktop, tablet, and all monthly themes

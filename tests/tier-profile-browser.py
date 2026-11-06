@@ -29,6 +29,7 @@ async def main():
                 '주소 없는 선수':{},
                 '방송 중 선수':{s:'live_fixture'}
             };
+            window.tierPlayerMeta=p=>window.PLAYER_META[p.name]||{};
             window.liveForTierPlayer=p=>p.name==='방송 중 선수'?'https://play.sooplive.com/live_fixture/12345':'';
             window.tierLiveStatus='확인';window.tierLiveLoading=false;
             window.esc=value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');

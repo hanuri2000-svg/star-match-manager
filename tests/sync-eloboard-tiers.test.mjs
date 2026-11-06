@@ -5,8 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 const script = fileURLToPath(new URL('../scripts/sync-eloboard-tiers.mjs', import.meta.url));
+const digest = value => createHash('sha256').update(value).digest('hex');
 
 test('tier sync preserves known races for invalid values and accepts valid race changes', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'eloboard-tier-test-'));
@@ -27,8 +30,10 @@ test('tier sync preserves known races for invalid values and accepts valid race 
     const flight = JSON.stringify({ sections });
     const html = `<h2>변경사항</h2><span>3.62</span><span>2026-10-03</span><script>self.__next_f.push([1,${JSON.stringify(flight)}])</script>`;
     await writeFile(join(dir, 'players.json'), JSON.stringify({ players }));
+    await writeFile(join(dir, 'source.html'), html);
     await writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(html)} });`);
-    execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir });
+    const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script, '--apply', '--source-file=source.html', `--expected-sha256=${digest(html)}`, `--expected-db-sha256=${digest(readFileSync(join(dir,'players.json')) )}`], { cwd: dir });
+    run();
     const first = await readFile(join(dir, 'players.json'), 'utf8');
     const result = JSON.parse(first).players;
     for (const [index, item] of cases.entries()) {
@@ -37,7 +42,7 @@ test('tier sync preserves known races for invalid values and accepts valid race 
       assert.equal(result[index].tier, sections[Math.floor(index / 20)].label);
     }
     // The next scheduled sync must preserve the same data too.
-    execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir });
+    run();
     assert.equal(await readFile(join(dir, 'players.json'), 'utf8'), first);
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -58,20 +63,48 @@ async function withSyncFixture(change, check, metadata = '<h2>변경사항</h2><
       key: String(index), label: '7티어', players: official.slice(index * 20, index === 14 ? undefined : index * 20 + 20)
     }));
     const html = `${metadata}<script>self.__next_f.push([1,${JSON.stringify(JSON.stringify({ sections }))}])</script>`;
+    let currentHtml = html;
     const before = JSON.stringify({ source: { name: '스타CK 밸런스 티어표', version: '3.62', date: '2026-10-16' }, players });
     await writeFile(join(dir, 'players.json'), before);
+    await writeFile(join(dir, 'source.html'), html);
     const mockFetch = value => `globalThis.fetch = async url => String(url).endsWith('/tiers')
       ? { ok: true, text: async () => ${JSON.stringify(value)} }
       : { ok: !String(url).includes('/missing.'), headers: { get: name => name === 'content-type' ? (String(url).includes('/broken.') ? 'text/html' : 'image/jpeg') : null },
           arrayBuffer: async () => Uint8Array.from([255, 216, 255, 224, 12, 34, 56, 255, 217]).buffer };`;
     await writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(html));
-    const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script], { cwd: dir, stdio: 'pipe' });
-    await check({ run, before, setHtml: value => writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(value)), html,
+    const runWithHash = (hash,dbHash=digest(readFileSync(join(dir,'players.json')))) => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script, '--apply', '--source-file=source.html', `--expected-sha256=${hash}`, `--expected-db-sha256=${dbHash}`], { cwd: dir, stdio: 'pipe' });
+    const run = () => runWithHash(digest(currentHtml));
+    const propose = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script, '--proposal-dir=proposal'], { cwd: dir, stdio: 'pipe' });
+    await check({ run, runWithHash, propose, before, setHtml: async value => { currentHtml = value; await writeFile(join(dir, 'source.html'), value); await writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(value)); }, html,
+      proposal: () => readFile(join(dir, 'proposal', 'proposal.json'), 'utf8'), snapshot: () => readFile(join(dir, 'proposal', 'source.html'), 'utf8'),
       read: () => readFile(join(dir, 'players.json'), 'utf8'), readAsset: path => readFile(join(dir, path)) });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
 }
+
+test('scheduled proposal keeps DB unchanged and reviewed snapshot must match its hash', async () => {
+  await withSyncFixture((players, official) => {
+    official[0].race = 'P';
+    official[1].name = 'renamed';
+  }, async ({ run, runWithHash, propose, proposal, snapshot, read, before, setHtml }) => {
+    propose();
+    assert.equal(await read(), before);
+    const report = JSON.parse(await proposal());
+    assert.equal(report.reviewRequired, true);
+    assert.equal(report.sourceSha256, digest(await snapshot()));
+    assert.equal(report.dbSha256, digest(before));
+    assert.deepEqual(report.changes.find(c => c.eloId === 1).changes.race, { before: 'T', after: 'P' });
+    assert.deepEqual(report.changes.find(c => c.eloId === 2).changes.name, { before: 'player-1', after: 'renamed' });
+    await setHtml((await snapshot()).replace('renamed', 'changed'));
+    assert.throws(() => runWithHash(report.sourceSha256), error => /snapshot hash does not match/.test(String(error.stderr)));
+    assert.equal(await read(), before);
+    await setHtml(await snapshot());
+    runWithHash(report.sourceSha256);
+    assert.equal(JSON.parse(await read()).players.find(p => p.eloId === 1).race, 'P');
+    assert.throws(() => runWithHash(report.sourceSha256,report.dbSha256), error => /DB changed since review/.test(String(error.stderr)));
+  });
+});
 
 test('new EloBoard page metadata shape syncs complete player data and preserves last-known version', async () => {
   await withSyncFixture(() => {}, async ({ run, read }) => {
