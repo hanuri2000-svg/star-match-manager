@@ -10,11 +10,26 @@ function render(soopId, live='', thumb='players/1.jpg') {
     s:{tierLevels:[],tierFilter:'ALL'},window:{},
     TIER_DATA:[{tier:'8티어',players:[{name:'선수',race:'P'}]}],
     PLAYER_META:{'선수':{s:soopId,t:thumb}},
+    tierPlayerMeta:p=>({s:soopId,t:thumb}),
     liveForTierPlayer:()=>live,tierLiveStatus:'확인',tierLiveLoading:false,
     esc:value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;')
   });
   return vm.runInContext(renderer+';tierPanel()',context);
 }
+test('same-name player cards use their own Elo IDs for photos and stations',()=>{
+  const byId={170:{s:'dkwkal',t:'players/170.jpg'},6312:{s:'',t:'players/6312.jpg'}};
+  const context=vm.createContext({
+    s:{tierLevels:[],tierFilter:'ALL'},window:{},
+    TIER_DATA:[{tier:'스페이드',players:[{name:'탱크',race:'P',eloId:170},{name:'탱크',race:'P',eloId:6312}]}],
+    tierPlayerMeta:p=>byId[p.eloId],liveForTierPlayer:()=>'',tierLiveStatus:'확인',tierLiveLoading:false,
+    esc:value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;')
+  });
+  const result=vm.runInContext(renderer+';tierPanel()',context);
+  assert.match(result,/src="https:\/\/eloboard\.co\.kr\/static\/players\/170\.jpg"/);
+  assert.match(result,/src="https:\/\/eloboard\.co\.kr\/static\/players\/6312\.jpg"/);
+  assert.equal((result.match(/href="https:\/\/www\.sooplive\.com\/station\/dkwkal"/g)||[]).length,1);
+  assert.match(result,/data-tier-channel-missing="탱크"/);
+});
 test('offline profile uses the direct station address in the current tab',()=>{
   const result=render('123rhaxld');
   assert.match(result,/href="https:\/\/www.sooplive.com\/station\/123rhaxld" target="_self"/);

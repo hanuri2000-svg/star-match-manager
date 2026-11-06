@@ -15,11 +15,18 @@ writers = []
 for path in (ROOT / '.github/workflows').glob('*.yml'):
     other = yaml.safe_load(path.read_text())
     if path.name != 'regression-tests.yml':
-        writers.append(other['name'])
+        if path.name != 'sync-eloboard-tiers.yml':
+            writers.append(other['name'])
         # No second Pages publisher may appear outside the gated workflow.
         assert 'deploy-pages@' not in path.read_text()
         assert other.get('permissions', {}).get('pages') != 'write'
 assert set(events['workflow_run']['workflows']) == set(writers)
+review = yaml.safe_load((ROOT / '.github/workflows/sync-eloboard-tiers.yml').read_text())
+assert review['permissions']['contents'] == 'read'
+steps = review['jobs']['sync']['steps']
+assert any('--proposal-dir=tier-sync-proposal' in s.get('run', '') for s in steps)
+assert any(s.get('uses') == 'actions/upload-artifact@v4' for s in steps)
+assert not any('git push' in s.get('run', '') or '--apply' in s.get('run', '') for s in steps)
 
 for name, job in jobs.items():
     assert not job.get('continue-on-error')
@@ -65,4 +72,4 @@ assert 'artifact-name=github-pages-$GITHUB_SHA-$GITHUB_RUN_ATTEMPT' in package['
 assert '>> "$GITHUB_OUTPUT"' in package['run']
 assert upload['with']['path'] == '_site'
 assert any('git archive "$GITHUB_SHA"' in s.get('run', '') for s in jobs['build-pages']['steps'])
-print('PASS: parsed workflow — required checks, pinned SHA/artifact, serialized guarded deployment, bot update coverage')
+print('PASS: parsed workflow — required checks, pinned SHA/artifact, guarded deployment, read-only tier proposals')

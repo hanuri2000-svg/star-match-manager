@@ -1,4 +1,5 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 
 const SOURCE_URL = 'https://eloboard.co.kr/tiers';
 const THUMB_BASE_URL = 'https://eloboard.co.kr/static/';
@@ -151,14 +152,43 @@ function koreaDate() {
 }
 
 async function main() {
-  const response = await fetch(SOURCE_URL, {
-    headers: { 'user-agent': 'star-match-manager-tier-sync/1.0' }
-  });
-  if (!response.ok) throw new Error(`EloBoard request failed: ${response.status}`);
-  const html = await response.text();
+  const apply = process.argv.includes('--apply');
+  const proposalDirOption = process.argv.find(arg => arg.startsWith('--proposal-dir='));
+  const sourceFileOption = process.argv.find(arg => arg.startsWith('--source-file='));
+  const expectedHashOption = process.argv.find(arg => arg.startsWith('--expected-sha256='));
+  const expectedDbHashOption = process.argv.find(arg => arg.startsWith('--expected-db-sha256='));
+  if (apply && proposalDirOption) throw new Error('Choose either --apply or --proposal-dir');
+  if (process.argv.slice(2).some(arg => !['--apply', proposalDirOption, sourceFileOption, expectedHashOption, expectedDbHashOption].includes(arg))) {
+    throw new Error('Unknown tier sync option');
+  }
+  const sourceFile = sourceFileOption?.slice('--source-file='.length);
+  if (sourceFileOption && !sourceFile) throw new Error('Empty --source-file');
+  if (apply && (!sourceFile || !/^--expected-sha256=[a-f0-9]{64}$/.test(expectedHashOption || '')
+    || !/^--expected-db-sha256=[a-f0-9]{64}$/.test(expectedDbHashOption || ''))) {
+    throw new Error('Applying reviewed tiers requires the source file and both hashes from the reviewed proposal');
+  }
+  let html;
+  if (sourceFile) {
+    html = await readFile(sourceFile, 'utf8');
+  } else {
+    const response = await fetch(SOURCE_URL, {
+      headers: { 'user-agent': 'star-match-manager-tier-sync/1.0' }
+    });
+    if (!response.ok) throw new Error(`EloBoard request failed: ${response.status}`);
+    html = await response.text();
+  }
+  const sourceHash = createHash('sha256').update(html).digest('hex');
+  if (expectedHashOption && expectedHashOption.slice('--expected-sha256='.length) !== sourceHash) {
+    throw new Error('Reviewed EloBoard snapshot hash does not match; compare the source again');
+  }
   const source = parseSourceMeta(html);
   const official = parsePlayers(html);
-  const db = JSON.parse(await readFile(PLAYER_FILE, 'utf8'));
+  const dbRaw = await readFile(PLAYER_FILE, 'utf8');
+  const dbHash = createHash('sha256').update(dbRaw).digest('hex');
+  if (expectedDbHashOption && expectedDbHashOption.slice('--expected-db-sha256='.length) !== dbHash) {
+    throw new Error('Player DB changed since review; compare the proposal again');
+  }
+  const db = JSON.parse(dbRaw);
   // Stable IDs identify players. A shared name must never migrate an identity.
   const validId = value => typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
   const nameKey = value => typeof value === 'string' ? value.normalize('NFKC').trim().toLowerCase() : '';
@@ -291,6 +321,33 @@ async function main() {
   const nextPlayers = [...active, ...inactive];
   const unchanged = JSON.stringify(db.source) === JSON.stringify(nextSource)
     && JSON.stringify(db.players) === JSON.stringify(nextPlayers);
+  if (!apply) {
+    const beforeById = new Map(db.players.map(player => [player.eloId, player]));
+    const changes = nextPlayers.flatMap(player => {
+      const previous = beforeById.get(player.eloId);
+      const fields = ['name', 'tier', 'tierLabel', 'race', 'active', 'soopId', 'thumbUrl'];
+      const changed = Object.fromEntries(fields.filter(field =>
+        JSON.stringify(previous?.[field]) !== JSON.stringify(player[field])
+      ).map(field => [field, { before: previous?.[field] ?? null, after: player[field] ?? null }]));
+      return Object.keys(changed).length ? [{ eloId: player.eloId, profileUrl: `${SOURCE_URL.replace(/\/tiers$/, '')}/players/${player.eloId}`, changes: changed }] : [];
+    });
+    const proposal = {
+      checkedAt: new Date().toISOString(), sourceUrl: SOURCE_URL,
+      sourceSha256: sourceHash, dbSha256: dbHash,
+      sourceMeta: source, previousSourceMeta: db.source, activeCount: active.length,
+      retainedCount: inactive.length, undecidedCount: active.filter(player => player.race == null).length,
+      changes, reviewRequired: changes.length > 0 || newMirrors.size > 0
+    };
+    if (proposalDirOption) {
+      const dir = proposalDirOption.slice('--proposal-dir='.length);
+      if (!dir) throw new Error('Empty --proposal-dir');
+      await mkdir(dir, { recursive: true });
+      await writeFile(`${dir}/source.html`, html);
+      await writeFile(`${dir}/proposal.json`, JSON.stringify(proposal, null, 2) + '\n');
+    }
+    console.log(`EloBoard review proposal: ${changes.length} player changes, ${newMirrors.size} new mirrors; no DB writes`);
+    return;
+  }
   if (unchanged && !newMirrors.size) {
     console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: already current (${active.length} active)`);
     return;
