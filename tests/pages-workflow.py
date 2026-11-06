@@ -38,10 +38,12 @@ for name, job in jobs.items():
 assert any(s.get('run') == 'node --test tests/*.test.mjs' for s in jobs['test']['steps'])
 assert any('python tests/pages-workflow.py' in s.get('run', '') for s in jobs['test']['steps'])
 assert jobs['browser-smoke']['runs-on'] == 'ubuntu-24.04'
+assert jobs['browser-smoke']['container']['image'] == 'mcr.microsoft.com/playwright/python:v1.56.0-noble'
 browser_commands = '\n'.join(s.get('run', '') for s in jobs['browser-smoke']['steps'])
+assert 'playwright install --with-deps' not in browser_commands
 assert 'python tests/tier-profile-browser.py' in browser_commands
 assert 'python tests/browser-smoke.py' in browser_commands
-assert 'chromium webkit' in browser_commands
+assert 'python -m pip install playwright==1.56.0' in browser_commands
 
 assert set(jobs['build-pages']['needs']) == {'test', 'browser-smoke'}
 assert set(jobs['deploy-pages']['needs']) == {'test', 'browser-smoke', 'build-pages'}
