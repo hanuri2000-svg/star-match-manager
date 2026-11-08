@@ -1,5 +1,6 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { makeReview, applyReviewedFiles, renderReview } from './eloboard-review.mjs';
 
 const SOURCE_URL = 'https://eloboard.co.kr/tiers';
 const THUMB_BASE_URL = 'https://eloboard.co.kr/static/';
@@ -145,28 +146,21 @@ function parsePlayers(html) {
   return players;
 }
 
-function koreaDate() {
-  return new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
-}
-
 async function main() {
   const apply = process.argv.includes('--apply');
+  if (apply) {
+    await applyReviewedFiles(process.argv.slice(2));
+    return;
+  }
   const proposalDirOption = process.argv.find(arg => arg.startsWith('--proposal-dir='));
   const sourceFileOption = process.argv.find(arg => arg.startsWith('--source-file='));
   const expectedHashOption = process.argv.find(arg => arg.startsWith('--expected-sha256='));
   const expectedDbHashOption = process.argv.find(arg => arg.startsWith('--expected-db-sha256='));
-  if (apply && proposalDirOption) throw new Error('Choose either --apply or --proposal-dir');
   if (process.argv.slice(2).some(arg => !['--apply', proposalDirOption, sourceFileOption, expectedHashOption, expectedDbHashOption].includes(arg))) {
     throw new Error('Unknown tier sync option');
   }
   const sourceFile = sourceFileOption?.slice('--source-file='.length);
   if (sourceFileOption && !sourceFile) throw new Error('Empty --source-file');
-  if (apply && (!sourceFile || !/^--expected-sha256=[a-f0-9]{64}$/.test(expectedHashOption || '')
-    || !/^--expected-db-sha256=[a-f0-9]{64}$/.test(expectedDbHashOption || ''))) {
-    throw new Error('Applying reviewed tiers requires the source file and both hashes from the reviewed proposal');
-  }
   let html;
   if (sourceFile) {
     html = await readFile(sourceFile, 'utf8');
@@ -253,7 +247,26 @@ async function main() {
       else console.warn(`Skipping unavailable EloBoard thumbnail: ${path}`);
     }));
   }
+  // Freeze every changed photo into reviewed bytes, rather than reusing a
+  // mutable remote URL. The apply path never rechecks an external image.
+  for (const item of official) {
+    if (!validThumbnails.has(item.thumbUrl)) continue;
+    const bytes = await downloadThumbnail(item.thumbUrl);
+    const localPath = mirroredThumbnailPath(item.id, item.thumbUrl);
+    if (bytes && localPath) {
+      const frozenPath = localPath.replace(/(\.[^.]+)$/, `-${createHash('sha256').update(bytes).digest('hex')}$1`);
+      mirroredThumbnails.set(item.id, frozenPath);
+      try {
+        const existing = await readFile(frozenPath);
+        if (!existing.equals(bytes)) throw new Error('Existing frozen image hash mismatch');
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        newMirrors.set(frozenPath, bytes);
+      }
+    }
+  }
   const used = new Set();
+  const previousRecords = new Map();
   const isKnownRace = race => ['T', 'Z', 'P'].includes(race);
   const isUndecidedRace = race => race == null || (typeof race === 'string' && ['', '미정'].includes(race.trim()));
 
@@ -286,10 +299,11 @@ async function main() {
       return {
         name: item.name, tier: item.tier, tierLabel: item.tier === '유스' ? '베이비' : item.tier,
         race: isKnownRace(item.race) ? item.race : null, aliases: [], active: true, eloId: item.id, soopId: '',
-        thumbUrl: validThumbnails.has(item.thumbUrl) ? item.thumbUrl : ''
+        thumbUrl: mirroredThumbnails.get(item.id) || ''
       };
     }
     used.add(found);
+    previousRecords.set(item.id, found);
     const player = { ...found };
     if (player.name !== item.name) {
       player.aliases = [...new Set([...(player.aliases || []), player.name].filter(name => name && name !== item.name))];
@@ -303,36 +317,35 @@ async function main() {
     player.active = true;
     player.eloId = item.id;
     if (mirroredThumbnails.has(item.id)) player.thumbUrl = mirroredThumbnails.get(item.id);
-    else if (validThumbnails.has(item.thumbUrl) && !isRejectedThumbnail(found, item.thumbUrl)) {
-      player.thumbUrl = item.thumbUrl;
-    }
+
     return player;
   });
 
   const inactive = db.players
     .filter(player => !used.has(player))
-    .map(player => ({ ...player, active: false }));
+    .map(player => {
+      const after = { ...player, active: false };
+      previousRecords.set(after, player);
+      return after;
+    });
 
-  const nextSource = {
-    name: '스타CK 밸런스 티어표',
-    version: source.version || db.source?.version || null,
-    date: source.date || db.source?.date || null
-  };
   const nextPlayers = [...active, ...inactive];
-  const unchanged = JSON.stringify(db.source) === JSON.stringify(nextSource)
-    && JSON.stringify(db.players) === JSON.stringify(nextPlayers);
-  if (!apply) {
+  {
     const beforeById = new Map(db.players.map(player => [player.eloId, player]));
     const changes = nextPlayers.flatMap(player => {
-      const previous = beforeById.get(player.eloId);
-      const fields = ['name', 'tier', 'tierLabel', 'race', 'active', 'soopId', 'thumbUrl'];
+      const previous = previousRecords.get(player.eloId) || beforeById.get(player.eloId);
+      const fields = ['name', 'tier', 'tierLabel', 'race', 'eloId', 'aliases', 'active', 'soopId', 'thumbUrl'];
       const changed = Object.fromEntries(fields.filter(field =>
         JSON.stringify(previous?.[field]) !== JSON.stringify(player[field])
       ).map(field => [field, { before: previous?.[field] ?? null, after: player[field] ?? null }]));
       return Object.keys(changed).length ? [{ eloId: player.eloId, profileUrl: `${SOURCE_URL.replace(/\/tiers$/, '')}/players/${player.eloId}`, changes: changed }] : [];
     });
     const proposal = {
+      ...makeReview(db, nextPlayers, previousRecords, newMirrors),
       checkedAt: new Date().toISOString(), sourceUrl: SOURCE_URL,
+      repository: process.env.GITHUB_REPOSITORY || null,
+      commitSha: process.env.GITHUB_SHA || null,
+      runId: process.env.GITHUB_RUN_ID || null,
       sourceSha256: sourceHash, dbSha256: dbHash,
       sourceMeta: source, previousSourceMeta: db.source, activeCount: active.length,
       retainedCount: inactive.length, undecidedCount: active.filter(player => player.race == null).length,
@@ -344,20 +357,12 @@ async function main() {
       await mkdir(dir, { recursive: true });
       await writeFile(`${dir}/source.html`, html);
       await writeFile(`${dir}/proposal.json`, JSON.stringify(proposal, null, 2) + '\n');
+      await writeFile(`${dir}/review.md`, renderReview(proposal));
     }
     console.log(`EloBoard review proposal: ${changes.length} player changes, ${newMirrors.size} new mirrors; no DB writes`);
     return;
   }
-  if (unchanged && !newMirrors.size) {
-    console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: already current (${active.length} active)`);
-    return;
-  }
-  const next = { ...db, updatedAt: koreaDate(), source: nextSource, players: nextPlayers };
-  const after = JSON.stringify(next, null, 2) + '\n';
-  if (newMirrors.size) await mkdir(MIRROR_DIR, { recursive: true });
-  for (const [path, bytes] of newMirrors) await writeFile(path, bytes);
-  await writeFile(PLAYER_FILE, after);
-  console.log(`EloBoard ${source.version ? `v${source.version}` : '(version unavailable)'}: synced ${active.length} active, ${inactive.length} retained outside imported roster, ${active.filter(player => player.race == null).length} undecided`);
+
 }
 
 main().catch(error => {

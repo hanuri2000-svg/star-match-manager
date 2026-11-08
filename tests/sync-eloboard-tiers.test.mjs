@@ -11,6 +11,19 @@ import { readFileSync } from 'node:fs';
 const script = fileURLToPath(new URL('../scripts/sync-eloboard-tiers.mjs', import.meta.url));
 const digest = value => createHash('sha256').update(value).digest('hex');
 
+
+// Exercise the real reviewed-proposal path: generate once, pin its bytes, select
+// explicit operation keys. Applying itself must not repeat any HTTP lookup.
+function reviewedRun(dir, importPath, sourceHash, dbHash) {
+  execFileSync(process.execPath, ['--import', importPath, script, '--source-file=source.html', '--proposal-dir=review'], {cwd: dir, stdio: 'pipe'});
+  const raw = readFileSync(join(dir, 'review/proposal.json'), 'utf8');
+  const report = JSON.parse(raw);
+  if (!report.operations.length && sourceHash === report.sourceSha256 && dbHash === report.dbSha256) return;
+  return execFileSync(process.execPath, [script, '--apply', '--source-file=source.html', '--proposal-file=review/proposal.json',
+    `--expected-sha256=${sourceHash}`, `--expected-db-sha256=${dbHash}`, `--expected-proposal-sha256=${digest(raw)}`,
+    `--approved-changes=${report.operations.map(o => o.key).join(',') || '1:race'}`], {cwd: dir, stdio: 'pipe'});
+}
+
 test('tier sync preserves known races for invalid values and accepts valid race changes', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'eloboard-tier-test-'));
   try {
@@ -32,7 +45,7 @@ test('tier sync preserves known races for invalid values and accepts valid race 
     await writeFile(join(dir, 'players.json'), JSON.stringify({ players }));
     await writeFile(join(dir, 'source.html'), html);
     await writeFile(join(dir, 'mock-fetch.mjs'), `globalThis.fetch = async () => ({ ok: true, text: async () => ${JSON.stringify(html)} });`);
-    const run = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script, '--apply', '--source-file=source.html', `--expected-sha256=${digest(html)}`, `--expected-db-sha256=${digest(readFileSync(join(dir,'players.json')) )}`], { cwd: dir });
+    const run = () => reviewedRun(dir, join(dir, 'mock-fetch.mjs'), digest(html), digest(readFileSync(join(dir, 'players.json'))));
     run();
     const first = await readFile(join(dir, 'players.json'), 'utf8');
     const result = JSON.parse(first).players;
@@ -72,7 +85,7 @@ async function withSyncFixture(change, check, metadata = '<h2>변경사항</h2><
       : { ok: !String(url).includes('/missing.'), headers: { get: name => name === 'content-type' ? (String(url).includes('/broken.') ? 'text/html' : 'image/jpeg') : null },
           arrayBuffer: async () => Uint8Array.from([255, 216, 255, 224, 12, 34, 56, 255, 217]).buffer };`;
     await writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(html));
-    const runWithHash = (hash,dbHash=digest(readFileSync(join(dir,'players.json')))) => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script, '--apply', '--source-file=source.html', `--expected-sha256=${hash}`, `--expected-db-sha256=${dbHash}`], { cwd: dir, stdio: 'pipe' });
+    const runWithHash = (hash, dbHash=digest(readFileSync(join(dir,'players.json')))) => reviewedRun(dir, join(dir, 'mock-fetch.mjs'), hash, dbHash);
     const run = () => runWithHash(digest(currentHtml));
     const propose = () => execFileSync(process.execPath, ['--import', join(dir, 'mock-fetch.mjs'), script, '--proposal-dir=proposal'], { cwd: dir, stdio: 'pipe' });
     await check({ run, runWithHash, propose, before, setHtml: async value => { currentHtml = value; await writeFile(join(dir, 'source.html'), value); await writeFile(join(dir, 'mock-fetch.mjs'), mockFetch(value)); }, html,
@@ -111,7 +124,7 @@ test('new EloBoard page metadata shape syncs complete player data and preserves 
     run();
     const result = JSON.parse(await read());
     assert.equal(result.source.version, '3.62');
-    assert.equal(result.source.date, '2026-10-19');
+    assert.equal(result.source.date, '2026-10-16'); // Partial approvals retain last fully applied source metadata.
     assert.equal(result.players.filter(player => player.active).length, 300);
   }, '<h3 class="page-meta">최종 갱신</h3><time datetime="2026-10-19">2026-10-19</time>');
 });
@@ -202,7 +215,7 @@ test('HTML fallback and missing thumbnails do not overwrite an existing photo or
     const result = JSON.parse(first).players;
     assert.equal(result[0].thumbUrl, 'old-0.jpg');
     assert.equal(result[1].thumbUrl, '');
-    assert.equal(result[2].thumbUrl, 'players/valid.jpg?v=123');
+    assert.match(result[2].thumbUrl, /^assets\/eloboard-players\/3-valid-[a-f0-9]{64}\.jpg$/);
     run();
     assert.equal(await read(), first);
   });
@@ -222,7 +235,7 @@ test('browser-rejected thumbnail is mirrored when the Actions runner can downloa
     assert.equal(result[0].thumbUrl, 'assets/eloboard-players/1-448_dc7eeec8.jpg');
     assert.deepEqual([...await readAsset(result[0].thumbUrl)], [255, 216, 255, 224, 12, 34, 56, 255, 217]);
     assert.deepEqual(result[0].rejectedThumbUrls, ['players/448_dc7eeec8.jpg?v=1792645915']);
-    assert.equal(result[1].thumbUrl, 'players/new-photo.jpg?v=123');
+    assert.match(result[1].thumbUrl, /^assets\/eloboard-players\/2-new-photo-[a-f0-9]{64}\.jpg$/);
     run();
     assert.equal(await read(), first);
   });
@@ -332,7 +345,7 @@ test('verified Sewol identity history and custom metadata survive repeated canon
     assert.deepEqual(p.notes, { keep: true });
     assert.deepEqual(p.aliases, ['local alias']);
     assert.equal(p.soopId, 'local-account');
-    assert.equal(p.thumbUrl, 'players/new-photo.jpg');
+    assert.match(p.thumbUrl, /^assets\/eloboard-players\/763-new-photo-[a-f0-9]{64}\.jpg$/);
     run();
     assert.equal(await read(), first);
   });
@@ -395,5 +408,20 @@ test('malformed incoming race for an undecided existing player aborts without wr
   }, async ({ run, read, before }) => {
     assert.throws(run);
     assert.equal(await read(), before);
+  });
+});
+
+test('an absent ID-less legacy record is retained and only deactivated with explicit approval', async () => {
+  await withSyncFixture((players) => {
+    players.push({name:'legacy outside source',eloId:'',race:null,active:true,soopId:'keep',notes:{keep:true}});
+  }, async ({run,read,propose,proposal}) => {
+    propose();
+    const report=JSON.parse(await proposal());
+    const op=report.operations.find(o=>o.key==='legacy-300:active');
+    assert.deepEqual(op.before,{active:true});
+    assert.deepEqual(op.after,{active:false});
+    run();
+    const legacy=JSON.parse(await read()).players.find(p=>p.name==='legacy outside source');
+    assert.deepEqual(legacy,{name:'legacy outside source',eloId:'',race:null,active:false,soopId:'keep',notes:{keep:true}});
   });
 });

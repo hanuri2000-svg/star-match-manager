@@ -5,19 +5,21 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  # GITHUB_TOKEN pushes do not trigger another push workflow. Test the main
-  # snapshot captured by this event, including commits made by these writers.
-  workflow_run:
-    workflows: [Apply shared player master DB, Refresh integrated shared apps v5.12.1]
-    types: [completed]
-    branches: [main]
+    inputs:
+      tested_sha:
+        description: 'Exact commit to verify (required for bot-created PR checks)'
+        type: string
+        default: ''
+      deploy_sha:
+        description: 'Separate production approval: exact current main SHA, blank = checks only'
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   test:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,9 +27,17 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Verify explicitly requested commit
+        env:
+          TESTED_SHA: ${{ inputs.tested_sha }}
+        run: |
+          if [ -n "$TESTED_SHA" ]; then test "$TESTED_SHA" = "$GITHUB_SHA"; fi
+      - name: Verify new EloBoard approval receipts
+        run: node scripts/verify-eloboard-receipt.mjs
       - name: Run all regression tests
         run: node --test tests/*.test.mjs
       - uses: actions/setup-python@v5
@@ -39,7 +49,6 @@ jobs:
           python tests/pages-workflow.py
 
   browser-smoke:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     container:
       image: mcr.microsoft.com/playwright/python:v1.56.0-noble
@@ -49,6 +58,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Install pinned browser test tooling
         run: python -m pip install playwright==1.56.0
       - name: Check iPhone profile navigation in WebKit
@@ -67,8 +77,8 @@ jobs:
     needs: [test, browser-smoke]
     if: >-
       github.ref == 'refs/heads/main' &&
-      github.event_name != 'pull_request' &&
-      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+      github.event_name == 'workflow_dispatch' &&
+      inputs.deploy_sha == github.sha
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -82,6 +92,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Check required results, latest main, and Actions publishing source
         id: guard
         uses: actions/github-script@v7
@@ -108,7 +119,7 @@ jobs:
 
   deploy-pages:
     needs: [test, browser-smoke, build-pages]
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build-pages.outputs.current == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.deploy_sha == github.sha && needs.build-pages.outputs.current == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -128,6 +139,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Recheck latest commit immediately before deployment
         id: guard
         uses: actions/github-script@v7

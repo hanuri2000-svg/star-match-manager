@@ -1,25 +1,12 @@
 'use strict';
 
-const WRITERS = [
-  'Sync EloBoard tiers',
-  'Apply shared player master DB',
-  'Refresh integrated shared apps v5.12.1',
-];
-
 // Used both before packaging and after acquiring the deployment concurrency slot.
 // Errors fail closed; only a superseded commit is a successful, explicit skip.
 module.exports = async function guard({ github, context, core, results = JSON.parse(process.env.REQUIRED_RESULTS || '{}') }) {
   const repo = context.repo;
-  if (context.ref !== 'refs/heads/main' ||
-      !['push', 'workflow_dispatch', 'workflow_run'].includes(context.eventName)) {
-    throw new Error('Pages deployment is restricted to main push/dispatch/approved writer completion.');
-  }
-  if (context.eventName === 'workflow_run') {
-    const run = context.payload.workflow_run;
-    if (run?.conclusion !== 'success' || run.head_branch !== 'main' ||
-        run.head_repository?.full_name !== `${repo.owner}/${repo.repo}` || !WRITERS.includes(run.name)) {
-      throw new Error('Untrusted or unsuccessful upstream workflow.');
-    }
+  if (context.ref !== 'refs/heads/main' || context.eventName !== 'workflow_dispatch' ||
+      context.payload.inputs?.deploy_sha !== context.sha) {
+    throw new Error('Pages deployment requires separate explicit approval of the exact main SHA.');
   }
   for (const job of ['test', 'browser-smoke']) {
     if (results[job]?.result !== 'success') throw new Error(`Required job did not pass: ${job}`);

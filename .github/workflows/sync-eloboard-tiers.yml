@@ -9,6 +9,8 @@ on:
     paths:
       - 'scripts/sync-eloboard-tiers.mjs'
       - 'tests/sync-eloboard-tiers.test.mjs'
+      - 'scripts/eloboard-review.mjs'
+      - 'tests/eloboard-review.test.mjs'
       - '.github/workflows/sync-eloboard-tiers.yml'
 
 permissions:
@@ -23,16 +25,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Test EloBoard tier sync
-        run: node --test tests/sync-eloboard-tiers.test.mjs
+        run: node --test tests/sync-eloboard-tiers.test.mjs tests/eloboard-review.test.mjs
       - name: Compare EloBoard tiers without changing the DB
         run: node scripts/sync-eloboard-tiers.mjs --proposal-dir=tier-sync-proposal
+      - name: Show review table in Actions
+        run: cat tier-sync-proposal/review.md >> "$GITHUB_STEP_SUMMARY"
       - name: Save source snapshot and changes for review
         uses: actions/upload-artifact@v4
         with:
           name: eloboard-tier-proposal
           path: tier-sync-proposal/
           retention-days: 7
+          if-no-files-found: error

@@ -1,0 +1,83 @@
+name: Prepare approved EloBoard changes
+
+on:
+  workflow_dispatch:
+    inputs:
+      review_run_id:
+        description: 'Successful main Review EloBoard tiers run ID (within 7 days)'
+        required: true
+        type: string
+      approved_changes:
+        description: 'Explicit approval keys from review.md, e.g. 32:tier,100:race'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eloboard-approval
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.56.0-noble
+    timeout-minutes: 25
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify source run and artifact ZIP digest
+        uses: actions/github-script@v7
+        env:
+          REVIEW_RUN_ID: ${{ inputs.review_run_id }}
+          APPROVED_CHANGES: ${{ inputs.approved_changes }}
+        with:
+          script: await require('./scripts/eloboard-actions.cjs').download({github, context, core});
+      - name: Extract only bounded proposal data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile('_review/proposal.zip') as archive:
+              expected = {'source.html', 'proposal.json', 'review.md'}
+              entries = archive.infolist()
+              assert len(entries) == 3 and {e.filename for e in entries} == expected
+              assert sum(e.file_size for e in entries) <= 100_000_000
+              for entry in entries:
+                  assert not entry.is_dir() and entry.file_size <= 50_000_000
+                  Path('_review', entry.filename).write_bytes(archive.read(entry))
+          PY
+      - name: Apply only approved fields without network requests
+        run: node scripts/prepare-eloboard-approval.mjs
+      - name: Run all regression and workflow checks on changed DB
+        run: |
+          node --test tests/*.test.mjs
+          python -m pip install PyYAML==6.0.3 playwright==1.56.0
+          python tests/pages-workflow.py
+          python tests/tier-profile-browser.py
+          python tests/browser-smoke.py
+      - name: Create reviewed data PR and explicitly dispatch its checks
+        uses: actions/github-script@v7
+        with:
+          script: await require('./scripts/eloboard-actions.cjs').publish({github, context, core});
+      - name: Save verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eloboard-approval-results
+          path: |
+            eloboard-approval.json
+            test-results/browser-smoke/
+          retention-days: 7
