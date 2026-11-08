@@ -9,24 +9,34 @@ jobs = workflow['jobs']
 events = workflow.get('on', workflow.get(True))
 assert events['push']['branches'] == ['main']
 assert 'paths' not in events['push'] and 'paths-ignore' not in events['push']
-assert events['workflow_run']['types'] == ['completed']
-assert events['workflow_run']['branches'] == ['main']
-writers = []
+assert 'workflow_run' not in events
+assert 'pull_request' in events
+assert 'deploy_sha' in events['workflow_dispatch']['inputs']
 for path in (ROOT / '.github/workflows').glob('*.yml'):
     other = yaml.safe_load(path.read_text())
     if path.name != 'regression-tests.yml':
-        if path.name != 'sync-eloboard-tiers.yml':
-            writers.append(other['name'])
-        # No second Pages publisher may appear outside the gated workflow.
         assert 'deploy-pages@' not in path.read_text()
         assert other.get('permissions', {}).get('pages') != 'write'
-assert set(events['workflow_run']['workflows']) == set(writers)
 review = yaml.safe_load((ROOT / '.github/workflows/sync-eloboard-tiers.yml').read_text())
 assert review['permissions']['contents'] == 'read'
 steps = review['jobs']['sync']['steps']
 assert any('--proposal-dir=tier-sync-proposal' in s.get('run', '') for s in steps)
 assert any(s.get('uses') == 'actions/upload-artifact@v4' for s in steps)
 assert not any('git push' in s.get('run', '') or '--apply' in s.get('run', '') for s in steps)
+approval = yaml.safe_load((ROOT / '.github/workflows/apply-eloboard-proposal.yml').read_text())
+assert set(approval.get('on', approval.get(True))) == {'workflow_dispatch'}
+assert approval['jobs']['prepare']['if'] == "github.ref == 'refs/heads/main'"
+assert approval['jobs']['prepare']['permissions'] == {'actions': 'write', 'contents': 'write', 'pull-requests': 'write'}
+commands = '\n'.join(step.get('run', '') for step in approval['jobs']['prepare']['steps'])
+assert 'node --test tests/*.test.mjs' in commands
+assert 'python tests/browser-smoke.py' in commands and 'python tests/tier-profile-browser.py' in commands
+assert 'node scripts/prepare-eloboard-approval.mjs' in commands
+assert 'git push' not in commands and '${{ inputs.' not in commands
+for retired in ['apply-player-master-v512.yml', 'bump-shared-apps-v5121.yml']:
+    old = yaml.safe_load((ROOT / '.github/workflows' / retired).read_text())
+    assert set(old.get('on', old.get(True))) == {'workflow_dispatch'}
+    assert old['permissions']['contents'] == 'read'
+    assert list(old['jobs']) == ['retired']
 
 for name, job in jobs.items():
     assert not job.get('continue-on-error')
@@ -50,7 +60,8 @@ assert set(jobs['deploy-pages']['needs']) == {'test', 'browser-smoke', 'build-pa
 for name in ['build-pages', 'deploy-pages']:
     job = jobs[name]
     assert "github.ref == 'refs/heads/main'" in job['if']
-    assert "github.event_name != 'pull_request'" in job['if']
+    assert "github.event_name == 'workflow_dispatch'" in job['if']
+    assert 'inputs.deploy_sha == github.sha' in job['if']
     assert 'always()' not in job['if']
     guard = next(s for s in job['steps'] if s.get('id') == 'guard')
     assert guard['env']['REQUIRED_RESULTS'] == '${{ toJSON(needs) }}'
@@ -74,4 +85,4 @@ assert 'artifact-name=github-pages-$GITHUB_SHA-$GITHUB_RUN_ATTEMPT' in package['
 assert '>> "$GITHUB_OUTPUT"' in package['run']
 assert upload['with']['path'] == '_site'
 assert any('git archive "$GITHUB_SHA"' in s.get('run', '') for s in jobs['build-pages']['steps'])
-print('PASS: parsed workflow — required checks, pinned SHA/artifact, guarded deployment, read-only tier proposals')
+print('PASS: explicit production approval, pinned SHA/artifact, read-only proposals, reviewed data PRs, retired direct writers')

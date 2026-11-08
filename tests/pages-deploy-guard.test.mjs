@@ -6,7 +6,7 @@ const A = 'a'.repeat(40), B = 'b'.repeat(40), C = 'c'.repeat(40);
 const passing = {test: {result: 'success'}, 'browser-smoke': {result: 'success'}};
 function fixture(overrides = {}) {
   return {
-    context: {repo: {owner: 'owner', repo: 'site'}, ref: 'refs/heads/main', eventName: 'push', sha: A, payload: {}},
+    context: {repo: {owner: 'owner', repo: 'site'}, ref: 'refs/heads/main', eventName: 'workflow_dispatch', sha: A, payload: {inputs:{deploy_sha:A}}},
     results: structuredClone(passing),
     github: {rest: {
       git: {getRef: async () => ({data: {object: {sha: A}}})},
@@ -51,26 +51,24 @@ test('successive commits: stale build, queued old run, and old rerun never roll 
   main = B; // B pushed while A waits for the deployment slot.
   if (await guard(f)) deployed = f.context.sha;
   assert.equal(deployed, C); // Last good deployment survives a superseded run.
-  f.context.sha = B;
+  f.context.sha = B; f.context.payload.inputs.deploy_sha = B;
   f.results['browser-smoke'].result = 'failure';
   await assert.rejects(guard(f));
   assert.equal(deployed, C); // Failed latest commit also leaves it unchanged.
   f.results['browser-smoke'].result = 'success';
   if (await guard(f)) deployed = f.context.sha;
   assert.equal(deployed, B);
-  f.context.sha = A; // Someone reruns A after B deployed.
+  f.context.sha = A; f.context.payload.inputs.deploy_sha = A; // Someone reruns A after B deployed.
   if (await guard(f)) deployed = f.context.sha;
   assert.equal(deployed, B);
 });
-test('bot completion tests the new main snapshot, not the pre-sync upstream SHA', async () => {
-  const f = fixture();
-  f.context.eventName = 'workflow_run';
-  f.context.payload.workflow_run = {name: 'Sync EloBoard tiers', conclusion: 'success', head_branch: 'main',
-    head_sha: C, head_repository: {full_name: 'owner/site'}};
-  assert.equal(await guard(f), true);
-  for (const change of [{conclusion: 'failure'}, {head_branch: 'other'},
-    {head_repository: {full_name: 'fork/site'}}, {name: 'Unknown writer'}]) {
-    const invalid = {...f, context: {...f.context, payload: {workflow_run: {...f.context.payload.workflow_run, ...change}}}};
-    await assert.rejects(guard(invalid), /upstream/);
+test('push, bot completion, absent or stale production approvals never deploy', async () => {
+  for (const eventName of ['push', 'workflow_run', 'pull_request']) {
+    const f = fixture(); f.context.eventName = eventName;
+    await assert.rejects(guard(f), /separate explicit approval/);
+  }
+  for (const inputs of [{}, {deploy_sha:B}, {deploy_sha:'main'}]) {
+    const f = fixture(); f.context.payload.inputs = inputs;
+    await assert.rejects(guard(f), /separate explicit approval/);
   }
 });
