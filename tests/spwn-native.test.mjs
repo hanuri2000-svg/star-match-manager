@@ -20,10 +20,8 @@ test("기존 스폰노트 기록 저장 키를 유지한다", () => {
 test("통합 모듈은 전체 기록 기능과 공용 선수 DB를 유지한다", () => {
   for (const feature of [
     "openForm",
-    "openEloDialog",
     "exportJson",
     "importJson",
-    "previewElo",
     "autoFillRecordPlayer",
   ]) {
     assert.match(moduleSource, new RegExp(`\\b${feature}\\b`));
@@ -33,4 +31,10 @@ test("통합 모듈은 전체 기록 기능과 공용 선수 DB를 유지한다"
   assert.match(moduleSource, /attachShadow\(\{mode:'open'\}\)/);
   assert.doesNotMatch(moduleSource, /\.spwn-\.spwn-body/);
   assert.doesNotMatch(moduleSource, /navigator\.serviceWorker\.register/);
+});
+
+test('스폰노트는 ELO 조회·가져오기 없이 저장된 기록으로 통계를 계산한다',()=>{
+ assert.doesNotMatch(moduleSource,/api\/elo|EloDashboardClient|openEloDialog|DailyEloImport|spawn-note-elo-relay/);
+ assert.match(moduleSource,/function localDashboardSummary/);
+ assert.match(moduleSource,/스폰일지 저장 기록/);
 });

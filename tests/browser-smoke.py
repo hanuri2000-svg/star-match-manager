@@ -29,8 +29,10 @@ async def check_viewport(browser, origin, label, width, height, touch):
         has_touch=touch, is_mobile=touch, device_scale_factor=1,
         locale="ko-KR", timezone_id="Asia/Seoul",
     )
+    requested_urls = []
     # Do not send requests or data to live stats services during a UI test.
     async def route(request):
+        requested_urls.append(request.request.url)
         if request.request.url.startswith(origin):
             await request.continue_()
         else:
@@ -71,6 +73,11 @@ async def check_viewport(browser, origin, label, width, height, touch):
             # A separate scroll resolves an ElementHandle that can detach.
             await tab.click()
             assert await page.locator(".season-hero-badge").count() == 0
+            if tab_name == 'spwn':
+                sponsor = page.locator('[data-spwn-native-host]')
+                assert await sponsor.locator('#cards').count() == 1
+                assert '스폰일지 저장 기록' in await sponsor.locator('#cards').inner_text()
+                assert await sponsor.locator('#eloDlg').count() == 0
             if tab_name == 'tier':
                 card = page.locator('.native-tier-player').first
                 await card.wait_for()
@@ -137,6 +144,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
         }""")
         assert reachability['reachable'], reachability
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
+        assert not any("/api/elo/" in url or "spawn-note-elo-relay" in url for url in requested_urls), requested_urls
         assert not errors, errors
         return {"viewport": label, "geometry": geometry, "tabs": tabs, "months": 12,
                 "calendarButtons": toolbar_geometry, "saveReachability": reachability,

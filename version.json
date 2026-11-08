@@ -1,5 +1,5 @@
 {
-  "version": "5.23.21",
-  "releasedAt": "2026-11-06T05:17:00Z",
-  "notes": "LIVE 조회 실패 시 저장된 LIVE만 필터 해제 · 전체 선수 카드 표시"
+  "version": "5.23.22",
+  "releasedAt": "2026-11-08T03:00:00Z",
+  "notes": "스폰노트·스케줄 ELOBOARD 조회 제거 · 저장된 일지 기준 통계"
 }
