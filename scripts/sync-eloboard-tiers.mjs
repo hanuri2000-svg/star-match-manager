@@ -323,7 +323,11 @@ async function main() {
 
   const inactive = db.players
     .filter(player => !used.has(player))
-    .map(player => ({ ...player, active: false }));
+    .map(player => {
+      const after = { ...player, active: false };
+      previousRecords.set(after, player);
+      return after;
+    });
 
   const nextPlayers = [...active, ...inactive];
   {

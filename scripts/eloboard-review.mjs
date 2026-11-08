@@ -24,8 +24,8 @@ export function operationsFor(records) {
 export function makeReview(db, nextPlayers, previousRecords, mirrors) {
   const byId = new Map(db.players.filter(p => p.eloId != null && p.eloId !== '').map(p => [p.eloId, p]));
   const records = nextPlayers.flatMap(after => {
-    const before = previousRecords.get(after.eloId) || byId.get(after.eloId)
-      || db.players.find(p => p.eloId == null && p.name === after.name);
+    const before = previousRecords.get(after) || previousRecords.get(after.eloId) || byId.get(after.eloId)
+      || db.players.find(p => (p.eloId == null || p.eloId === '') && p.name === after.name);
     return equal(before, after) ? [] : [{index: before ? db.players.indexOf(before) : null, before: before || null, after}];
   });
   return {schemaVersion: 2, records, operations: operationsFor(records),
@@ -56,8 +56,9 @@ export function applyProposal({dbRaw, source, proposalRaw, expectedSource, expec
     }
   }
   for (const {index, before, after} of proposal.records) {
-    if (!after || typeof after.name !== 'string' || !after.name.trim() || !['string'].includes(typeof after.tier)
-      || !after.tier.trim() || (!knownRace(after.race) && after.race !== null)) fail('Invalid candidate fields');
+    if (!after || typeof after.name !== 'string' || !after.name.trim()
+      || ((!before || !equal(before.tier, after.tier)) && (typeof after.tier !== 'string' || !after.tier.trim()))
+      || ((!before || !equal(before.race, after.race)) && !knownRace(after.race) && after.race !== null)) fail('Invalid candidate fields');
     if (index === null) {
       if (before !== null || !validId(after.eloId) || ids.has(after.eloId)
         || Object.keys(after).some(k => !allowed.has(k) && k !== 'soopId')

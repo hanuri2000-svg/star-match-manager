@@ -410,3 +410,18 @@ test('malformed incoming race for an undecided existing player aborts without wr
     assert.equal(await read(), before);
   });
 });
+
+test('an absent ID-less legacy record is retained and only deactivated with explicit approval', async () => {
+  await withSyncFixture((players) => {
+    players.push({name:'legacy outside source',eloId:'',race:null,active:true,soopId:'keep',notes:{keep:true}});
+  }, async ({run,read,propose,proposal}) => {
+    propose();
+    const report=JSON.parse(await proposal());
+    const op=report.operations.find(o=>o.key==='legacy-300:active');
+    assert.deepEqual(op.before,{active:true});
+    assert.deepEqual(op.after,{active:false});
+    run();
+    const legacy=JSON.parse(await read()).players.find(p=>p.name==='legacy outside source');
+    assert.deepEqual(legacy,{name:'legacy outside source',eloId:'',race:null,active:false,soopId:'keep',notes:{keep:true}});
+  });
+});
