@@ -51,7 +51,7 @@
   async function refreshAll(){
     if(manualRefreshing||global.HARINA_MASTER_SYNC_STATUS?.status==='loading')return;
     manualRefreshing=true;render();
-    try{await Promise.resolve().then(()=>global.HARINA_LOAD_PLAYER_MASTER?.(true))}
+    try{await Promise.allSettled([Promise.resolve().then(()=>global.HARINA_LOAD_PLAYER_MASTER?.(true))])}
     finally{manualRefreshing=false;render()}
   }
   global.ScheduleDashboard = {render,refresh,refreshAll};
