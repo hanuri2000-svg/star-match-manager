@@ -75,6 +75,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
             assert await page.locator(".season-hero-badge").count() == 0
             if tab_name == 'spwn':
                 sponsor = page.locator('[data-spwn-native-host]')
+                await sponsor.locator('#cards').wait_for(state='attached')
                 assert await sponsor.locator('#cards').count() == 1
                 assert '스폰일지 저장 기록' in await sponsor.locator('#cards').inner_text()
                 assert await sponsor.locator('#eloDlg').count() == 0
