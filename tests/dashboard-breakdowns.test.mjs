@@ -18,16 +18,9 @@ test('상세전적은 기존 일지의 빌드별 승패를 집계한다',()=>{
   assert.equal(rows[0].label,'더블');assert.equal(rows[0].w,1);assert.equal(rows[0].l,1);assert.equal(rows[0].p,50);
   assert.equal(rows[1].label,'빌드 미입력');
 });
-test('공식전과 일지 출처를 나누고 상대는 중복 없이 최근 20명만 표시한다',()=>{
-  const {context,root,note}=setup();
-  const opponents=Array.from({length:23},(_,i)=>({label:`선수${i}`,wins:1,losses:0,winRate:100,lastPlayedOn:`2026-10-${String(i+1).padStart(2,'0')}`}));
-  opponents.push({...opponents[22]});
-  context.renderDashboardBreakdowns({player:{name:'최도랑'},detailGames:500,maps:[{label:'<투혼>',wins:3,losses:1,winRate:75}],opponents});
-  assert.match(root.innerHTML,/&lt;투혼&gt;/);assert.match(root.innerHTML,/3승 1패/);assert.match(root.innerHTML,/빌드별 전적/);
-  assert.equal((root.innerHTML.match(/<b>선수/g)||[]).length,20);assert.equal((root.innerHTML.match(/<b>선수22<\/b>/g)||[]).length,1);
-  assert(!root.innerHTML.includes('<b>선수0</b>'));assert.match(note.textContent,/500경기/);
-});
-test('조회 실패 시 공식전 수치를 만들지 않고 일지 통계만 유지한다',()=>{
-  const {context,root}=setup();context.eloDashboardError='연결 실패';context.renderDashboardBreakdowns(null);
-  assert.match(root.innerHTML,/연결 실패/);assert.match(root.innerHTML,/더블/);assert.match(root.innerHTML,/스폰일지 기준/);
+test('맵·빌드·상대별 전적을 저장된 일지로 집계한다',()=>{
+ const {context,root,note}=setup();context.records=[{map:'<투혼>',opponent:'상대',myBuild:'더블',result:'승',date:'2026-11-08'},{map:'<투혼>',opponent:'상대',myBuild:'더블',result:'패',date:'2026-11-07'}];
+ context.renderDashboardBreakdowns();
+ assert.match(root.innerHTML,/&lt;투혼&gt;/);assert.match(root.innerHTML,/1승 1패/);assert.match(root.innerHTML,/상대/);
+ assert.doesNotMatch(root.innerHTML,/ELO 기준|조회 중|연결 실패/);assert.match(note.textContent,/저장된 스폰일지/);
 });

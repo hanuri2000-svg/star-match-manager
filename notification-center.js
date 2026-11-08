@@ -84,7 +84,7 @@
   function checkSources(){
     change(()=>{
       observeSchedules(state,global.getScheduleDashboardSchedules?.()||[]);
-      observeElo(state,global.DORANG_ELO_SYNC_STATUS);
+
       observeTier(state,global.HARINA_MASTER_SYNC_STATUS,global.HARINA_PLAYER_DIRECTORY?.[PLAYER]?.tier);
     });
   }
@@ -110,7 +110,7 @@
   });
   const style=global.document.createElement('style');style.textContent=`.notification-details{padding:10px 14px;border:1px solid #d3bfdc;border-radius:12px;background:#fff;color:#513c60}.notification-details summary{cursor:pointer;font-size:.875rem}.notification-count{margin-left:12px;padding:3px 7px;border-radius:6px;background:#f2e8f8;color:#755580;font-size:.75rem}.notification-body{display:grid;gap:10px;margin-top:10px}.notification-note,.notification-empty{margin:0;color:#74647d;font-size:.875rem;line-height:1.5}.notification-tools{display:flex;gap:6px;flex-wrap:wrap}.notification-tools button,.notification-read{font-size:.875rem!important;padding:7px 10px!important}.notification-list{display:grid;gap:7px;max-height:350px;overflow:auto}.notification-item{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #e5d5ed;border-radius:10px;background:#fcf9ff;min-width:0}.notification-item.is-unread{border-left:4px solid #a777c0}.notification-item.is-read{background:#fafafa}.notification-link{display:grid;gap:5px;flex:1;min-width:0;text-align:left;background:transparent!important;border:0!important;box-shadow:none!important;color:#513c60!important;padding:4px!important;overflow-wrap:anywhere}.notification-link b,.notification-link span{font-size:.875rem;line-height:1.5}.notification-link small{font-size:.75rem;color:#88728f}.notification-read{flex-shrink:0}.notification-tools button:disabled{opacity:.5}@media(max-width:560px){.notification-count{display:inline-block;margin-left:7px}.notification-item{gap:5px}.notification-read{padding:7px!important}}`;global.document.head.appendChild(style);
   new MutationObserver(render).observe(global.document.getElementById('app'),{childList:true,subtree:true});
-  for(const name of ['dorang:data-changed','dorang:elo-sync','harina-player-master-sync','spawn-note:dashboard-changed'])global.addEventListener(name,checkSources);
+  for(const name of ['dorang:data-changed','harina-player-master-sync'])global.addEventListener(name,checkSources);
   global.addEventListener('dorang:version-checked',event=>change(()=>observeVersion(state,event.detail,global.INTEGRATED_APP_VERSION||'')));
   global.addEventListener('storage',event=>{if(event.key===KEY){state=load(localStorage);render()}else if(event.key==='star-match-manager-v1')checkSources()});
   global.addEventListener('pageshow',()=>{checkSources();checkVersion()});

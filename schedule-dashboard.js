@@ -2,33 +2,17 @@
 (function (global) {
   'use strict';
   const PLAYER = '최도랑';
-  const CACHE = 'scheduleDashboard.eloSnapshot.v1';
-  const SHARED_CACHE = 'spawnNote.eloDashboard.v1';
-  const TTL = 5 * 60 * 1000;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
   const dateKey = (now = new Date()) => `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const numeric = value => value !== '' && value != null && Number.isFinite(Number(String(value).replace(/,/g,''))) ? Number(String(value).replace(/,/g,'')) : null;
-  const own = read(CACHE);
-  const shared = read(SHARED_CACHE);
-  let snapshot = own?.player === PLAYER ? own : null;
-  if (!snapshot && shared?.player === PLAYER) snapshot = {player:PLAYER,data:shared.data,checkedAt:0,delta:null};
-  let loading = false, error = '', lastAttempt = 0;
-  let eloSync={status:snapshot?'cached':'idle',lastSuccess:snapshot?.checkedAt||0,error:''};
-  function publishElo(){
-    const score=numeric(snapshot?.data?.player?.elo);
-    global.DORANG_ELO_SYNC_STATUS={...eloSync,score,previousScore:score!=null&&snapshot?.delta!=null?Number((score-snapshot.delta).toFixed(1)):null};
-    if(typeof global.CustomEvent==='function')global.dispatchEvent?.(new global.CustomEvent('dorang:elo-sync',{detail:global.DORANG_ELO_SYNC_STATUS}));
-  }
   let manualRefreshing=false;
   const syncLabels={idle:'확인 전',loading:'업데이트 중',ok:'정상',cached:'저장된 자료',error:'오류'};
   function syncHtml(){
     const tier=global.HARINA_MASTER_SYNC_STATUS||{status:'idle'};
     const time=timestamp=>timestamp?new Date(timestamp).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'없음';
     const row=(label,state,detail='')=>`<div class="sync-source"><div><b>${label}</b><span class="sync-badge sync-${state.status}">${syncLabels[state.status]||'확인 전'}</span></div><span>마지막 성공 ${esc(time(state.lastSuccess))}</span>${state.status==='error'?`<small class="sync-error">${esc(state.error||'갱신 실패')} · 이전 자료 유지</small>`:detail?`<small>${esc(detail)}</small>`:''}</div>`;
-    const busy=manualRefreshing||loading||eloSync.status==='loading'||tier.status==='loading';
+    const busy=manualRefreshing||tier.status==='loading';
     const offline=global.navigator?.onLine===false;
-    return `<div class="sync-heading"><strong>동기화 상태</strong><button type="button" class="secondary" data-sync-refresh ${busy?'disabled':''}>${busy?'확인 중…':'새로고침'}</button></div><div class="sync-sources">${row('ELO 점수',eloSync,eloSync.status==='cached'?'저장된 점수 표시 중':'최도랑 현재 ELO · 전체 통계는 스폰노트에서 확인')}${row('티어표',tier,tier.version?`자료 v${tier.version}${tier.sourceDate?' · '+tier.sourceDate+' 기준':''}`:'선수 DB')}</div>${offline?'<p class="sync-offline">인터넷 연결 없음 · 저장된 자료를 표시해.</p>':''}`;
+    return `<div class="sync-heading"><strong>동기화 상태</strong><button type="button" class="secondary" data-sync-refresh ${busy?'disabled':''}>${busy?'확인 중…':'새로고침'}</button></div><div class="sync-sources">${row('티어표',tier,tier.version?`자료 v${tier.version}${tier.sourceDate?' · '+tier.sourceDate+' 기준':''}`:'선수 DB')}</div>${offline?'<p class="sync-offline">인터넷 연결 없음 · 저장된 자료를 표시해.</p>':''}`;
   }
   const statText = stat => `${stat.games}전 ${stat.wins}승 ${stat.losses}패`;
   function card(label, value, detail, action, extra = '') {
@@ -47,15 +31,9 @@
     const races = stats ? ['P','T','Z'].map(race=>`<span><b>${race}전</b> ${statText(stats.races[race])}</span>`).join('') : '';
     const records = global.SpawnScheduleStats?.readRecords(localStorage) || [];
     const last = records.filter(record => global.SpawnScheduleStats?.normalizeDate(record.date) && global.SpawnScheduleStats?.normalizeResult(record.result)).sort((a,b)=>global.SpawnScheduleStats.normalizeDate(b.date).localeCompare(global.SpawnScheduleStats.normalizeDate(a.date)) || Number(b.eloRecordId||b.id||0)-Number(a.eloRecordId||a.id||0))[0];
-    const score = numeric(snapshot?.data?.player?.elo);
-    const tier = global.HARINA_PLAYER_DIRECTORY?.[PLAYER]?.tier;
-    const delta = snapshot?.delta;
-    const change = delta == null ? '직전 비교 자료 없음' : delta === 0 ? '직전 확인 대비 변동 없음' : `직전 확인 대비 ${delta>0?'▲':'▼'} ${Number(Math.abs(delta).toFixed(1))}`;
-    const checked = snapshot?.checkedAt ? `확인 ${new Date(snapshot.checkedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}` : '저장된 자료';
-    const eloState = loading ? '점수 확인 중…' : error ? (score == null ? '조회 실패 · 눌러서 재확인' : `조회 실패 · ${checked} 점수`) : score == null ? 'ELO 확인 전' : checked;
     return card('오늘 일정',`${items.length}개`,agenda,'schedule') +
       card('오늘 전적',stats ? statText(stats.total) : '집계 준비 중',`${PLAYER} · 스폰노트`,'records',`<span class="today-race-list">${races}</span>`) +
-      card('현재 ELO',score == null ? '—' : esc(score.toLocaleString('ko-KR')),`${PLAYER}${tier?' · '+esc(tier):''} · ${change}`,'elo',`<span class="today-summary-meta" aria-live="polite">${esc(eloState)}</span>`) +
+      card('전체 기록',`${records.length}경기`,'이 기기에 저장된 스폰일지','records') +
       card('최근 결과',last ? `<span class="today-result ${global.SpawnScheduleStats.normalizeResult(last.result)==='W'?'win':'loss'}">${global.SpawnScheduleStats.normalizeResult(last.result)==='W'?'승':'패'}</span> vs ${esc(last.opponent||'상대 미상')}` : '기록 없음',last ? `${esc(last.date)} · ${esc(last.map||'맵 미기록')}` : '스폰노트에 경기를 기록해 줘','recent');
   }
   function render() {
@@ -69,26 +47,11 @@
     const sync=global.document.querySelector('[data-schedule-sync]');
     if(sync){const content=syncHtml();if(sync._syncContent!==content){sync._syncContent=content;sync.innerHTML=content}}
   }
-  async function refresh(force = false) {
-    if (loading || (!force && Date.now()-lastAttempt<TTL)) return;
-    lastAttempt = Date.now();
-    if (!force && snapshot?.checkedAt && Date.now()-snapshot.checkedAt<TTL) return;
-    loading = true; error = ''; eloSync={...eloSync,status:'loading',error:''};render();
-    try {
-      const base = String(global.SPAWN_NOTE_ELO_API_BASE || 'https://spawn-note-elo-relay.hajimayo8130.workers.dev').replace(/\/$/,'');
-      const {data,checkedAt,cached} = await global.EloDashboardClient.getProfile({player:PLAYER,today:dateKey(),base,force});
-      const previous = numeric(snapshot?.data?.player?.elo), current = numeric(data.player.elo);
-      const delta = snapshot?.checkedAt===checkedAt&&previous===current?snapshot.delta:previous==null?null:Number((current-previous).toFixed(1));
-      snapshot = {player:PLAYER,data,checkedAt,delta};
-      eloSync={status:cached?'cached':'ok',lastSuccess:checkedAt,error:''};
-      try { localStorage.setItem(CACHE,JSON.stringify(snapshot)); } catch {}
-    } catch (failure) { error = failure.name==='AbortError'?'응답 시간 초과':failure.message;eloSync={...eloSync,status:'error',error}; }
-    finally { loading = false; publishElo();render(); }
-  }
+  function refresh(){ render(); }
   async function refreshAll(){
-    if(manualRefreshing||loading||eloSync.status==='loading'||global.HARINA_MASTER_SYNC_STATUS?.status==='loading')return;
+    if(manualRefreshing||global.HARINA_MASTER_SYNC_STATUS?.status==='loading')return;
     manualRefreshing=true;render();
-    try{await Promise.allSettled([refresh(true),Promise.resolve().then(()=>global.HARINA_LOAD_PLAYER_MASTER?.(true))])}
+    try{await Promise.allSettled([Promise.resolve().then(()=>global.HARINA_LOAD_PLAYER_MASTER?.(true))])}
     finally{manualRefreshing=false;render()}
   }
   global.ScheduleDashboard = {render,refresh,refreshAll};
@@ -105,7 +68,7 @@
     .today-result{color:#328258}.today-result.loss{color:#c44869}
     .schedule-sync{padding:10px 14px;border:1px solid #d3bfdc;border-radius:12px;background:#fff;min-width:0;color:#513c60}
     .sync-heading,.sync-source>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.sync-heading strong{font-size:.875rem}.sync-heading button{font-size:.875rem!important;padding:6px 10px!important}.sync-heading button:disabled{opacity:.65;cursor:wait}
-    .sync-sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}.sync-source{display:grid;gap:4px;min-width:0;padding:8px 10px;background:#faf7fc;border-radius:8px}.sync-source b{font-size:.875rem}.sync-source>span,.sync-source small{color:#74647d;font-size:.75rem;line-height:1.4;overflow-wrap:anywhere}
+    .sync-sources{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:8px}.sync-source{display:grid;gap:4px;min-width:0;padding:8px 10px;background:#faf7fc;border-radius:8px}.sync-source b{font-size:.875rem}.sync-source>span,.sync-source small{color:#74647d;font-size:.75rem;line-height:1.4;overflow-wrap:anywhere}
     .sync-badge{font-size:.75rem;padding:3px 7px;border-radius:6px;background:#ece5f2;color:#705982;white-space:nowrap}.sync-ok{background:#e7f5ed;color:#28724e}.sync-loading{background:#e9effd;color:#4468a3}.sync-error{background:#fce9ef;color:#b63d5e}.sync-source small.sync-error{color:#b63d5e;background:transparent}.sync-offline{margin:8px 0 0;color:#b63d5e;font-size:.875rem}
     body.app-fit-screen .today-summary-card{padding:10px!important;gap:4px}
     @media(max-width:900px){.schedule-dashboard{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.today-summary-card{padding:12px!important}.today-summary-card>strong{font-size:1.0625rem}}
@@ -116,20 +79,6 @@
   global.addEventListener('harina-player-master-sync',render);
   global.addEventListener('online',()=>{render();refreshAll()});
   global.addEventListener('offline',render);
-  // Detailed statistics have their own state in the sponsor-note tab. A slow
-  // history request must not turn a successfully refreshed score into an error.
-  global.addEventListener('spawn-note:dashboard-changed',event=>{
-    const {player,data,checkedAt=Date.now()}=event.detail||{};
-    if(player!==PLAYER || numeric(data?.player?.elo)==null)return;
-    const previous=numeric(snapshot?.data?.player?.elo),current=numeric(data.player.elo);
-    const delta=snapshot?.checkedAt===checkedAt&&previous===current?snapshot.delta:previous==null?null:Number((current-previous).toFixed(1));
-    snapshot={player:PLAYER,data,checkedAt,delta};
-    eloSync={status:'ok',lastSuccess:snapshot.checkedAt,error:''};
-    publishElo();
-    error='';
-    try{localStorage.setItem(CACHE,JSON.stringify(snapshot))}catch{}
-    render();
-  });
   global.addEventListener('storage',event=>{if(event.key==='spawnNote.records.v1')render()});
   global.addEventListener('pageshow',()=>{render();refresh()});
   global.document.addEventListener('visibilitychange',()=>{if(!global.document.hidden){render();refresh()}});
@@ -141,10 +90,10 @@
     const focus=()=>{
       const host=global.document.querySelector('[data-spwn-native-host]');
       const root=host?.shadowRoot;
-      if(root?.querySelector('#recent')){global.SpwnNative?.showTab('dash');if(target==='recent')root.querySelector('#recent').scrollIntoView({behavior:'smooth',block:'center'});else if(target==='elo')root.querySelector('#basePlayerStatus')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+      if(root?.querySelector('#recent')){global.SpwnNative?.showTab('dash');if(target==='recent')root.querySelector('#recent').scrollIntoView({behavior:'smooth',block:'center'});return;}
       if(Date.now()-started<8000)setTimeout(focus,100);
     };
     setTimeout(focus,0);
   });
-  publishElo();render();refresh();
+  render();
 })(window);
