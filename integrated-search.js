@@ -36,7 +36,7 @@
       const a=participants.find(p=>p.id===item.a),b=participants.find(p=>p.id===item.b);
       add('match',`${a?.name||'선수 미정'} vs ${b?.name||'선수 미정'}`,text(main.title,index>=matches.length?'ACE':`${item.set||1}세트`,`${index+1}경기`,item.map),text(main.teamA,main.teamB,a?.tier,b?.tier,race(item.raceA),race(item.raceB)),{kind:'match',id:item.id});
     });
-    for(const [title,tab,extra] of [['스케줄','schedule','달력 일정'],['스타 티어표','tier','선수 종족'],['스폰노트','spwn','ELO 전적 기록'],['맞혀도랑','prediction','ASL 예측 우승 준우승'],['대진표','match','CK 대회 경기'],['덕몽 & 폴가이즈','party','게임 점수'],['룰렛','roulette','맵 추첨'],['별풍 정산','settlement','펀딩 계산'],['알림센터','schedule','알림'],['백업·복구','schedule','파일 저장 복원'],['동기화 상태','schedule','ELO 티어 갱신 새로고침']]){
+    for(const [title,tab,extra] of [['스케줄','schedule','달력 일정'],['스폰노트','spwn','전적 기록'],['맞혀도랑','prediction','ASL 예측 우승 준우승'],['대진표','match','CK 대회 경기'],['덕몽 & 폴가이즈','party','게임 점수'],['룰렛','roulette','맵 추첨'],['별풍 정산','settlement','펀딩 계산'],['알림센터','schedule','알림'],['백업·복구','schedule','파일 저장 복원']]){
       const section=title==='알림센터'?'notification':title==='백업·복구'?'backup':title==='동기화 상태'?'sync':'';
       add('menu',title,'바로 열기',extra,{kind:'menu',tab,section});
     }

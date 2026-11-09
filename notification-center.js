@@ -85,7 +85,7 @@
     change(()=>{
       observeSchedules(state,global.getScheduleDashboardSchedules?.()||[]);
 
-      observeTier(state,global.HARINA_MASTER_SYNC_STATUS,global.HARINA_PLAYER_DIRECTORY?.[PLAYER]?.tier);
+
     });
   }
   async function checkVersion(){

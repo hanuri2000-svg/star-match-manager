@@ -38,3 +38,9 @@ test('스폰노트는 ELO 조회·가져오기 없이 저장된 기록으로 통
  assert.match(moduleSource,/function localDashboardSummary/);
  assert.match(moduleSource,/스폰일지 저장 기록/);
 });
+
+test('티어표 화면과 조회는 없고 기록 입력용 자동완성은 유지한다',()=>{
+ assert.doesNotMatch(moduleSource,/loadTierTable|readTierCache|tierPayload|fetchTierLive|id=\\"tierTab/);
+ assert.doesNotMatch(main,/data-tab="tier"|function tierPanel|refreshTierLive|tier-live-preview\.js/);
+ assert.match(moduleSource,/function autoFillRecordPlayer/);
+});
