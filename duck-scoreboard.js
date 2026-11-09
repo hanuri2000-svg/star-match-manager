@@ -26,7 +26,7 @@
     const unassigned = ranked.filter(player => !pinballTeam(player)).length;
     const teamSummary = ['odd', 'even'].map(team => {
       const members = ranked.filter(player => pinballTeam(player) === team);
-      return `<div><span>${team === 'odd' ? '홀팀' : '짝팀'} · ${members.length}명</span><strong>${members.reduce((sum, player) => sum + player.total, 0)}점</strong></div>`;
+      return `<div data-duck-team-summary="${team}"><div class="duck-team-heading"><span>${team === 'odd' ? '홀팀' : '짝팀'} · ${members.length}명</span><strong>${members.reduce((sum, player) => sum + player.total, 0)}점</strong></div><p class="duck-team-members">${members.length ? members.map(player => esc(player.name)).join(' · ') : '배정된 참가자 없음'}</p></div>`;
     }).join('');
     return `<section class="panel party-score-panel duck-score-panel">
       <div class="party-score-head">
@@ -123,12 +123,17 @@
     .duck-round-tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px}
     .duck-round-tools label{min-width:110px}.duck-round-tools p{flex:1;margin:0;color:var(--muted);font-size:12px;line-height:1.6}
     .duck-team-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px}
-    .duck-team-summary > div{display:flex;justify-content:space-between;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
-    .duck-pinball-status{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .duck-score-panel .duck-team-summary > div{display:flex;flex-direction:column;gap:8px;min-width:0;padding:14px;border:2px solid var(--season-module-line,#d7c6df);border-radius:10px;background:var(--season-module-soft,#f2eaf6)!important;color:var(--season-module-text,#352b40)!important}
+    .duck-score-panel .duck-team-summary :is(span,strong,p){color:inherit!important;-webkit-text-fill-color:currentColor}
+    .duck-team-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800}
+    .duck-team-heading strong{font-size:22px;white-space:nowrap}
+    .duck-team-members{margin:0;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+    .duck-score-panel .duck-pinball-status{font-size:13px;font-weight:750;color:var(--season-module-text,#352b40)!important;background:var(--season-module-soft,#f2eaf6);padding:8px 10px;border-radius:8px;margin-bottom:8px}
     .duck-score-table .party-name-col{min-width:96px}
     .duck-score-table .party-name strong{overflow-wrap:anywhere}
     .duck-score-table .party-total-input{color:#345326!important;background:#fff!important}
     @media(max-width:760px){
+      .duck-team-summary{grid-template-columns:1fr}
       .duck-score-table{min-width:100%}.duck-score-table .party-name-col{min-width:84px}
       .duck-score-table [data-duck-round-column]{display:none}
       .duck-score-table [data-duck-round-column][data-current-round]{display:table-cell}
