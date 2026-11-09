@@ -29,7 +29,7 @@ assert approval['jobs']['prepare']['if'] == "github.ref == 'refs/heads/main'"
 assert approval['jobs']['prepare']['permissions'] == {'actions': 'write', 'contents': 'write', 'pull-requests': 'write'}
 commands = '\n'.join(step.get('run', '') for step in approval['jobs']['prepare']['steps'])
 assert 'node --test tests/*.test.mjs' in commands
-assert 'python tests/browser-smoke.py' in commands and 'python tests/tier-profile-browser.py' in commands
+assert 'python tests/browser-smoke.py' in commands
 assert 'node scripts/prepare-eloboard-approval.mjs' in commands
 assert 'git push' not in commands and '${{ inputs.' not in commands
 for retired in ['apply-player-master-v512.yml', 'bump-shared-apps-v5121.yml']:
@@ -51,7 +51,6 @@ assert jobs['browser-smoke']['runs-on'] == 'ubuntu-24.04'
 assert jobs['browser-smoke']['container']['image'] == 'mcr.microsoft.com/playwright/python:v1.56.0-noble'
 browser_commands = '\n'.join(s.get('run', '') for s in jobs['browser-smoke']['steps'])
 assert 'playwright install --with-deps' not in browser_commands
-assert 'python tests/tier-profile-browser.py' in browser_commands
 assert 'python tests/browser-smoke.py' in browser_commands
 assert 'python -m pip install playwright==1.56.0' in browser_commands
 

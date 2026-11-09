@@ -65,6 +65,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
         if width > 960 and (touch or height <= 700):
             assert geometry["documentScroll"] == "auto", geometry
 
+        assert await page.locator('[data-tab="tier"]').count() == 0
         # Exercise tab rerenders and ensure each navigation control is reachable.
         tabs = await page.locator('.app-tabs [data-tab]').evaluate_all("els => els.map(el => el.dataset.tab)")
         for tab_name in tabs:
@@ -79,26 +80,12 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#cards').count() == 1
                 assert '스폰일지 저장 기록' in await sponsor.locator('#cards').inner_text()
                 assert await sponsor.locator('#eloDlg').count() == 0
-            if tab_name == 'tier':
-                card = page.locator('.native-tier-player').first
-                await card.wait_for()
-                profile_layout = await card.evaluate("""card => {
-                  const a=card.querySelector('.native-avatar-link').getBoundingClientRect();
-                  const info=card.querySelector('.native-tier-identity').getBoundingClientRect();
-                  const badge=card.querySelector('.native-live')?.getBoundingClientRect();
-                  const parent=card.getBoundingClientRect();
-                  return {avatar:a.width, avatarHeight:a.height,
-                    identityRight:info.right, cardRight:parent.right,
-                    badgeBelow:badge ? badge.top >= info.bottom-2 : true,
-                    identityRightOfProfile:info.left >= a.right-2,
-                    columnCount:getComputedStyle(card).gridTemplateColumns.split(' ').length};
-                }""")
-                assert 71 <= profile_layout['avatar'] <= 73, profile_layout
-                assert 71 <= profile_layout['avatarHeight'] <= 73, profile_layout
-                assert profile_layout['columnCount'] == 2, profile_layout
-                assert profile_layout['identityRightOfProfile'], profile_layout
-                assert profile_layout['identityRight'] <= profile_layout['cardRight'] + 1, profile_layout
-                assert profile_layout['badgeBelow'], profile_layout
+                assert await sponsor.locator('#tierTab').count() == 0
+                await sponsor.locator('#logTab').click()
+                await sponsor.locator('button[onclick="window.SpwnNative.openForm()"]').click()
+                assert await sponsor.locator('#dlg').is_visible()
+                await sponsor.locator('#dlg button[type="button"]').click()
+                await sponsor.locator('#dashTab').click()
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
         party = await check_party_scoreboard(page, width)
         await page.screenshot(path=str(OUTPUT / f'{label}-duck-scoreboard.png'), full_page=True)
@@ -145,7 +132,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
         }""")
         assert reachability['reachable'], reachability
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
-        assert not any("/api/elo/" in url or "spawn-note-elo-relay" in url for url in requested_urls), requested_urls
+        assert not any("/api/elo/" in url or "spawn-note-elo-relay" in url or "dorang-live" in url or "eloboard.co.kr" in url for url in requested_urls), requested_urls
         assert not errors, errors
         return {"viewport": label, "geometry": geometry, "tabs": tabs, "months": 12,
                 "calendarButtons": toolbar_geometry, "saveReachability": reachability,

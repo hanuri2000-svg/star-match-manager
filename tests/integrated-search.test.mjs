@@ -43,11 +43,11 @@ test('전체 건수·범위별 건수는 결과 제한과 무관하고 빈 검�
  assert.ok(search(index,'').items.every(row=>row.kind==='menu'));
  assert.equal(search(index,'백업').items[0].target.section,'backup');
  assert.equal(search(index,'알림센터').items[0].target.section,'notification');
- assert.equal(search(index,'동기화').items[0].target.section,'sync');
+ assert.equal(search(index,'스타 티어표').total,0);
 });
 test('손상되거나 비어 있는 자료도 메뉴 검색을 막지 않고 원본 자료를 수정하지 않는다',()=>{
  const before=JSON.stringify(source);buildIndex(source);assert.equal(JSON.stringify(source),before);
- assert.equal(buildIndex({main:null,players:null,records:[null],prediction:null}).length,11);
+ assert.equal(buildIndex({main:null,players:null,records:[null],prediction:null}).length,9);
  assert.equal(search(buildIndex(source),'<script>').total,0);
  assert.equal(buildIndex({records:[{id:'01',opponent:'상대',note:'메모'}]}).find(row=>row.kind==='record').target.id,1);
 });
