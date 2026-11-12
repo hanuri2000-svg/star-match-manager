@@ -1,39 +1,40 @@
-/* Readable broadcast text at popup and OBS sizes. */
-.broadcast-only .broadcast-stage{padding:clamp(6px,1.5vw,20px);gap:6px}
-.broadcast-only .broadcast-stage header{padding-bottom:4px;gap:8px}
-.broadcast-only .broadcast-stage header h1{max-width:none;min-width:0;font-size:clamp(18px,4.2vw,46px);line-height:1.2}
-.broadcast-only .broadcast-status{flex-shrink:0;font-size:clamp(11px,2.6vw,20px);padding:4px 9px;line-height:1.2}
-.broadcast-only .broadcast-score{gap:8px}
-.broadcast-only .broadcast-team{min-width:0;gap:7px}
-.broadcast-only .broadcast-team span{max-width:none;font-size:clamp(14px,3.3vw,36px);font-weight:900}
-.broadcast-only .broadcast-team strong{width:clamp(32px,7vw,84px);border-radius:9px;font-size:clamp(22px,5vw,60px);flex-shrink:0}
-.broadcast-only .broadcast-score-label{min-width:60px}
-.broadcast-only .broadcast-score-label b,.broadcast-only .broadcast-score-label small{font-size:clamp(8px,1.8vw,13px);letter-spacing:.03em}
-.broadcast-only .broadcast-score-label em{font-size:clamp(21px,4.8vw,48px);line-height:1.1}
-.broadcast-only .broadcast-set-board{padding:5px 6px;border-radius:10px}
-.broadcast-only .broadcast-set-title{margin-bottom:4px}
-.broadcast-only .broadcast-set-title strong{font-size:clamp(11px,2.7vw,22px)}
-.broadcast-only .broadcast-set-title span{font-size:clamp(10px,2.5vw,18px)}
-.broadcast-only .broadcast-set-rows{gap:3px}
-.broadcast-only .broadcast-set-row{grid-template-columns:clamp(24px,4vw,56px) minmax(42px,.65fr) minmax(0,1fr) clamp(18px,3vw,40px) minmax(0,1fr) minmax(52px,.8fr);gap:clamp(4px,1vw,14px);padding:3px 4px;font-size:clamp(13px,3.6vw,28px);line-height:1.15;font-weight:850;border-radius:6px}
-.broadcast-only .broadcast-set-row>small{font-size:clamp(11px,2.9vw,22px)}
-.broadcast-only .broadcast-set-row em{font-size:clamp(10px,2.4vw,18px)}
-.broadcast-only .broadcast-set-row i{font-size:clamp(11px,2.9vw,22px);line-height:1.15;padding:4px 3px;border-radius:5px;overflow-wrap:anywhere}
-.broadcast-stage.preview .broadcast-set-row i{font-size:14px;padding:5px;font-weight:900}
-.broadcast-stage.preview .broadcast-set-title span{font-size:14px}
-@media(max-width:380px){
- .broadcast-only .broadcast-set-row{grid-template-columns:19px 37px minmax(0,1fr) 12px minmax(0,1fr) 46px;gap:2px;padding:2px}
- .broadcast-only .broadcast-set-row i{font-size:10px;padding:2px}
+/* Keep the compact 16:9 match board and all set rows visible in a popup. */
+.broadcast-only .broadcast-set-board:has(.broadcast-set-row:only-child){align-self:start;grid-template-rows:auto auto}
+.broadcast-only .broadcast-set-board:has(.broadcast-set-row:only-child) .broadcast-set-rows{align-content:start}
+@media(max-width:800px){
+ .broadcast-only .broadcast-stage{grid-template-rows:auto auto minmax(0,1fr);gap:4px;padding:8px 10px 7px}
+ .broadcast-only .broadcast-stage header{padding-bottom:5px}
+ .broadcast-only .broadcast-stage header h1{max-width:55vw;font-size:clamp(16px,3.3vw,22px);line-height:1.15}
+ .broadcast-only .broadcast-status{padding:3px 7px;font-size:clamp(10px,2.3vw,14px);font-weight:900}
+ .broadcast-only .broadcast-score{gap:6px}
+ .broadcast-only .broadcast-team{gap:5px;min-width:0}
+ .broadcast-only .broadcast-team span{max-width:22vw;font-size:clamp(11px,2.6vw,16px);font-weight:900}
+ .broadcast-only .broadcast-team strong{width:clamp(27px,6vw,40px);font-size:clamp(18px,4vw,26px);border-radius:8px}
+ .broadcast-only .broadcast-score-label{min-width:50px}
+ .broadcast-only .broadcast-score-label b,.broadcast-only .broadcast-score-label small{font-size:clamp(6px,1.5vw,9px)}
+ .broadcast-only .broadcast-score-label em{font-size:clamp(16px,3.6vw,24px)}
+ .broadcast-only .broadcast-set-board{min-height:0;padding:4px 5px;border-radius:7px}
+ .broadcast-only .broadcast-set-title{margin-bottom:3px}
+ .broadcast-only .broadcast-set-title strong{font-size:clamp(10px,2.2vw,15px)}
+ .broadcast-only .broadcast-set-title span{font-size:clamp(9px,1.9vw,13px);font-weight:900}
+ .broadcast-only .broadcast-set-rows{min-height:0;gap:2px}
+ .broadcast-only .broadcast-set-row{grid-template-columns:20px 50px minmax(0,1fr) 15px minmax(0,1fr) 60px;gap:3px;min-height:0;padding:2px 3px;border-radius:5px;font-size:clamp(10px,2.5vw,14px);line-height:1.15;font-weight:850}
+ .broadcast-only .broadcast-set-row>small{font-size:clamp(9px,2.1vw,12px)}
+ .broadcast-only .broadcast-set-row em{font-size:clamp(8px,1.8vw,11px)}
+ .broadcast-only .broadcast-set-row i{font-size:clamp(9px,2.15vw,12px);line-height:1.1;padding:2px;white-space:nowrap}
+ .broadcast-only .broadcast-stage footer{display:none}
 }
-@media(max-height:220px){
- .broadcast-only .broadcast-stage{padding:4px 6px;gap:3px}
- .broadcast-only .broadcast-stage header h1{font-size:17px}
- .broadcast-only .broadcast-team strong{width:27px;font-size:20px}
- .broadcast-only .broadcast-score-label b,.broadcast-only .broadcast-score-label small{display:none}
- .broadcast-only .broadcast-score-label em{font-size:20px}
+@media(max-width:380px){
+ .broadcast-only .broadcast-stage{padding:5px 6px;gap:3px}
  .broadcast-only .broadcast-set-board{padding:2px 3px}
- .broadcast-only .broadcast-set-title{margin-bottom:1px}
  .broadcast-only .broadcast-set-rows{gap:1px}
- .broadcast-only .broadcast-set-row{padding-top:1px;padding-bottom:1px}
- .broadcast-only .broadcast-set-row i{padding-top:1px;padding-bottom:1px}
+ .broadcast-only .broadcast-set-row{grid-template-columns:17px 40px minmax(0,1fr) 12px minmax(0,1fr) 47px;gap:2px;padding:1px 2px}
+ .broadcast-only .broadcast-set-row i{font-size:8px;padding:1px}
+}
+@media(min-width:801px){
+ .broadcast-only .broadcast-set-row{font-size:clamp(13px,1.4vw,20px)}
+ .broadcast-only .broadcast-set-row>small{font-size:clamp(11px,1.1vw,17px)}
+ .broadcast-only .broadcast-set-row i{font-size:clamp(11px,1.1vw,16px);font-weight:900}
+ .broadcast-only .broadcast-set-title strong{font-size:clamp(16px,1.5vw,22px)}
+ .broadcast-only .broadcast-set-title span{font-size:clamp(12px,1vw,16px)}
 }
