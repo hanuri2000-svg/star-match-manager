@@ -15,7 +15,7 @@
 .broadcast-only .broadcast-set-title strong{font-size:clamp(11px,2.7vw,22px)}
 .broadcast-only .broadcast-set-title span{font-size:clamp(10px,2.5vw,18px)}
 .broadcast-only .broadcast-set-rows{gap:3px}
-.broadcast-only .broadcast-set-row{grid-template-columns:24px minmax(42px,.65fr) minmax(0,1fr) 18px minmax(0,1fr) minmax(52px,.8fr);gap:4px;padding:3px 4px;font-size:clamp(13px,3.6vw,28px);line-height:1.15;font-weight:850;border-radius:6px}
+.broadcast-only .broadcast-set-row{grid-template-columns:clamp(24px,4vw,56px) minmax(42px,.65fr) minmax(0,1fr) clamp(18px,3vw,40px) minmax(0,1fr) minmax(52px,.8fr);gap:clamp(4px,1vw,14px);padding:3px 4px;font-size:clamp(13px,3.6vw,28px);line-height:1.15;font-weight:850;border-radius:6px}
 .broadcast-only .broadcast-set-row>small{font-size:clamp(11px,2.9vw,22px)}
 .broadcast-only .broadcast-set-row em{font-size:clamp(10px,2.4vw,18px)}
 .broadcast-only .broadcast-set-row i{font-size:clamp(11px,2.9vw,22px);line-height:1.15;padding:4px 3px;border-radius:5px;overflow-wrap:anywhere}
