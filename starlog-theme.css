@@ -87,3 +87,9 @@ html body:not(.broadcast-only) #app .schedule-toolbar h2{font-size:22px!importan
 html body:not(.broadcast-only) #app .schedule-main-layout,html body:not(.broadcast-only) #app .schedule-bottom-layout{grid-template-columns:minmax(0,1fr)!important}
 }
 @media(prefers-reduced-motion:reduce){body:not(.broadcast-only) #app *{transition:none!important;scroll-behavior:auto!important}}
+
+/* Keep schedule categories and special dates visually identifiable. */
+html body:not(.broadcast-only) #app .calendar-day.holiday{background:#fff2f5!important}
+html body:not(.broadcast-only) #app .calendar-day.dorang-special{background:#f6eafa!important;border-color:#cfaddf!important}
+html body:not(.broadcast-only) #app .schedule-list-item[class*=type-]{border-left:4px solid var(--schedule-color)!important}
+html body:not(.broadcast-only) #app input[type=checkbox],html body:not(.broadcast-only) #app input[type=radio]{min-height:0!important;accent-color:#8060a8}
