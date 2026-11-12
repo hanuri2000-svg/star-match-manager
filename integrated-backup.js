@@ -2,19 +2,21 @@
 (function(global){
   'use strict';
   const APP='dorang-integrated-page',HISTORY_KEY='dorangIntegratedBackup.v1',MAX_HISTORY=5,MAX_HISTORY_CHARS=900000;
-  const KEYS=['star-match-manager-v1','spawnNote.records.v1','spawnNote.eloPlayer','spawnNote.rivalPlayer','spawnNote.rivalOpponent','starPredictionManager_v31','newcatsleSpawnNote.records.v1','newcatsleEloPlayer','dorangNotificationCenter.v1'];
-  const JSON_KEYS=[KEYS[0],KEYS[1],KEYS[5],KEYS[6],KEYS[8]];
+  const KEYS=['star-match-manager-v1','spawnNote.records.v1','spawnNote.eloPlayer','spawnNote.rivalPlayer','spawnNote.rivalOpponent','starPredictionManager_v31','newcatsleSpawnNote.records.v1','newcatsleEloPlayer','dorangNotificationCenter.v1','my-starlog-spwn-note-v1','my-starlog-spwn-note-draft'];
+  const JSON_KEYS=[KEYS[0],KEYS[1],KEYS[5],KEYS[6],KEYS[8],KEYS[9]];
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function validate(backup){
     if(!object(backup)||backup.app!==APP||backup.schemaVersion!==1||typeof backup.createdAt!=='string'||!Number.isFinite(Date.parse(backup.createdAt))||!object(backup.data))throw new Error('올바른 통합 백업 파일이 아니야.');
     if(Object.keys(backup.data).some(key=>!KEYS.includes(key))||KEYS.slice(0,8).some(key=>!Object.hasOwn(backup.data,key)))throw new Error('백업에 필요한 데이터가 빠져 있어.');
     if(!Object.hasOwn(backup.data,KEYS[8]))backup.data[KEYS[8]]=null;
+    for(const key of KEYS.slice(9)){if(!Object.hasOwn(backup.data,key))backup.data[key]=null;}
     for(const key of KEYS){
       const value=backup.data[key];if(value!==null&&typeof value!=='string')throw new Error('백업 데이터 형식이 올바르지 않아.');
       if(value===null||!JSON_KEYS.includes(key))continue;
       let parsed;try{parsed=JSON.parse(value)}catch{throw new Error('백업 데이터가 손상됐어.')}
-      if(key===KEYS[8]){if(!object(parsed)||parsed.schemaVersion!==1||!Array.isArray(parsed.items)||!Array.isArray(parsed.seen)||!object(parsed.baseline))throw new Error('알림 데이터 형식이 올바르지 않아.')}
+      if(key===KEYS[9]){if(!object(parsed)||parsed.version!==1||!Array.isArray(parsed.matches)||!Array.isArray(parsed.trash)||!object(parsed.settings))throw new Error("스타로그 백업 형식이 올바르지 않아.")}
+      else if(key===KEYS[8]){if(!object(parsed)||parsed.schemaVersion!==1||!Array.isArray(parsed.items)||!Array.isArray(parsed.seen)||!object(parsed.baseline))throw new Error('알림 데이터 형식이 올바르지 않아.')}
       else if(key===KEYS[1]||key===KEYS[6]){if(!Array.isArray(parsed)||parsed.some(item=>!object(item)))throw new Error('스폰노트 기록 형식이 올바르지 않아.')}
       else{
         if(!object(parsed))throw new Error('앱 데이터 형식이 올바르지 않아.');
@@ -69,7 +71,7 @@
   }
   function counts(backup){
     const parse=key=>{try{return JSON.parse(backup.data[key]||'null')}catch{return null}};
-    return {schedules:parse(KEYS[0])?.schedules?.length||0,records:(parse(KEYS[1])||parse(KEYS[6]))?.length||0,predictions:parse(KEYS[5])?.matches?.length||0};
+    return {schedules:parse(KEYS[0])?.schedules?.length||0,records:parse(KEYS[9])?.matches?.length??((parse(KEYS[1])||parse(KEYS[6]))?.length||0),predictions:parse(KEYS[5])?.matches?.length||0};
   }
   const api={KEYS,HISTORY_KEY,validate,capture,fingerprint,history,checkpoint,restore,counts};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

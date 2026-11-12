@@ -58,6 +58,12 @@
 
   function readRecords(storage = global.localStorage) {
     try {
+      const current = storage?.getItem('my-starlog-spwn-note-v1');
+      if (current !== null && current !== undefined) {
+        const db = JSON.parse(current);
+        if (db?.version !== 1 || !Array.isArray(db.matches)) return [];
+        return db.matches;
+      }
       const parsed = JSON.parse(storage?.getItem(STORAGE_KEY) || "[]");
       return Array.isArray(parsed) ? parsed : [];
     } catch {

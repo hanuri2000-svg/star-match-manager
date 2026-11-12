@@ -1,0 +1,11 @@
+{
+  "name": "마이 스타로그",
+  "short_name": "스타로그",
+  "description": "스폰·래더·연습·CK까지, 스타크래프트 경기 기록장",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf8fd",
+  "theme_color": "#eee6ff"
+}

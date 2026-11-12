@@ -20,7 +20,7 @@ test("초기 HTML은 인라인 이미지 없이 가볍게 유지한다", () => {
 });
 
 test("무거운 탭 모듈은 첫 화면 파싱을 막지 않는다", () => {
-  assert.match(main, /<script async src="\.\/spwn-native\.js\?v=\d+\.\d+\.\d+"><\/script>/);
+  assert.match(main, /<script async src="\.\/starlog-embed\.js\?v=\d+\.\d+\.\d+"><\/script>/);
   assert.match(main, /<script async src="\.\/prediction-native\.js\?v=\d+\.\d+\.\d+"><\/script>/);
   assert.match(main, /window\.__appBootReady=true/);
 });

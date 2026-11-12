@@ -79,7 +79,7 @@
   global.addEventListener('harina-player-master-sync',render);
   global.addEventListener('online',()=>{render();refreshAll()});
   global.addEventListener('offline',render);
-  global.addEventListener('storage',event=>{if(event.key==='spawnNote.records.v1')render()});
+  global.addEventListener('storage',event=>{if((event.key==='spawnNote.records.v1'||event.key==='my-starlog-spwn-note-v1'))render()});
   global.addEventListener('pageshow',()=>{render();refresh()});
   global.document.addEventListener('visibilitychange',()=>{if(!global.document.hidden){render();refresh()}});
   global.document.addEventListener('click',event=>{

@@ -75,17 +75,12 @@ async def check_viewport(browser, origin, label, width, height, touch):
             await tab.click()
             assert await page.locator(".season-hero-badge").count() == 0
             if tab_name == 'spwn':
-                sponsor = page.locator('[data-spwn-native-host]')
-                await sponsor.locator('#cards').wait_for(state='attached')
-                assert await sponsor.locator('#cards').count() == 1
-                assert '스폰일지 저장 기록' in await sponsor.locator('#cards').inner_text()
-                assert await sponsor.locator('#eloDlg').count() == 0
-                assert await sponsor.locator('#tierTab').count() == 0
-                await sponsor.locator('#logTab').click()
-                await sponsor.locator('button[onclick="window.SpwnNative.openForm()"]').click()
-                assert await sponsor.locator('#dlg').is_visible()
-                await sponsor.locator('#dlg button[type="button"]').click()
-                await sponsor.locator('#dashTab').click()
+                sponsor = page.frame_locator('[data-spwn-native-host] iframe')
+                await sponsor.locator('#home.active').wait_for()
+                assert await sponsor.locator('#nameGuide').is_visible()
+                await sponsor.locator('#home button[onclick="openForm()"]').click()
+                assert await sponsor.locator('#editor').is_visible()
+                await sponsor.locator('button[onclick="closeForm()"]').first.click()
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
         party = await check_party_scoreboard(page, width)
         await page.screenshot(path=str(OUTPUT / f'{label}-duck-scoreboard.png'), full_page=True)

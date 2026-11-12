@@ -57,7 +57,7 @@ test("기존 버전 검사와 초기 가벼운 로딩 구조를 유지한다",()
   assert.equal(html.match(/const APP_VERSION=['"]([^'"]+)['"]/)?.[1],version);
   assert.equal(html.match(/const RELEASE_VERSION=['"]([^'"]+)['"]/)?.[1],version);
   assert.ok(Buffer.byteLength(html)<300000);
-  for(const path of ["spwn-native.js","prediction-native.js"]){
+  for(const path of ["starlog-embed.js","prediction-native.js"]){
     assert.ok(html.includes(`<script async src="./${path}?v=${version}"></script>`),path+" 비동기 로딩 또는 버전 불일치");
   }
 });

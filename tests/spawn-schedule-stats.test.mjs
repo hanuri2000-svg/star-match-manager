@@ -54,3 +54,11 @@ test("통합페이지는 스케줄로 시작하고 별풍 정산을 마지막에
   assert.match(main, /s\.activeTab='schedule';/);
   assert.match(main, /nav\.appendChild\(settlementTab\)/);
 });
+
+ test('Starlog edits and trash override the preserved legacy records',()=>{
+ const values={'spawnNote.records.v1':JSON.stringify([{date:'2026-11-12',race:'Z',result:'승'}]),'my-starlog-spwn-note-v1':JSON.stringify({version:1,matches:[{date:'2026-11-12',race:'T',result:'L'}],trash:[{date:'2026-11-12',race:'Z',result:'W'}]})};
+ const storage={getItem:k=>values[k]??null};
+ assert.deepEqual(stats.summarizeStorage('2026-11-12',storage).total,{games:1,wins:0,losses:1});
+ values['my-starlog-spwn-note-v1']=JSON.stringify({version:1,matches:[],trash:[]});
+ assert.deepEqual(stats.readRecords(storage),[]);
+ });
