@@ -573,6 +573,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 </style>`);
 document.head.insertAdjacentHTML('beforeend',`<style>
 .spwn-note-view{padding:0!important}
+body.starlog-active .head,body.starlog-active .app-tabs{position:relative!important;top:auto!important}
 .spwn-note-shell{overflow:hidden;border:1px solid #ddcce7;border-radius:18px;background:linear-gradient(145deg,#fff9fc,#f5f1ff 55%,#eef8ff);box-shadow:0 10px 30px rgba(91,66,116,.12)}
 .spwn-note-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid #e6d7ed;background:rgba(255,255,255,.82);color:#51445d}
 .spwn-note-bar strong{font-size:16px}.spwn-note-bar span{margin-left:8px;color:#806d8d;font-size:11px;font-weight:750}
@@ -605,6 +606,7 @@ render=function(){
   renderWithSpwnNote();
   if(new URLSearchParams(location.search).get('broadcast')==='1')return;
   const nav=document.querySelector('.app-tabs'),footer=document.querySelector('#app>footer');
+  document.body.classList.toggle('starlog-active',s.activeTab==='spwn');
   if(nav&&!nav.querySelector('[data-tab="spwn"]')){
     const broadcastTab=nav.querySelector('[data-tab="broadcast"]');
     const button=`<button class="${s.activeTab==='spwn'?'active':''}" data-act="tab" data-tab="spwn">스폰노트</button>`;
