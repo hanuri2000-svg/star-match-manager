@@ -93,3 +93,10 @@ html body:not(.broadcast-only) #app .calendar-day.holiday{background:#fff2f5!imp
 html body:not(.broadcast-only) #app .calendar-day.dorang-special{background:#f6eafa!important;border-color:#cfaddf!important}
 html body:not(.broadcast-only) #app .schedule-list-item[class*=type-]{border-left:4px solid var(--schedule-color)!important}
 html body:not(.broadcast-only) #app input[type=checkbox],html body:not(.broadcast-only) #app input[type=radio]{min-height:0!important;accent-color:#8060a8}
+/* Override the older monthly image banner while keeping monthly accents. */
+html[data-season-theme] body:not(.broadcast-only) #app>.head{background:linear-gradient(115deg,#eee6f9,#f7edfa 58%,#fff0ed)!important}
+html[data-season-theme] body:not(.broadcast-only) #app>.head h1{background:transparent!important;padding:0!important;border-radius:0!important}
+html body:not(.broadcast-only) #app>.head .eyebrow{display:none!important}
+html body:not(.broadcast-only) #app>.head .sub{color:#71647e!important;font-size:12px!important;line-height:1.65!important}
+html[data-season-theme] body:not(.broadcast-only) #app .calendar-day:nth-child(7n+1) .calendar-number{-webkit-text-fill-color:#a23e65!important}
+html[data-season-theme] body:not(.broadcast-only) #app .calendar-day:nth-child(7n) .calendar-number{-webkit-text-fill-color:#365f9c!important}
