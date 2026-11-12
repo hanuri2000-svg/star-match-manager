@@ -288,7 +288,7 @@ async def check_compact_broadcast(browser, origin, width, height):
         playersA:matches.map((_,i)=>({id:'a'+i,name:'도재욱'+i,race:'P'})),
         playersB:matches.map((_,i)=>({id:'b'+i,name:'박성균'+i,race:'T'})),
         matches,setGames:[5],setModes:['normal'],aces:[],activeTab:'match',
-        broadcast:{bg:'dark',size:width+'x'+height}
+        broadcast:{bg:'dark',size:'480x270'}
       }));
     })()""")
     page = await context.new_page()
