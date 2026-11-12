@@ -183,3 +183,6 @@ html body.starlog-active #app .spwn-native-host iframe{height:100%!important;min
 }
 
 .schedule-play-records{display:grid;gap:5px;margin-top:8px;max-height:240px;overflow:auto}.schedule-play-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#faf7fd;border:1px solid #eadff1;border-radius:9px}.schedule-play-row small{display:block;font-size:11px;color:#71647e}.schedule-play-row b{font-size:13px}.play-win{color:#28724e}.play-loss{color:#ad4265}
+
+.dorang-welcome{padding:16px 20px;background:#f3ebfb;border:1px solid #e4d5f1;border-radius:16px;color:#6b4d82;font-size:15px;line-height:1.8;overflow-wrap:anywhere}
+@media(max-width:700px){.dorang-welcome{padding:12px 14px;font-size:14px}}

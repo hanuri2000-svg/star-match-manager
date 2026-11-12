@@ -121,24 +121,13 @@ async def check_viewport(browser, origin, label, width, height, touch):
         await page.screenshot(path=str(OUTPUT / f'{label}-duck-scoreboard.png'), full_page=True)
         await page.locator('.app-tabs [data-tab="schedule"]').click()
 
-        # Change each month through the real controls, including repeated opens.
-        for month in range(1, 13):
-            await page.locator('[data-season-theme-open]').click()
-            await page.locator('[data-season-mode]').select_option(str(month))
-            await page.keyboard.press("Escape")
-            assert await page.locator('html').get_attribute('data-season-month') == str(month)
-            assert await page.locator('.season-hero-badge').count() == 0
-            assert await page.locator('.season-calendar-symbol').count() == 1
-            if label == 'desktop':
-                await page.screenshot(path=str(OUTPUT / f'theme-{month:02d}.png'), full_page=True)
+        # Fixed lavender appearance: no seasonal engine, controls, or decorations.
+        assert await page.locator('[data-season-theme-open]').count() == 0
+        assert await page.locator('#season-scene').count() == 0
+        assert await page.locator('html').get_attribute('data-season-month') is None
+        assert '이쁜 도랑아! 오늘도 반가워!' in await page.locator('.dorang-welcome').inner_text()
         await page.reload(wait_until="networkidle")
-        assert await page.locator('html').get_attribute('data-season-month') == '12'
-        assert await page.locator('.season-hero-badge').count() == 0
-        for mode in ['off', 'auto']:
-            await page.locator('[data-season-theme-open]').click()
-            await page.locator('[data-season-mode]').select_option(mode)
-            await page.keyboard.press('Escape')
-            assert await page.locator('.season-hero-badge').count() == 0
+        assert await page.locator('[data-season-theme-open]').count() == 0
         await page.screenshot(path=str(OUTPUT / f'{label}.png'), full_page=True)
         toolbar_geometry = await page.locator('.schedule-toolbar').evaluate("""toolbar => {
           const r=toolbar.getBoundingClientRect();
@@ -164,7 +153,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
         assert not any("/api/elo/" in url or "spawn-note-elo-relay" in url or "dorang-live" in url or "eloboard.co.kr" in url for url in requested_urls), requested_urls
         assert not errors, errors
-        return {"viewport": label, "geometry": geometry, "tabs": tabs, "months": 12,
+        return {"viewport": label, "geometry": geometry, "tabs": tabs, "fixedTheme": True,
                 "calendarButtons": toolbar_geometry, "saveReachability": reachability,
                 "partyScoreboard": party, "pageErrors": errors}
     except Exception:
