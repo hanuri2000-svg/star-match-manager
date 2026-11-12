@@ -84,7 +84,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
             if tab_name == 'spwn':
                 sponsor = page.frame_locator('[data-spwn-native-host] iframe')
                 await sponsor.locator('#home.active').wait_for()
-                assert await sponsor.locator('#nameGuide').is_visible()
+                assert not await sponsor.locator('#nameGuide').is_visible()
+                assert await sponsor.locator('#profileName').inner_text() == '최도랑'
                 frame_bounds = await page.locator('[data-spwn-native-host] iframe').evaluate("""frame => {
                   const r=frame.getBoundingClientRect();
                   return {top:r.top,bottom:r.bottom,height:r.height,viewport:innerHeight,
@@ -94,8 +95,6 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert frame_bounds['bottom'] <= frame_bounds['viewport'] + 1, frame_bounds
                 assert frame_bounds['documentHeight'] <= frame_bounds['viewport'] + 1, frame_bounds
                 assert await sponsor.locator('img[src*="newcatsle-logo"]').count() == 0
-                await sponsor.locator('#welcomeNotice[open]').wait_for()
-                await sponsor.get_by_role('button', name='확인 · 닫기', exact=True).click()
                 assert not await sponsor.locator('#welcomeNotice').is_visible()
                 assert await sponsor.locator('#updateCheck').count() == 0
                 assert await sponsor.locator('#calendar').count() == 0
@@ -105,8 +104,11 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#stats button.selected').inner_text() == '맵별'
                 assert await sponsor.locator('.race-summary-card').count() == 3
                 assert '0승 0패' in await sponsor.locator('.race-summary-card[data-race="P"]').inner_text()
-                await sponsor.locator('.sidebar > .profile').click()
+                await sponsor.locator('#nav a[href="#settings"]').click()
                 await sponsor.locator('#settings.active').wait_for()
+                assert await sponsor.locator('#settingsForm [name="name"]').count() == 0
+                assert await sponsor.locator('#settingsForm [name="race"]').count() == 0
+                assert '최도랑 · 프로토스' in await sponsor.locator('#settingsForm').inner_text()
                 await sponsor.locator('#nav a[href="#home"]').click()
                 await sponsor.locator('#home.active').wait_for()
                 await sponsor.get_by_role('button', name='＋ 오늘의 경기 기록하기', exact=True).click()
