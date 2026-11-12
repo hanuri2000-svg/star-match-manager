@@ -277,7 +277,7 @@ async def check_screen_mode(browser, origin, label, width, height):
 async def check_compact_broadcast(browser, origin, width, height):
     context = await browser.new_context(viewport={"width": width, "height": height})
     # Isolated five-game set with completed, current, and waiting states.
-    await context.add_init_script("""() => {
+    await context.add_init_script("""(() => {
       if (location.origin === 'null') return;
       const matches=Array.from({length:5},(_,i)=>({
         id:'game-'+i,set:1,a:'a'+i,b:'b'+i,map:'실피드',
@@ -290,7 +290,7 @@ async def check_compact_broadcast(browser, origin, width, height):
         matches,setGames:[5],setModes:['normal'],aces:[],activeTab:'match',
         broadcast:{bg:'dark',size:width+'x'+height}
       }));
-    }""")
+    })()""")
     page = await context.new_page()
     try:
         await page.goto(origin + '?broadcast=1', wait_until='networkidle')
