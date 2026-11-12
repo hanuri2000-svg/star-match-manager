@@ -177,8 +177,6 @@ async def check_screen_mode(browser, origin, label, width, height):
         await page.goto(origin, wait_until='networkidle')
         # Startup deliberately schedules a player DB render after 1.2 seconds
         # on WebKit. Network-idle alone precedes that render.
-            if label in ['desktop', 'phone']:
-                await page.screenshot(path=str(OUTPUT / f'{label}-{tab_name}.png'), full_page=True)
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
         assert await page.locator('html').get_attribute('data-screen-mode') == 'mobile'
         await page.locator('#schedule-title').fill('화면 전환 중 작성 내용')
@@ -221,8 +219,6 @@ async def check_screen_mode(browser, origin, label, width, height):
         assert await page.locator('#schedule-title').input_value() == '화면 전환 중 작성 내용'
         await page.locator('.screen-mode-controls [data-screen-mode="pc"]').click()
         await page.reload(wait_until='networkidle')
-            if label in ['desktop', 'phone']:
-                await page.screenshot(path=str(OUTPUT / f'{label}-{tab_name}.png'), full_page=True)
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
         assert await page.locator('html').get_attribute('data-screen-mode') == 'pc'
         assert await page.evaluate("matchMedia('(min-width:1200px)').matches")
@@ -238,8 +234,6 @@ async def check_screen_mode(browser, origin, label, width, height):
         await tap_visual(page.locator('.screen-mode-return'), scroll=False)
         await page.wait_for_function("document.documentElement.dataset.screenMode==='mobile'")
         await page.reload(wait_until='networkidle')
-            if label in ['desktop', 'phone']:
-                await page.screenshot(path=str(OUTPUT / f'{label}-{tab_name}.png'), full_page=True)
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
         assert await page.locator('html').get_attribute('data-screen-mode') == 'mobile'
         assert await page.evaluate('document.documentElement.scrollWidth') <= width + 1
