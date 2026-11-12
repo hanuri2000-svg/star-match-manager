@@ -100,3 +100,76 @@ html body:not(.broadcast-only) #app>.head .eyebrow{display:none!important}
 html body:not(.broadcast-only) #app>.head .sub{color:#71647e!important;font-size:12px!important;line-height:1.65!important}
 html[data-season-theme] body:not(.broadcast-only) #app .calendar-day:nth-child(7n+1) .calendar-number{-webkit-text-fill-color:#a23e65!important}
 html[data-season-theme] body:not(.broadcast-only) #app .calendar-day:nth-child(7n) .calendar-number{-webkit-text-fill-color:#365f9c!important}
+
+/* Compact workspace: spend the viewport on controls, not decoration. */
+html body:not(.broadcast-only) #app{padding:10px 16px 14px!important}
+html body:not(.broadcast-only) #app>.head{min-height:80px!important;padding:10px 16px!important;gap:12px!important;margin-bottom:10px!important;border-radius:18px!important;grid-template-columns:minmax(170px,1fr) 110px minmax(310px,1.5fr)!important}
+html body:not(.broadcast-only) #app>.head>div:first-child{min-height:0!important;padding-right:44px!important}
+html body:not(.broadcast-only) #app>.head h1{font-size:26px!important;margin:0!important}
+html body:not(.broadcast-only) #app>.head h1:before{font-size:8px;line-height:1.5}
+html body:not(.broadcast-only) #app>.head .sub{display:none!important}
+html body:not(.broadcast-only) #app>.head .harina-signature{width:110px!important}
+html body:not(.broadcast-only) #app>.head .dorang-header-character{width:40px!important}
+html body:not(.broadcast-only) #app>.head .actions{gap:4px!important}
+html body:not(.broadcast-only) #app>.head .actions button{padding:5px 8px!important;min-height:30px!important}
+html body:not(.broadcast-only) #app>.app-tabs{padding:4px!important;margin-bottom:10px!important}
+html body:not(.broadcast-only) #app>.app-tabs button{min-height:36px!important;padding:7px 12px!important}
+html body:not(.broadcast-only) #app .schedule-shell{gap:8px!important}
+html body:not(.broadcast-only) #app .schedule-dashboard{gap:8px!important}
+html body:not(.broadcast-only) #app .today-summary-card{padding:10px 14px!important;min-height:0!important;border-radius:14px!important}
+html body:not(.broadcast-only) #app .today-summary-card>strong{font-size:21px!important;margin:3px 0!important}
+html body:not(.broadcast-only) #app .today-summary-detail{font-size:11px!important}
+html body:not(.broadcast-only) #app .schedule-toolbar{padding:8px 14px!important;min-height:48px!important;height:auto!important;gap:8px!important}
+html body:not(.broadcast-only) #app .schedule-toolbar h2{font-size:20px!important}
+html body:not(.broadcast-only) #app .schedule-toolbar .eyebrow{display:none!important}
+html body:not(.broadcast-only) #app .calendar{padding:8px!important}
+html body:not(.broadcast-only) #app .calendar-day{height:clamp(44px,7vh,64px)!important;padding:4px!important;border-radius:8px!important}
+html body:not(.broadcast-only) #app .schedule-editor{padding:10px!important;gap:5px!important}
+html body:not(.broadcast-only) #app .schedule-editor label{gap:3px!important}
+html body:not(.broadcast-only) #app .schedule-editor :is(input,select){min-height:32px!important;padding:5px 8px!important}
+html body:not(.broadcast-only) #app .schedule-editor textarea{height:38px!important;min-height:38px!important}
+html body:not(.broadcast-only) #app .schedule-editor h3{margin:0!important}
+html body:not(.broadcast-only) #app .schedule-editor-head{margin-bottom:4px!important}
+html body:not(.broadcast-only) #app :is(.notification-details,.backup-details){padding-top:5px!important;padding-bottom:5px!important}
+html body:not(.broadcast-only) #app :is(.spwn-note-bar,.prediction-bar){padding:7px 12px!important}
+html body:not(.broadcast-only) #app>footer{margin:6px 0 0!important;padding:0!important;font-size:10px!important}
+html body:not(.broadcast-only) .dorang-sleeping-cat{width:68px!important}
+@media(min-width:1320px){
+ html body:not(.broadcast-only) #app{padding:12px 20px!important}
+ html body:not(.broadcast-only) #app>.app-tabs{padding:20px 14px!important;margin:0!important}
+ html body:not(.broadcast-only) #app>.app-tabs:before{padding-bottom:16px!important;font-size:22px}
+ html body:not(.broadcast-only) #app>.app-tabs:after{padding:16px 10px!important}
+}
+@media(min-width:701px) and (max-width:1100px){
+ html body:not(.broadcast-only) #app>.head{grid-template-columns:minmax(160px,1fr) 100px minmax(260px,1.5fr)!important}
+ html body:not(.broadcast-only) #app>.head .actions{grid-column:auto!important;justify-content:flex-end}
+ html body:not(.broadcast-only) #app>.head .harina-signature{width:100px!important}
+}
+@media(min-width:701px){
+ html body:not(.broadcast-only) #app .schedule-layout{grid-template-columns:minmax(0,1fr) minmax(235px,28%)!important;gap:8px!important}
+ html body:not(.broadcast-only) #app .schedule-dashboard{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+/* The outer notebook frame must never create a second vertical scrollbar. */
+html:has(body.starlog-active),html body.starlog-active{height:100%!important;overflow:hidden!important}
+html body.starlog-active #app{display:flex!important;flex-direction:column!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important}
+html body.starlog-active #app>.head,html body.starlog-active #app>.app-tabs,html body.starlog-active #app>footer{flex-shrink:0!important}
+html body.starlog-active #app>.spwn-note-view{flex:1 1 0!important;min-height:0!important;overflow:hidden!important}
+html body.starlog-active #app .spwn-note-shell{height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important}
+html body.starlog-active #app .spwn-native-host{flex:1 1 0!important;height:0!important;min-height:0!important;overflow:hidden!important}
+html body.starlog-active #app .spwn-native-host iframe{height:100%!important;min-height:0!important}
+@media(max-width:700px){
+ html body:not(.broadcast-only) #app{padding:8px!important}
+ html body:not(.broadcast-only) #app>.head{grid-template-columns:minmax(0,1fr) 76px!important;padding:10px 12px!important;gap:6px!important}
+ html body:not(.broadcast-only) #app>.head>div:first-child{min-height:0!important;padding-right:0!important}
+ html body:not(.broadcast-only) #app>.head h1{font-size:24px!important}
+ html body:not(.broadcast-only) #app>.head .harina-signature{width:76px!important}
+ html body:not(.broadcast-only) #app>.head .actions{grid-column:1/-1!important;justify-content:flex-start!important}
+ html body:not(.broadcast-only) #app>.head .actions button{min-height:32px!important}
+ html body:not(.broadcast-only) #app>.app-tabs button{min-height:40px!important}
+ html body:not(.broadcast-only) #app .schedule-dashboard{gap:6px!important}
+ html body:not(.broadcast-only) #app .today-summary-card{padding:9px 10px!important;min-height:0!important}
+ html body:not(.broadcast-only) #app .calendar-day{height:54px!important}
+ html body.starlog-active #app>.head .actions{display:none!important}
+ html body.starlog-active #app .spwn-note-bar{display:none!important}
+ html body.starlog-active #app>footer{display:none!important}
+}

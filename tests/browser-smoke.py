@@ -78,6 +78,14 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 sponsor = page.frame_locator('[data-spwn-native-host] iframe')
                 await sponsor.locator('#home.active').wait_for()
                 assert await sponsor.locator('#nameGuide').is_visible()
+                frame_bounds = await page.locator('[data-spwn-native-host] iframe').evaluate("""frame => {
+                  const r=frame.getBoundingClientRect();
+                  return {top:r.top,bottom:r.bottom,height:r.height,viewport:innerHeight,
+                    documentHeight:document.documentElement.scrollHeight};
+                }""")
+                assert frame_bounds['height'] > 200, frame_bounds
+                assert frame_bounds['bottom'] <= frame_bounds['viewport'] + 1, frame_bounds
+                assert frame_bounds['documentHeight'] <= frame_bounds['viewport'] + 1, frame_bounds
                 assert await sponsor.locator('img[src*="newcatsle-logo"]').count() == 0
                 await sponsor.get_by_role('button', name='＋ 오늘의 경기 기록하기', exact=True).click()
                 assert await sponsor.locator('#editor').is_visible()

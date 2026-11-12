@@ -14,3 +14,8 @@ body{font-size:16px;line-height:1.65}.sidebar{width:260px;padding:30px 22px 22px
 
 /* Unbranded journal inside Dorang. */
 .brand small{letter-spacing:2px}
+
+/* Embedded journal: compact chrome and readable controls. */
+.sidebar{padding:16px 16px 12px;width:205px}.brand{font-size:20px}.nav-label{margin:18px 8px 8px}nav{gap:4px}nav a{padding:9px 12px}.sidebar-note{padding:12px}.sidebar-note>div{font-size:22px;margin-bottom:3px}.sidebar-note b{font-size:15px}.sidebar-note small{margin:5px 0;font-size:11px}.sidebar-bottom{margin-top:10px}main{margin-left:205px}header{min-height:50px;padding:8px 18px;gap:8px}.content{padding:14px 18px}.hero{min-height:0;padding:18px 22px}.hero h1{font-size:28px;line-height:1.35;margin:7px 0}.hero p{font-size:15px;margin-bottom:8px}.game-types{margin-bottom:10px}.hero-art{top:0;transform:scale(.7);transform-origin:right center}.metrics{margin:12px 0;gap:8px}.metric{padding:12px 14px}.metric strong{margin:4px 0;font-size:28px}.section-top{margin:14px 0 10px}.section-top h2{font-size:22px}.panel{padding:15px}.panel-title{margin-bottom:12px}.name-guide,.welcome-guide{margin-bottom:12px;padding:10px 14px}footer{padding-top:12px}
+@media(max-width:800px){.sidebar{width:100%;padding:10px 12px 0}.brand{font-size:19px}nav{margin-top:8px}nav a{padding:9px 10px}main{margin-left:0}header{min-height:48px;padding:8px 12px}.content{padding:12px}.hero{padding:16px;min-height:0}.hero h1{font-size:26px}.hero p{font-size:15px}.hero-copy{max-width:100%}.hero-art{opacity:.3}.metric{padding:12px}.btn{min-height:42px}.btn.small{min-height:36px}.sidebar-note,.sidebar-bottom{display:none}}
+@media(max-height:700px){.sidebar-note{display:none}}
