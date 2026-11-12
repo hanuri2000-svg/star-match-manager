@@ -36,7 +36,7 @@ test('새로고침은 저장소 선수 DB만 읽으며 기존 기록을 변경�
 });
 test('릴리스 버전은 로드하는 모듈과 일치하고 ELO 조회 모듈은 로드하지 않는다',()=>{
  assert.ok(main.includes(`const APP_VERSION='${version}'`));
- for(const module of ['schedule-dashboard','starlog-embed','prediction-native','spawn-schedule-stats','integrated-backup','notification-center'])assert.ok(main.includes(`${module}.js?v=${version}`));
+ for(const module of ['starlog-embed','prediction-native','spawn-schedule-stats','integrated-backup','notification-center'])assert.ok(main.includes(`${module}.js?v=${version}`));
  assert.doesNotMatch(main,/src="[^"]*(?:daily-elo-import|elo-sync-client)\.js/);
  assert.doesNotMatch(source,/EloDashboardClient|api\/elo|spawn-note-elo-relay/);
 });

@@ -66,6 +66,13 @@ async def check_viewport(browser, origin, label, width, height, touch):
             assert geometry["documentScroll"] == "auto", geometry
 
         assert await page.locator('[data-tab="tier"]').count() == 0
+        assert await page.locator('[data-schedule-dashboard]').count() == 0
+        assert await page.locator('.schedule-shell [data-notification-center]').count() == 0
+        await page.locator('[data-open-notifications]').click()
+        assert await page.locator('#notification-dialog').is_visible()
+        await page.get_by_role('button', name='알림센터 닫기', exact=True).click()
+        assert not await page.locator('#notification-dialog').is_visible()
+
         # Exercise tab rerenders and ensure each navigation control is reachable.
         tabs = await page.locator('.app-tabs [data-tab]').evaluate_all("els => els.map(el => el.dataset.tab)")
         for tab_name in tabs:
