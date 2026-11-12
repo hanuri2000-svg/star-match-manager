@@ -274,6 +274,44 @@ async def check_screen_mode(browser, origin, label, width, height):
         await context.close()
 
 
+async def check_compact_broadcast(browser, origin, width, height):
+    context = await browser.new_context(viewport={"width": width, "height": height})
+    # Isolated five-game set with completed, current, and waiting states.
+    await context.add_init_script("""() => {
+      if (location.origin === 'null') return;
+      const matches=Array.from({length:5},(_,i)=>({
+        id:'game-'+i,set:1,a:'a'+i,b:'b'+i,map:'실피드',
+        winner:i<2?'A':null
+      }));
+      localStorage.setItem('star-match-manager-v1',JSON.stringify({
+        title:'6회차 아이렌즈',mode:'CK',teamA:'도랑팀',teamB:'너거팀',
+        playersA:matches.map((_,i)=>({id:'a'+i,name:'도재욱'+i,race:'P'})),
+        playersB:matches.map((_,i)=>({id:'b'+i,name:'박성균'+i,race:'T'})),
+        matches,setGames:[5],setModes:['normal'],aces:[],activeTab:'match',
+        broadcast:{bg:'dark',size:width+'x'+height}
+      }));
+    }""")
+    page = await context.new_page()
+    try:
+        await page.goto(origin + '?broadcast=1', wait_until='networkidle')
+        assert await page.locator('.broadcast-set-row').count() == 5
+        assert await page.locator('.broadcast-set-row i').all_text_contents() == [
+            '도랑팀 승','도랑팀 승','진행 중','대기','대기']
+        boxes = await page.locator('.broadcast-set-row').evaluate_all("""rows => rows.map(row => {
+          const box=row.getBoundingClientRect();
+          const children=[...row.children].map(el=>el.getBoundingClientRect());
+          return {top:box.top,bottom:box.bottom,left:box.left,right:box.right,
+            columnsFit:children.every(c=>c.left>=box.left-1&&c.right<=box.right+1)};
+        })""")
+        assert all(b['columnsFit'] for b in boxes), boxes
+        assert boxes[0]['top'] < boxes[-1]['top'], boxes
+        assert boxes[-1]['bottom'] <= height + 1, boxes
+        assert await page.evaluate("document.documentElement.scrollWidth") <= width + 1
+        await page.screenshot(path=str(OUTPUT / f'broadcast-{width}x{height}.png'))
+    finally:
+        await context.close()
+
+
 async def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(ROOT))
@@ -285,6 +323,8 @@ async def main():
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch()
             try:
+                for popup_width,popup_height in [(320,180),(480,270)]:
+                    await check_compact_broadcast(browser, origin, popup_width, popup_height)
                 results.append(await check_screen_mode(browser, origin, 'phone-chromium', 390, 844))
                 for viewport in VIEWPORTS:
                     results.append(await check_viewport(browser, origin, *viewport))
