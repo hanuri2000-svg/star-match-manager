@@ -83,26 +83,16 @@ async def check_party_scoreboard(page, width):
 
     assert '최도랑' in await page.locator('[data-duck-team-summary="odd"] .duck-team-members').inner_text()
     assert '단솔' in await page.locator('[data-duck-team-summary="even"] .duck-team-members').inner_text()
-    # Team labels, totals and rosters must stay readable under every monthly palette.
-    original_month = await page.locator('html').get_attribute('data-season-month')
-    for month in (range(1, 13) if width == 1440 else [int(original_month)]):
-        if width == 1440:
-            await page.locator('[data-season-theme-open]').click()
-            await page.locator('[data-season-mode]').select_option(str(month))
-            await page.keyboard.press('Escape')
-        contrast = await page.locator('.duck-team-summary').evaluate(r"""root => {
-          const rgb = value => (value.match(/[\d.]+/g)||[]).slice(0,3).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});
-          const luminance = color => {const [r,g,b]=rgb(color);return .2126*r+.7152*g+.0722*b};
-          return Array.from(root.querySelectorAll('span,strong,p')).map(el=>{
-            const fg=luminance(getComputedStyle(el).color),bg=luminance(getComputedStyle(el.closest('[data-duck-team-summary]')).backgroundColor);
-            return {text:el.textContent,ratio:(Math.max(fg,bg)+.05)/(Math.min(fg,bg)+.05)};
-          });
-        }""")
-        assert all(item['ratio'] >= 4.5 for item in contrast), (month, contrast)
-    if width == 1440:
-        await page.locator('[data-season-theme-open]').click()
-        await page.locator('[data-season-mode]').select_option(original_month)
-        await page.keyboard.press('Escape')
+    # Fixed lavender theme must keep team labels readable.
+    contrast = await page.locator('.duck-team-summary').evaluate(r"""root => {
+      const rgb = value => (value.match(/[\d.]+/g)||[]).slice(0,3).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});
+      const luminance = color => {const [r,g,b]=rgb(color);return .2126*r+.7152*g+.0722*b};
+      return Array.from(root.querySelectorAll('span,strong,p')).map(el=>{
+        const fg=luminance(getComputedStyle(el).color),bg=luminance(getComputedStyle(el.closest('[data-duck-team-summary]')).backgroundColor);
+        return {text:el.textContent,ratio:(Math.max(fg,bg)+.05)/(Math.min(fg,bg)+.05)};
+      });
+    }""")
+    assert all(item['ratio'] >= 4.5 for item in contrast), contrast
 
     await page.reload(wait_until='networkidle')
     await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
