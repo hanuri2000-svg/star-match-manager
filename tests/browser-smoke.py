@@ -87,6 +87,9 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert frame_bounds['bottom'] <= frame_bounds['viewport'] + 1, frame_bounds
                 assert frame_bounds['documentHeight'] <= frame_bounds['viewport'] + 1, frame_bounds
                 assert await sponsor.locator('img[src*="newcatsle-logo"]').count() == 0
+                await sponsor.locator('#welcomeNotice[open]').wait_for()
+                await sponsor.get_by_role('button', name='확인 · 닫기', exact=True).click()
+                assert not await sponsor.locator('#welcomeNotice').is_visible()
                 assert await sponsor.locator('#updateCheck').count() == 0
                 assert await sponsor.locator('#calendar').count() == 0
                 await sponsor.locator('.sidebar > .profile').click()
