@@ -99,6 +99,10 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert not await sponsor.locator('#welcomeNotice').is_visible()
                 assert await sponsor.locator('#updateCheck').count() == 0
                 assert await sponsor.locator('#calendar').count() == 0
+                assert await sponsor.locator('#nav a[href="#stats"]').count() == 0
+                assert await sponsor.locator('#home #stats').count() == 1
+                await sponsor.locator('#stats').get_by_role('button', name='맵별', exact=True).click()
+                assert await sponsor.locator('#stats button.selected').inner_text() == '맵별'
                 assert await sponsor.locator('.race-summary-card').count() == 3
                 assert '0승 0패' in await sponsor.locator('.race-summary-card[data-race="P"]').inner_text()
                 await sponsor.locator('.sidebar > .profile').click()
