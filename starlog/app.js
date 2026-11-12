@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION='2.0.5';
+const APP_VERSION='2.0.6';
 const KEY='my-starlog-spwn-note-v1', DRAFT='my-starlog-spwn-note-draft';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -80,29 +80,6 @@ async function importSponsorFile(input){
 async function restore(input){const file=input.files[0];input.value='';if(!file)return;if(file.size>20*1024*1024){toast('20MB 이하의 백업 파일을 선택해 주세요.');return}try{const parsed=JSON.parse((await file.text()).replace(/^\uFEFF/,''));if(!validDB(parsed))throw Error('invalid');if(!confirm(`백업의 ${parsed.matches.length}개 경기로 현재 기록과 설정을 교체할까요? 현재 자료를 먼저 백업해 주세요.`))return;const was=storageOK;storageOK=true;if(commit(parsed)){render();toast('백업 자료를 복원했어요 ✨')}else storageOK=was}catch(e){toast('올바른 마이 스타로그 백업 파일이 아니에요. 기존 기록은 유지했어요.')}}
 window.addEventListener('hashchange',render);window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{const next=JSON.parse(e.newValue);if(validDB(next)){db=next;render()}}catch(e){}}});autoMigrateLegacy();render();
 
-
-
-async function checkForUpdate(){
- const button=document.getElementById('updateCheck');
- if(button.disabled)return;
- button.disabled=true;button.textContent='확인 중…';
- const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10000);
- try{
-  const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store',signal:controller.signal});
-  if(!response.ok)throw Error('version fetch failed');
-  const latest=await response.json();
-  if(!latest||typeof latest.version!=='string'||!/^\d+\.\d+\.\d+$/.test(latest.version))throw Error('invalid version');
-  const comparison=compareVersion(latest.version,APP_VERSION);
-  if(comparison===0){toast('최신 버전이에요 · v'+APP_VERSION);return}
-  if(comparison<0){toast('배포가 반영 중이에요. 잠시 후 다시 확인해 주세요.');return}
-  if(confirm(`새 버전 v${latest.version}이 있어요. 지금 불러올까요?\n저장된 경기 기록과 설정은 그대로 유지돼요.`)){
-   if(document.getElementById('editor').open)saveDraft();
-   const url=new URL(location.href);url.searchParams.set('app_update',latest.version+'-'+Date.now());location.replace(url.href);
-  }
- }catch(e){toast('업데이트를 확인하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.')}
- finally{clearTimeout(timeout);button.disabled=false;button.textContent='↻ 업데이트 확인'}
-}
-function compareVersion(a,b){const aa=a.split('.').map(Number),bb=b.split('.').map(Number);for(let i=0;i<3;i++){if(aa[i]!==bb[i])return aa[i]>bb[i]?1:-1}return 0}
 
 
 function readLegacyRecords(storage){
