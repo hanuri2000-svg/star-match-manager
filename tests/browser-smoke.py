@@ -78,7 +78,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 sponsor = page.frame_locator('[data-spwn-native-host] iframe')
                 await sponsor.locator('#home.active').wait_for()
                 assert await sponsor.locator('#nameGuide').is_visible()
-                await sponsor.locator('#home button[onclick="openForm()"]').click()
+                await sponsor.get_by_role('button', name='＋ 오늘의 경기 기록하기', exact=True).click()
                 assert await sponsor.locator('#editor').is_visible()
                 await sponsor.locator('button[onclick="closeForm()"]').first.click()
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
