@@ -22,7 +22,7 @@ test("선택한 날짜의 스폰 전적을 상대 종족별로 집계한다", ()
     "2026-09-16",
   );
 
-  assert.deepEqual(result.total, { games: 4, wins: 2, losses: 2 });
+  assert.deepEqual(result.total, { games: 5, wins: 3, losses: 2 });
   assert.deepEqual(result.races.Z, { games: 2, wins: 1, losses: 1 });
   assert.deepEqual(result.races.T, { games: 1, wins: 1, losses: 0 });
   assert.deepEqual(result.races.P, { games: 1, wins: 0, losses: 1 });
@@ -62,3 +62,10 @@ test("통합페이지는 스케줄로 시작하고 별풍 정산을 마지막에
  values['my-starlog-spwn-note-v1']=JSON.stringify({version:1,matches:[],trash:[]});
  assert.deepEqual(stats.readRecords(storage),[]);
  });
+
+test('플레이 달력은 모든 경기 유형과 랜덤 종족을 포함하고 휴지통을 제외한다',()=>{
+ const matches=[{date:'2026-11-13',type:'래더',race:'R',result:'W',opponent:'A'},{date:'2026-11-13',type:'연습',race:'Z',result:'L',opponent:'B'},{date:'2026-11-12',type:'CK',race:'T',result:'W'}];
+ const storage={getItem:key=>key==='my-starlog-spwn-note-v1'?JSON.stringify({version:1,matches,trash:[{date:'2026-11-13',result:'W'}]}):null};
+ assert.deepEqual(stats.recordsForDate('2026-11-13',storage),matches.slice(0,2));
+ assert.deepEqual(stats.summarizeStorage('2026-11-13',storage).total,{games:2,wins:1,losses:1});
+});

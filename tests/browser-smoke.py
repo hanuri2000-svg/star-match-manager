@@ -88,6 +88,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert frame_bounds['documentHeight'] <= frame_bounds['viewport'] + 1, frame_bounds
                 assert await sponsor.locator('img[src*="newcatsle-logo"]').count() == 0
                 assert await sponsor.locator('#updateCheck').count() == 0
+                assert await sponsor.locator('#calendar').count() == 0
                 await sponsor.locator('.sidebar > .profile').click()
                 await sponsor.locator('#settings.active').wait_for()
                 await sponsor.locator('#nav a[href="#home"]').click()

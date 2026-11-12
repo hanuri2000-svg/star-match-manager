@@ -34,24 +34,19 @@
   function summarize(records, date) {
     const dateKey = normalizeDate(date);
     const races = { Z: emptyStat(), T: emptyStat(), P: emptyStat() };
+    const total = emptyStat();
 
     for (const record of Array.isArray(records) ? records : []) {
       if (normalizeDate(record?.date) !== dateKey) continue;
       const race = normalizeRace(record?.race);
       const result = normalizeResult(record?.result);
-      if (!race || !result) continue;
+      if (!result) continue;
+      total.games += 1;
+      total[result === "W" ? "wins" : "losses"] += 1;
+      if (!race) continue;
       races[race].games += 1;
       races[race][result === "W" ? "wins" : "losses"] += 1;
     }
-
-    const total = RACE_ORDER.reduce(
-      (sum, race) => ({
-        games: sum.games + races[race].games,
-        wins: sum.wins + races[race].wins,
-        losses: sum.losses + races[race].losses,
-      }),
-      emptyStat(),
-    );
 
     return { date: dateKey, races, total, hasRecords: total.games > 0 };
   }
@@ -71,6 +66,11 @@
     }
   }
 
+  function recordsForDate(date, storage = global.localStorage) {
+    const key = normalizeDate(date);
+    return readRecords(storage).filter(record => normalizeDate(record?.date) === key);
+  }
+
   function summarizeStorage(date, storage = global.localStorage) {
     return summarize(readRecords(storage), date);
   }
@@ -85,6 +85,7 @@
     summarize,
     readRecords,
     summarizeStorage,
+    recordsForDate,
   };
 
   global.SpawnScheduleStats = api;

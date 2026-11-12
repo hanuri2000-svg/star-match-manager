@@ -21,3 +21,5 @@ body{font-size:16px;line-height:1.65}.sidebar{width:260px;padding:30px 22px 22px
 @media(max-height:700px){.sidebar-note{display:none}}
 
 .sidebar>.profile{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;margin:10px 0 0;padding:9px 12px;min-height:42px;background:#f4edfb;border-color:#e4d5ef;border-radius:12px;font-size:14px}.sidebar>.profile span{margin:0;overflow-wrap:anywhere}header{min-height:38px;padding:7px 18px}.header-actions{display:none}@media(max-width:800px){.sidebar>.profile{width:max-content;max-width:100%;margin:7px 0 3px}header{min-height:32px;padding:5px 12px}}
+
+.home-recent .panel-title{gap:10px;flex-wrap:wrap}.home-recent .panel-title .actions{align-items:center}.home-recent{min-width:0}
