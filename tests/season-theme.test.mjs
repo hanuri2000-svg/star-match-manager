@@ -43,15 +43,10 @@ test("KST 월별 전환과 수동/원본 전환을 지원한다",()=>{
   assert.match(engine,/setInterval\(/);
   assert.match(engine,/dorang-season-theme\.v1/);
 });
-test("메인 화면과 Shadow DOM 모듈을 모두 연결한다",()=>{
-  assert.ok(html.includes(`<link rel="stylesheet" href="./season-theme.css?v=${version}">`), "시즌 CSS 버전 불일치");
-  assert.ok(html.includes(`<script src="./season-theme.js?v=${version}"></script>`), "시즌 JS 버전 불일치");
-  for(const path of ["spwn-native.js","prediction-native.js"]){
-    assert.match(read(path),/applySeasonThemeToShadow\(root\)/,path+" 테마 연결 누락");
-  }
-  assert.match(css,/body:not\(\.broadcast-only\)/);
-  assert.match(css,/prefers-reduced-motion/);
-  assert.match(css,/\.calendar-day/);
+test("메인 화면은 고정 스타로그 스타일을 사용하고 월별 테마를 실행하지 않는다",()=>{
+  assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*season-theme\.js/);
+  assert.doesNotMatch(html,/<link[^>]+href=["'][^"']*season-theme\.css/);
+  assert.ok(html.includes(`./starlog-theme.css?v=${version}`));
 });
 test("기존 버전 검사와 초기 가벼운 로딩 구조를 유지한다",()=>{
   assert.equal(html.match(/const APP_VERSION=['"]([^'"]+)['"]/)?.[1],version);
