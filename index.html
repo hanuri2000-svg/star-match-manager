@@ -1227,3 +1227,12 @@ body.app-fit-screen #app .schedule-toolbar{
 <link rel="stylesheet" href="./season-theme.css?v=5.23.25">
 <script src="./season-theme.js?v=5.23.25"></script>
 </body></html>
+
+<style>
+body.starlog-active #app > .spwn-note-view{overflow:hidden!important;min-height:0}
+body.starlog-active .spwn-note-shell{display:flex;flex-direction:column;height:100%;min-height:0}
+body.starlog-active .spwn-note-bar{flex:none}
+body.starlog-active .spwn-native-host{flex:1;min-height:0!important;height:auto!important;overflow:hidden}
+body.starlog-active .spwn-native-host iframe{min-height:0!important}
+@media(max-width:960px),(max-height:700px){body.starlog-active .spwn-note-shell{height:80svh;min-height:400px}}
+</style>
