@@ -79,7 +79,7 @@ test("9~11월의 테마는 각각 황금·단풍·버건디로 차별화한다",
   assert.equal(palettes["9"].icon,"🌾");
   assert.equal(palettes["10"].icon,"🍁");
   assert.equal(palettes["11"].icon,"🕯️");
-  assert.equal(palettes["11"].dark,true);
+  assert.equal(palettes["11"].dark,false);
   assert.notEqual(palettes["9"].bg,palettes["10"].bg);
   assert.notEqual(palettes["10"].bg,palettes["11"].bg);
 });
@@ -95,10 +95,10 @@ test("달력·오늘 요약 장식을 유지하고 월별 안내 카드는 생�
   assert.match(css,/pointer-events:none/);
 });
 
-test('어두운 테마의 주말·공휴일 날짜는 기본/선택 배경에서 4.5:1 대비를 유지한다',()=>{
+test('밝은 스타로그 테마의 주말·공휴일 날짜는 기본/선택 배경에서 4.5:1 대비를 유지한다',()=>{
   for(const month of ['8','11','12']){
     const p=palettes[month];
-    for(const [text,weekend] of [['#ffb9ce','#392b3b'],['#b9dcff','#213e50']]){
+    for(const [text,weekend] of [['#a23e65','#fff4f8'],['#365f9c','#f0f5fc']]){
       for(const bg of [weekend,p.panel,p.soft])assert.ok(contrast(text,bg)>=4.5,`${month}월 ${text}/${bg}`);
     }
   }

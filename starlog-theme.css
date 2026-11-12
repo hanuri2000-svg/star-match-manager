@@ -1,0 +1,89 @@
+/* Shared Starlog design; broadcast output retains its own presentation. */
+:root{--bg:#faf8fd;--panel:#fffefd;--line:#e8deef;--text:#443854;--muted:#71647e;--purple:#8060a8;--purple2:#9a78bc;--sl-shadow:0 8px 32px #71558d08;color-scheme:light!important}
+html:has(body:not(.broadcast-only)),html body:not(.broadcast-only){height:auto!important;overflow:auto!important}
+html body:not(.broadcast-only){background:var(--season-bg,#faf8fd)!important;color:#443854!important;font-family:Pretendard,'Noto Sans KR',system-ui,sans-serif;line-height:1.55}
+body:not(.broadcast-only)::before,body:not(.broadcast-only)::after{display:none!important}
+html body:not(.broadcast-only) #app{display:block!important;width:100%!important;max-width:1600px;height:auto!important;max-height:none!important;min-height:100svh;padding:26px 32px 48px!important;overflow:visible!important}
+html body:not(.broadcast-only) #app>.head{position:relative!important;display:grid!important;grid-template-columns:minmax(220px,1fr) 180px minmax(240px,1fr)!important;gap:22px!important;align-items:center!important;min-height:170px!important;height:auto!important;padding:24px 28px!important;margin:0 0 24px!important;border:1px solid #e9dcf1!important;border-radius:26px!important;background:linear-gradient(115deg,#eee6f9,#f7edfa 58%,#fff0ed)!important;box-shadow:none!important;isolation:isolate}
+html body:not(.broadcast-only) #app>.head:before,html body:not(.broadcast-only) #app>.head:after{display:none!important}
+html body:not(.broadcast-only) #app>.head>div:first-child{min-height:110px;padding-right:72px!important}
+html body:not(.broadcast-only) #app>.head h1{font-family:'Gowun Batang',Batang,Georgia,serif;font-size:clamp(27px,2.5vw,38px)!important;font-weight:700!important;letter-spacing:-.04em;color:#665077!important;-webkit-text-fill-color:#665077!important;text-shadow:none!important;margin:0 0 10px!important}
+html body:not(.broadcast-only) #app>.head h1:before{content:'DORANG’S LITTLE UNIVERSE';display:block;font:600 9px/2.4 system-ui,sans-serif;letter-spacing:2px;color:#836e99;-webkit-text-fill-color:#836e99}
+html body:not(.broadcast-only) #app>.head .harina-signature{width:180px!important;height:auto!important;min-width:0!important;opacity:.8}
+html body:not(.broadcast-only) #app>.head .dorang-header-character{width:64px!important;right:0!important}
+html body:not(.broadcast-only) #app>.head .actions{justify-content:flex-end;align-items:center;gap:7px!important}
+html body:not(.broadcast-only) #app>.head .actions button{font-size:11px!important;padding:8px 11px!important;min-height:34px;border-radius:12px!important;background:#fffafde6!important;border:1px solid #e3d5ec!important;color:#665575!important;box-shadow:none!important}
+html body:not(.broadcast-only) #app>.app-tabs{height:auto!important;min-height:0!important;display:flex;gap:6px;padding:8px!important;margin:0 0 24px!important;background:#fffefd!important;border:1px solid #eee6f4!important;border-radius:18px!important;box-shadow:var(--sl-shadow)!important;overflow-x:auto}
+html body:not(.broadcast-only) #app>.app-tabs button{display:flex;align-items:center;gap:10px;justify-content:center;min-height:44px!important;padding:10px 16px!important;font-size:13px!important;font-weight:500!important;border:0!important;border-radius:12px!important;background:transparent!important;color:#756781!important;box-shadow:none!important;text-shadow:none!important}
+html body:not(.broadcast-only) #app>.app-tabs button.active{background:#efe6f8!important;color:#75529c!important;-webkit-text-fill-color:#75529c!important;font-weight:700!important}
+html body:not(.broadcast-only) #app>.app-tabs button:hover{background:#f7f1fb!important;filter:none}
+#app>.app-tabs [data-tab]:before{font:18px/1 Georgia,serif;color:#9b7ab7;width:22px;text-align:center}
+#app>.app-tabs [data-tab=schedule]:before{content:'▦'}#app>.app-tabs [data-tab=spwn]:before{content:'▤'}#app>.app-tabs [data-tab=match]:before{content:'⚑'}#app>.app-tabs [data-tab=roulette]:before{content:'◉'}#app>.app-tabs [data-tab=prediction]:before{content:'✧'}#app>.app-tabs [data-tab=party]:before{content:'♧'}#app>.app-tabs [data-tab=settlement]:before{content:'☆'}
+html body:not(.broadcast-only) #app>.tab-view{margin-top:0!important;overflow:visible!important;min-width:0}
+html body:not(.broadcast-only) #app :is(.panel,.settings,.team,.set-block,.settlement,.schedule-editor,.schedule-agenda,.party-score-panel,.spwn-note-shell,.prediction-shell,.notification-details,.backup-details){background:#fffefd!important;border:1px solid #ebe3f1!important;border-radius:20px!important;box-shadow:var(--sl-shadow)!important;color:#443854!important}
+html body:not(.broadcast-only) #app :is(.section-title,.panel-title,.schedule-agenda-head) h2,html body:not(.broadcast-only) #app h3{color:#564363!important}
+html body:not(.broadcast-only) #app :is(.eyebrow,.today-summary-label){font-size:10px!important;letter-spacing:1.4px;font-weight:600!important;color:#7f6c91!important}
+html body:not(.broadcast-only) #app :is(input,textarea,select){background:#fffefd!important;color:#443854!important;border:1px solid #e5daee!important;border-radius:11px!important;box-shadow:none!important;font-weight:500;min-height:38px;color-scheme:light}
+html body:not(.broadcast-only) #app :is(input,textarea,select):focus{outline:2px solid #c6acdF;outline-offset:1px;border-color:#ac8bc7!important}
+html body:not(.broadcast-only) #app :is(button,.btn){transition:background .16s,box-shadow .16s;box-shadow:none;letter-spacing:0}
+html body:not(.broadcast-only) #app :is(.primary,.spin-button){background:linear-gradient(110deg,#8060a8,#946eb1)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:1px solid transparent!important;border-radius:12px!important;font-weight:600!important}
+html body:not(.broadcast-only) #app .secondary{background:#f8f3fc!important;color:#665375!important;border:1px solid #e8ddef!important;border-radius:11px!important;font-weight:500!important}
+html body:not(.broadcast-only) #app .danger{color:#a33e62!important;background:#fff1f5!important;border-color:#eed0dc!important}
+html body:not(.broadcast-only) #app :is(button,a):focus-visible{outline:3px solid #ad88cc!important;outline-offset:3px}
+html body:not(.broadcast-only) #app .schedule-shell{gap:18px}
+html body:not(.broadcast-only) #app .schedule-shell:before,html body:not(.broadcast-only) #app .calendar:after,html body:not(.broadcast-only) #app .schedule-editor:before,html body:not(.broadcast-only) #app .schedule-toolbar:after{display:none!important}
+html body:not(.broadcast-only) #app .schedule-dashboard{gap:16px}
+html body:not(.broadcast-only) #app .today-summary-card{padding:23px 22px!important;border-radius:20px!important;min-height:135px;background:#fffefd!important;border:1px solid #ebe3f1!important;box-shadow:var(--sl-shadow)!important;text-align:left}
+html body:not(.broadcast-only) #app .today-summary-card>strong{font-size:25px!important;font-weight:600!important;letter-spacing:-1px;color:#5c486b!important;margin:9px 0}
+html body:not(.broadcast-only) #app .today-summary-card:after{opacity:.32!important;font-size:24px!important}
+html body:not(.broadcast-only) #app .today-summary-detail{color:#7a6a87!important;font-size:11px!important}
+html body:not(.broadcast-only) #app .schedule-toolbar{padding:20px 24px!important;min-height:86px!important;gap:18px}
+html body:not(.broadcast-only) #app .schedule-toolbar h2{font-family:'Gowun Batang',Batang,Georgia,serif;font-size:24px;color:#665077!important}
+html body:not(.broadcast-only) #app .calendar{padding:18px!important}
+html body:not(.broadcast-only) #app .calendar-grid{border:0!important;gap:4px!important}
+html body:not(.broadcast-only) #app .calendar-day{border:1px solid #f1ebf6!important;border-radius:11px!important;background:#fffefd!important;height:90px;padding:8px!important}
+html body:not(.broadcast-only) #app .calendar-day.outside{background:#faf8fc!important;opacity:.65}
+html body:not(.broadcast-only) #app .calendar-day.today{background:#fff1f6!important;box-shadow:inset 0 0 0 1px #dfa9c1!important}
+html body:not(.broadcast-only) #app .calendar-day.selected{background:#f1eafa!important;box-shadow:inset 0 0 0 2px #ad88cc!important}
+html body:not(.broadcast-only) #app .calendar-number{font-weight:600!important;color:#635071!important}
+html body:not(.broadcast-only) #app .calendar-day:nth-child(7n+1) .calendar-number{color:#a23e65!important}
+html body:not(.broadcast-only) #app .calendar-day:nth-child(7n) .calendar-number{color:#365f9c!important}
+html body:not(.broadcast-only) #app :is(.schedule-agenda-row,.schedule-list-item,.history-row,.player,.overview-row:not(.in-progress),.party-team-score,.funding-teams>div,.settle-summary>div){background:#f8f4fc!important;border-color:#e9e0f1!important;border-radius:12px!important;color:#51415f!important}
+html body:not(.broadcast-only) #app :is(.score,.roulette-result,.set-score){background:linear-gradient(120deg,#f1e9fa,#fdf0f5)!important;border-color:#e7d8ef!important;color:#614875!important;border-radius:18px!important}
+html body:not(.broadcast-only) #app .score strong{color:#8060a8!important}
+html body:not(.broadcast-only) #app :is(.spwn-note-bar,.prediction-bar){padding:14px 20px!important;background:#fcf9ff!important;border-color:#eee4f5!important;color:#645175!important}
+html body:not(.broadcast-only) #app :is(.spwn-native-host,.prediction-native-host){height:78svh!important;min-height:520px!important;background:#faf8fd!important}
+html body.starlog-active #app>.spwn-note-view{overflow:hidden!important}
+html body.starlog-active #app .spwn-note-shell{height:82svh!important;min-height:520px}
+html body.starlog-active #app .spwn-native-host{height:auto!important;min-height:0!important}
+html body:not(.broadcast-only) .dorang-sleeping-cat{width:105px!important;opacity:.75!important;right:16px!important;bottom:8px!important;pointer-events:none}
+html body:not(.broadcast-only) .season-scene{opacity:.3}
+@media(min-width:1320px){
+html body:not(.broadcast-only) #app{margin-left:224px!important;width:calc(100% - 224px)!important;max-width:none!important;padding:28px 36px 48px!important}
+html body:not(.broadcast-only) #app>.app-tabs{position:fixed!important;left:0;top:0;bottom:0;width:224px!important;height:100svh!important;max-height:100svh;padding:36px 20px 24px!important;margin:0!important;display:flex!important;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;border:0!important;border-right:1px solid #ece3f3!important;border-radius:0!important;overflow-y:auto!important;overflow-x:hidden!important;z-index:20;box-shadow:none!important}
+html body:not(.broadcast-only) #app>.app-tabs:before{content:'도랑이꺼야 ♡';white-space:pre;display:block;font:700 23px/2.1 Batang,Georgia,serif;color:#675077;padding:0 10px 36px;letter-spacing:-.5px}
+html body:not(.broadcast-only) #app>.app-tabs:after{content:'오늘도 함께하는\A우리의 작은 기록 공간\A\A✧  made by 라비c';white-space:pre;display:block;margin-top:auto;padding:28px 15px;text-align:center;background:linear-gradient(145deg,#faf4fc,#f0ecfb);border:1px solid #eee4f6;border-radius:20px;color:#867097;font:13px/2 Batang,Georgia,serif}
+html body:not(.broadcast-only) #app>.app-tabs button{flex:0 0 auto!important;justify-content:flex-start!important;width:100%;white-space:nowrap;min-height:48px!important;padding:13px 16px!important}
+}
+@media(max-width:1100px){html body:not(.broadcast-only) #app>.head{grid-template-columns:minmax(180px,1fr) 160px!important}html body:not(.broadcast-only) #app>.head .actions{grid-column:1/-1;justify-content:flex-start}html body:not(.broadcast-only) #app>.head .harina-signature{width:160px!important}}
+@media(max-width:700px){
+html body:not(.broadcast-only) #app{padding:16px 12px 40px!important}
+html body:not(.broadcast-only) #app>.head{grid-template-columns:minmax(0,1fr) 100px!important;gap:12px!important;padding:20px 18px!important;min-height:0!important;border-radius:22px!important;margin-bottom:14px!important}
+html body:not(.broadcast-only) #app>.head>div:first-child{padding-right:0!important;min-height:95px}
+html body:not(.broadcast-only) #app>.head h1{font-size:26px!important}
+html body:not(.broadcast-only) #app>.head .harina-signature{width:100px!important}
+html body:not(.broadcast-only) #app>.head .dorang-header-character{display:none!important}
+html body:not(.broadcast-only) #app>.head .actions{gap:6px!important}
+html body:not(.broadcast-only) #app>.app-tabs{margin-bottom:16px!important}
+html body:not(.broadcast-only) #app>.app-tabs button{font-size:12px!important;min-height:42px!important;padding:9px 12px!important}
+html body:not(.broadcast-only) #app .schedule-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+html body:not(.broadcast-only) #app .today-summary-card{min-height:126px!important;padding:16px 14px!important}
+html body:not(.broadcast-only) #app .today-summary-card>strong{font-size:21px!important}
+html body:not(.broadcast-only) #app .calendar{padding:9px!important}
+html body:not(.broadcast-only) #app .calendar-grid{gap:2px!important}
+html body:not(.broadcast-only) #app .calendar-day{height:75px;padding:5px!important;border-radius:8px!important}
+html body:not(.broadcast-only) #app .schedule-toolbar{padding:16px!important;flex-wrap:wrap}
+html body:not(.broadcast-only) #app .schedule-toolbar h2{font-size:22px!important}
+html body:not(.broadcast-only) #app .schedule-main-layout,html body:not(.broadcast-only) #app .schedule-bottom-layout{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(prefers-reduced-motion:reduce){body:not(.broadcast-only) #app *{transition:none!important;scroll-behavior:auto!important}}

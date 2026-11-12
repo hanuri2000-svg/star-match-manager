@@ -4,21 +4,237 @@
   if (typeof document === "undefined") return;
   const STORAGE_KEY = "dorang-season-theme.v1";
   const SEOUL_ZONE = "Asia/Seoul";
-  const NAMES = ["설원의 겨울","로맨틱 발렌타인","민트 새싹","벚꽃 라벤더","햇살 정원","푸른 하늘","트로피컬 바다","여름밤 축제","황금빛 들판","붉은 단풍","버건디 늦가을","크리스마스"];
+  const NAMES = ["설원의 겨울","로맨틱 발렌타인","민트 새싹","벚꽃 라벤더","햇살 정원","푸른 하늘","트로피컬 바다","여름밤 축제","황금빛 들판","붉은 단풍","라벤더 늦가을","크리스마스"];
   const PALETTES = Object.freeze({
-    "1":{"bg":"#eaf4fc","panel":"#ffffff","soft":"#e8f1fa","text":"#213c53","muted":"#4a6175","line":"#bacfdf","accent":"#285c85","onAccent":"#ffffff","glowA":"#bbdbefaa","glowB":"#dbe9f6aa","dark":false,"decor":["❄️","☃️","✦"],"icon":"❄️"},
-    "2":{"bg":"#ffe4ed","panel":"#fffafd","soft":"#ffcfdf","text":"#592039","muted":"#813a54","line":"#eab0c6","accent":"#973252","onAccent":"#ffffff","glowA":"#ff94b09c","glowB":"#fdd0d9a8","dark":false,"decor":["💝","❤️","🎀"],"icon":"💝"},
-    "3":{"bg":"#e4faec","panel":"#fafffe","soft":"#cdf1e3","text":"#174b3a","muted":"#386957","line":"#96d1ba","accent":"#216750","onAccent":"#ffffff","glowA":"#a4edcfab","glowB":"#fff3b3b0","dark":false,"decor":["🌱","🍀","🌷"],"icon":"🌱"},
-    "4":{"bg":"#f5ecff","panel":"#fffaff","soft":"#ead8fa","text":"#4a2e64","muted":"#705286","line":"#d3b2e6","accent":"#774391","onAccent":"#ffffff","glowA":"#f5b9d999","glowB":"#d8c0ffa9","dark":false,"decor":["🌸","🪻","🌸"],"icon":"🌸"},
-    "5":{"bg":"#dfefb8","panel":"#fcfff2","soft":"#c9e293","text":"#263b1b","muted":"#425d31","line":"#9ac26e","accent":"#365c28","onAccent":"#ffffff","glowA":"#a9e27ac2","glowB":"#ffee9ebc","dark":false,"decor":["🌻","🦋","🌼"],"icon":"🌻"},
-    "6":{"bg":"#e3f5ff","panel":"#ffffff","soft":"#d7ebfa","text":"#20465e","muted":"#46697e","line":"#b5d2e9","accent":"#286487","onAccent":"#ffffff","glowA":"#b3dcfa99","glowB":"#d9f1ffa8","dark":false,"decor":["☁️","🫧","☀️"],"icon":"☁️"},
-    "7":{"bg":"#c9f4f0","panel":"#faffff","soft":"#a7e5db","text":"#154a4d","muted":"#30686c","line":"#7accc2","accent":"#17666d","onAccent":"#ffffff","glowA":"#66d4c7aa","glowB":"#ffdfad9e","dark":false,"decor":["🌴","🐚","🏖️"],"icon":"🌴"},
-    "8":{"bg":"#101b31","panel":"#1a2b47","soft":"#243856","text":"#f5f8ff","muted":"#d2ddeb","line":"#4b6380","accent":"#f5ce83","onAccent":"#242b39","glowA":"#6c5db855","glowB":"#375c9c55","dark":true,"decor":["🎆","🌙","✦"],"icon":"🎆"},
-    "9":{"bg":"#fff2bd","panel":"#fffdf3","soft":"#fae29a","text":"#49351a","muted":"#6d522a","line":"#d6b86c","accent":"#77511e","onAccent":"#ffffff","glowA":"#f4d17daa","glowB":"#f9e6aeb5","dark":false,"decor":["🌾","🌻","🌾"],"icon":"🌾"},
-    "10":{"bg":"#ffe1cb","panel":"#fff9f3","soft":"#f7c8aa","text":"#532a21","muted":"#794434","line":"#de9e7e","accent":"#923529","onAccent":"#ffffff","glowA":"#ee895ca8","glowB":"#ffd07cac","dark":false,"decor":["🍁","🌰","🍂"],"icon":"🍁"},
-    "11":{"bg":"#2b1727","panel":"#422436","soft":"#55374a","text":"#fff5f5","muted":"#e6cbd6","line":"#886579","accent":"#f3cda3","onAccent":"#3b2230","glowA":"#88486877","glowB":"#b0745c66","dark":true,"decor":["🕯️","☕","🍂"],"icon":"🕯️"},
-    "12":{"bg":"#112820","panel":"#1b382c","soft":"#284738","text":"#f7fff9","muted":"#d3e7d9","line":"#4e7562","accent":"#ffdb96","onAccent":"#294334","glowA":"#3b8a6555","glowB":"#ba594e55","dark":true,"decor":["🎄","❄️","🎁"],"icon":"🎄"}
-  });
+  "1": {
+    "bg": "#f7f8fd",
+    "panel": "#fffefd",
+    "soft": "#edf0fb",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "❄️",
+      "☃️",
+      "✦"
+    ],
+    "icon": "❄️"
+  },
+  "2": {
+    "bg": "#fff8fb",
+    "panel": "#fffefd",
+    "soft": "#fbedf3",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "💝",
+      "❤️",
+      "🎀"
+    ],
+    "icon": "💝"
+  },
+  "3": {
+    "bg": "#f6faf8",
+    "panel": "#fffefd",
+    "soft": "#eaf5ef",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🌱",
+      "🍀",
+      "🌷"
+    ],
+    "icon": "🌱"
+  },
+  "4": {
+    "bg": "#faf7fd",
+    "panel": "#fffefd",
+    "soft": "#f1e9fa",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🌸",
+      "🪻",
+      "🌸"
+    ],
+    "icon": "🌸"
+  },
+  "5": {
+    "bg": "#fafbf5",
+    "panel": "#fffefd",
+    "soft": "#f1f4e8",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🌻",
+      "🦋",
+      "🌼"
+    ],
+    "icon": "🌻"
+  },
+  "6": {
+    "bg": "#f6f9fd",
+    "panel": "#fffefd",
+    "soft": "#eaf1fa",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "☁️",
+      "🫧",
+      "☀️"
+    ],
+    "icon": "☁️"
+  },
+  "7": {
+    "bg": "#f5fafb",
+    "panel": "#fffefd",
+    "soft": "#e7f3f2",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🌴",
+      "🐚",
+      "🏖️"
+    ],
+    "icon": "🌴"
+  },
+  "8": {
+    "bg": "#f8f7fd",
+    "panel": "#fffefd",
+    "soft": "#efebfa",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🎆",
+      "🌙",
+      "✦"
+    ],
+    "icon": "🎆"
+  },
+  "9": {
+    "bg": "#fdfaf5",
+    "panel": "#fffefd",
+    "soft": "#f8f0e4",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🌾",
+      "🌻",
+      "🌾"
+    ],
+    "icon": "🌾"
+  },
+  "10": {
+    "bg": "#fff9f5",
+    "panel": "#fffefd",
+    "soft": "#f9eee8",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🍁",
+      "🌰",
+      "🍂"
+    ],
+    "icon": "🍁"
+  },
+  "11": {
+    "bg": "#faf8fd",
+    "panel": "#fffefd",
+    "soft": "#f2ebf7",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🕯️",
+      "☕",
+      "🍂"
+    ],
+    "icon": "🕯️"
+  },
+  "12": {
+    "bg": "#f7faf8",
+    "panel": "#fffefd",
+    "soft": "#eaf3ed",
+    "text": "#443854",
+    "muted": "#71647e",
+    "line": "#e8deef",
+    "accent": "#8060a8",
+    "onAccent": "#ffffff",
+    "glowA": "#e8dbf51c",
+    "glowB": "#fae6ed24",
+    "dark": false,
+    "decor": [
+      "🎄",
+      "❄️",
+      "🎁"
+    ],
+    "icon": "🎄"
+  }
+});
   const DEFAULT = {mode:"auto",effect:"subtle"};
   const root = document.documentElement;
   const varNames = ["--bg","--panel","--line","--text","--muted","--purple","--purple2"];
@@ -71,6 +287,7 @@
       shadowRoot.appendChild(el);
     }
     el.disabled = !root.hasAttribute("data-season-theme");
+    window.applyStarlogThemeToShadow?.(shadowRoot);
   }
   window.applySeasonThemeToShadow = applyShadowTheme;
   function updateShadowModules(){
@@ -136,7 +353,7 @@
     title.append(strong,close);
     const modeLabel=document.createElement("label");modeLabel.textContent="사용할 테마";
     const modeSelect=document.createElement("select");modeSelect.dataset.seasonMode="1";
-    const opts=[["auto","자동 변경 (한국시간 기준)"],["off","기존 기본 테마"]].concat(NAMES.map((name,i)=>[String(i+1),(i+1)+"월 · "+name]));
+    const opts=[["auto","자동 변경 (한국시간 기준)"],["off","스타로그 기본 테마"]].concat(NAMES.map((name,i)=>[String(i+1),(i+1)+"월 · "+name]));
     opts.forEach(o=>{const option=document.createElement("option");option.value=o[0];option.textContent=o[1];modeSelect.appendChild(option)});
     modeLabel.appendChild(modeSelect);
     const motionLabel=document.createElement("label");motionLabel.textContent="장식 효과";
