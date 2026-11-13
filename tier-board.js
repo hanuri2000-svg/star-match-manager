@@ -35,7 +35,7 @@
     const generation=++state.generation, results=new Map();
     state.pending=true;state.checked=0;state.errors=0;state.total=ids.length;draw();
     let cursor=0,errors=0,checked=0;
-    async function worker(){while(cursor<ids.length && generation===state.generation){const id=ids[cursor++];try{const response=await fetch(CHANNEL(id),{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!response.ok)throw Error('channel');const data=await response.json();if(Number(data.broadNo)>0 && String(data.userId||'').toLowerCase()===id)results.set(id,data.broadNo)}catch{errors++}finally{checked++;if(generation===state.generation){state.checked=checked;state.errors=errors;if(checked%15===0)draw()}}}}
+    async function worker(){while(cursor<ids.length && generation===state.generation){const id=ids[cursor++];try{const response=await fetch(CHANNEL(id),{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!response.ok)throw Error('channel');const body=await response.text();const data=body.trim()?JSON.parse(body):{};if(Number(data.broadNo)>0 && String(data.userId||'').toLowerCase()===id)results.set(id,data.broadNo)}catch{errors++}finally{checked++;if(generation===state.generation){state.checked=checked;state.errors=errors;if(checked%15===0)draw()}}}}
     await Promise.all(Array.from({length:Math.min(8,ids.length)},worker));
     if(generation!==state.generation)return;
     state.pending=false;state.errors=errors;
