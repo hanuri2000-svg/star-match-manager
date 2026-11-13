@@ -875,7 +875,7 @@ footer{color:#74667d!important}
 const renderWithExternalApps=render;
 render=function(){
   if(new URLSearchParams(location.search).get('broadcast')==='1'){renderBroadcastOnly();return}
-  if(!['match','settlement','roulette','spwn','schedule','prediction','party','broadcast'].includes(s.activeTab)){
+  if(!['match','settlement','roulette','spwn','schedule','prediction','party','broadcast','tiers'].includes(s.activeTab)){
     s.activeTab='schedule';
     localStorage.setItem(KEY,JSON.stringify(s));
   }
@@ -1238,3 +1238,5 @@ body.starlog-active .spwn-native-host iframe{min-height:0!important}
 
 <link rel="stylesheet" href="./starlog-theme.css?v=5.24.19">
 <script src="./starlog-theme.js?v=5.24.19"></script>
+<link rel="stylesheet" href="./tier-board.css?v=1">
+<script src="./tier-board.js?v=1"></script>

@@ -312,6 +312,44 @@ async def check_compact_broadcast(browser, origin, width, height):
         await context.close()
 
 
+async def check_tier_board(browser, origin):
+    """The full roster loads first; LIVE needs a matching SOOP channel response."""
+    context = await browser.new_context()
+    payload = {'tierOrder': ['갓', '유스'], 'players': [
+        {'eloId': 463, 'name': '엔돌핀', 'tier': '갓', 'race': 'Z', 'active': True, 'soopId': 'dmsgkdn12'},
+        {'eloId': 828, 'name': '유즈', 'tier': '유스', 'race': 'P', 'active': True, 'soopId': 'yuzzzz'},
+        {'eloId': 6312, 'name': '탱크', 'tier': '갓', 'race': 'P', 'active': True, 'soopId': ''},
+    ]}
+    errors = []
+    page = await context.new_page()
+    page.on('pageerror', lambda error: errors.append(str(error)))
+    async def route(request):
+        url = request.request.url
+        if '/players.json' in url:
+            await request.fulfill(json=payload)
+        elif 'api-channel.sooplive.co.kr' in url:
+            data = {'broadNo': 123, 'userId': 'dmsgkdn12'} if '/dmsgkdn12/' in url else {}
+            await request.fulfill(json=data, headers={'access-control-allow-origin': '*'})
+        elif url.startswith(origin):
+            await request.continue_()
+        else:
+            await request.abort()
+    await context.route('**/*', route)
+    try:
+        await page.goto(origin, wait_until='domcontentloaded')
+        await page.locator('[data-tab="tiers"]').click()
+        await page.locator('.shared-tier-player').first.wait_for()
+        assert await page.locator('.shared-tier-player').count() == 3
+        assert await page.locator('.shared-tier-live').count() == 0
+        await page.locator('[data-tier-live]').click()
+        await page.wait_for_function('document.querySelector(".shared-tier-head p")?.textContent.includes("LIVE 1명")')
+        assert await page.locator('.shared-tier-player').count() == 1
+        assert await page.locator('.shared-tier-player a[href="https://eloboard.com/players/463"]').count() == 1
+        assert not errors, errors
+    finally:
+        await context.close()
+
+
 async def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(ROOT))
@@ -323,6 +361,7 @@ async def main():
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch()
             try:
+                await check_tier_board(browser, origin)
                 for popup_width,popup_height in [(320,180),(480,270)]:
                     await check_compact_broadcast(browser, origin, popup_width, popup_height)
                 results.append(await check_screen_mode(browser, origin, 'phone-chromium', 390, 844))
