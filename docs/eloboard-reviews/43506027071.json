@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "sourceSha256": "8012bf05918d8c1a85e713ac5ec871b122736252fea0bb867ba37f14ba165020",
+  "dbSha256": "c658c03d28a7f32f3f34fe526843621c9f5b6ae28a62e28c5326531cf37f62cf",
+  "proposalSha256": "9c5174390997ff278d847dc553036e398016e8c7313ecb48c260859be921fae6",
+  "resultSha256": "9b1039a69e866fdcc4c6f39ef1e39e9ae542047843fa206d4035168e7dca8b1a",
+  "approved": [
+    "463:race"
+  ],
+  "operations": [
+    {
+      "index": 245,
+      "eloId": 463,
+      "key": "463:race",
+      "before": {
+        "race": "T"
+      },
+      "after": {
+        "race": "Z"
+      }
+    }
+  ],
+  "approvalSha256": "e79bf4a43710878a9fc0d493b5760bf49ee620b17c6d061fcae5f523e1353fe9",
+  "runId": "43493882938",
+  "artifactId": 14070352470,
+  "artifactDigest": "sha256:33df35f2035931b59b8d1b7178d2e654801680b9d7088ad340773800d638452e",
+  "commitSha": "e6277d7c73a6530df3f109d641455cc0973e3384",
+  "repository": "hanuri2000-svg/star-match-manager",
+  "actor": "hanuri2000-svg",
+  "approvedChanges": "463:race",
+  "approvedAt": "2026-11-13T20:56:22.665Z"
+}
