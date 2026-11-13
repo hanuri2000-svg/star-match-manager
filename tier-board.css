@@ -1,0 +1,22 @@
+.shared-tier-board{color:#3e304b;padding:18px;min-height:360px}
+.shared-tier-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;margin-bottom:18px}
+.shared-tier-head h2{font-size:24px;margin:0 0 5px;color:#3e304b}
+.shared-tier-head p,.shared-tier-foot{font-size:12px;color:#75677c;margin:0}
+.shared-tier-actions{display:flex;gap:8px}
+.shared-tier-actions button{cursor:pointer;border:1px solid #cbb6d8;background:#fff;color:#604678;border-radius:9px;padding:8px 12px;font-weight:750}
+.shared-tier-actions button[aria-pressed=true]{background:#7754a5;color:#fff;border-color:#7754a5}
+.shared-tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start;gap:14px}
+.shared-tier-group{border:1px solid #e2d4e9;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px #48335b0c}
+.shared-tier-group h3{background:#f4edf9;color:#523a68;margin:0;padding:10px 13px;font-size:16px}
+.shared-tier-group h3 small{float:right;font-size:11px;font-weight:500;color:#75677c}
+.shared-tier-players{max-height:600px;overflow-y:auto;padding:6px 10px}
+.shared-tier-player{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:7px;min-height:34px;border-bottom:1px solid #f1eaf4;font-size:13px}
+.shared-tier-player:last-child{border-bottom:0}
+.shared-tier-player a{color:#453354;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shared-tier-player a:hover{text-decoration:underline}
+.shared-tier-race{font-size:11px;font-weight:850;text-align:center;border-radius:5px;background:#eee;color:#444}
+.shared-tier-race.race-T{color:#fff;background:#668eed}.shared-tier-race.race-P{color:#fff;background:#bd91d6}.shared-tier-race.race-Z{color:#fff;background:#d16d96}
+.shared-tier-player .shared-tier-live{color:#bf1744;font-weight:850;font-size:11px}
+.shared-tier-empty{padding:35px;text-align:center;color:#75677c}
+.shared-tier-foot{margin:18px 0 0}
+@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-grid{grid-template-columns:1fr}.shared-tier-players{max-height:none}}
