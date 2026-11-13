@@ -328,8 +328,11 @@ async def check_tier_board(browser, origin):
         if '/players.json' in url:
             await request.fulfill(json=payload)
         elif 'api-channel.sooplive.co.kr' in url:
-            data = {'broadNo': 123, 'userId': 'dmsgkdn12'} if '/dmsgkdn12/' in url else {}
-            await request.fulfill(json=data, headers={'access-control-allow-origin': '*'})
+            if '/dmsgkdn12/' in url:
+                await request.fulfill(json={'broadNo': 123, 'userId': 'dmsgkdn12'}, headers={'access-control-allow-origin': '*'})
+            else:
+                # SOOP may return a 200 with no body for an offline channel.
+                await request.fulfill(status=200, body='', headers={'access-control-allow-origin': '*'})
         elif url.startswith(origin):
             await request.continue_()
         else:
