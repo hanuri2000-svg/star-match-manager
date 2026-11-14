@@ -10,7 +10,7 @@
   const AMBIGUOUS_ELO_IDS = new Set([170, 6312]);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const profileImage = id => `https://profile.img.sooplive.com/LOGO/${id.slice(0,2)}/${id}/${id}.jpg`;
-  const state = {payload:null, loading:null, liveOnly:false, tierFilter:'all', live:new Map(), pending:false, checked:0, errors:0, total:0, lastChecked:0, generation:0, liveError:false};
+  const state = {payload:null, loading:null, liveOnly:true, tierFilter:'all', live:new Map(), pending:false, checked:0, errors:0, total:0, lastChecked:0, generation:0, liveError:false};
   const manager = typeof window.HARINA_LOAD_PLAYER_MASTER === 'function';
   let host, preview, previewTimer, previewCloseTimer, previewRefreshTimer;
 
