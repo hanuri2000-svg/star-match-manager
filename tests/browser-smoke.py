@@ -312,6 +312,44 @@ async def check_compact_broadcast(browser, origin, width, height):
         await context.close()
 
 
+async def check_prediction_participant_scroll(browser, origin, screen_mode):
+    """A long prediction roster stays reachable by ordinary wheel scrolling."""
+    context = await browser.new_context(viewport={"width": 1440, "height": 900})
+    await context.add_init_script("""(() => {
+      const mode = __SCREEN_MODE__;
+      if (mode) localStorage.setItem('dorang.screenMode.v1', mode);
+      localStorage.setItem('starPredictionManager_v31', JSON.stringify({
+        tournament:'스크롤 점검', participants:Array.from({length:80},(_,i)=>`참가자 ${i+1}`),
+        matches:[{id:'scroll-match',p1:'선수 A',p2:'선수 B',picks:{},locked:false,winner:null}],
+        current:0,version:32
+      }));
+    })()""".replace('__SCREEN_MODE__', json.dumps(screen_mode)))
+    async def route(request):
+        if request.request.url.startswith(origin):
+            await request.continue_()
+        else:
+            await request.abort()
+    await context.route("**/*", route)
+    page = await context.new_page()
+    try:
+        await page.goto(origin, wait_until="networkidle")
+        await page.locator('[data-tab="prediction"]').click()
+        await page.wait_for_function("document.querySelector('[data-prediction-native-host]')?.shadowRoot?.querySelectorAll('.pred').length===80")
+        last = page.locator('.prediction-native-host .pred').last
+        assert '참가자 80' in await last.inner_text()
+        await page.mouse.move(600, 500)
+        await page.mouse.wheel(0, 12000)
+        await page.wait_for_timeout(150)
+        box = await last.bounding_box()
+        assert box and 0 <= box['y'] and box['y'] + box['height'] <= 901, (screen_mode, box)
+        await page.get_by_role('button', name='참가자', exact=True).click()
+        dialog = page.locator('.prediction-native-host .dialog')
+        assert '참가자 80' in await dialog.locator('textarea').input_value()
+        assert await dialog.get_by_role('button', name='저장').is_visible()
+    finally:
+        await context.close()
+
+
 async def check_tier_board(browser, origin):
     """LIVE is selected on entry; the full roster remains one click away."""
     context = await browser.new_context()
@@ -413,6 +451,8 @@ async def main():
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch()
             try:
+                await check_prediction_participant_scroll(browser, origin, None)
+                await check_prediction_participant_scroll(browser, origin, 'pc')
                 await check_tier_board(browser, origin)
                 for popup_width,popup_height in [(320,180),(480,270)]:
                     await check_compact_broadcast(browser, origin, popup_width, popup_height)
