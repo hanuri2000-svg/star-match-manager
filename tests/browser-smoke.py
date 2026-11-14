@@ -327,6 +327,11 @@ async def check_tier_board(browser, origin):
         url = request.request.url
         if '/players.json' in url:
             await request.fulfill(json=payload)
+        elif 'profile.img.sooplive.com' in url:
+            if '/dmsgkdn12/' in url:
+                await request.fulfill(status=200, body='<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>', content_type='image/svg+xml')
+            else:
+                await request.abort()
         elif 'api-channel.sooplive.co.kr' in url:
             if '/dmsgkdn12/' in url:
                 await request.fulfill(json={'broadNo': 123, 'userId': 'dmsgkdn12'}, headers={'access-control-allow-origin': '*'})
@@ -344,6 +349,16 @@ async def check_tier_board(browser, origin):
         await page.locator('.shared-tier-player').first.wait_for()
         assert await page.locator('.shared-tier-player').count() == 3
         assert await page.locator('.shared-tier-group').count() == 2
+        first = page.locator('.shared-tier-player').filter(has=page.locator('a[href="https://eloboard.com/players/463"]'))
+        assert await first.locator('.shared-tier-avatar img').get_attribute('src') == 'https://profile.img.sooplive.com/LOGO/dm/dmsgkdn12/dmsgkdn12.jpg'
+        await first.locator('.shared-tier-avatar img').evaluate('(img) => img.decode()')
+        missing = page.locator('.shared-tier-player').filter(has=page.locator('a[href="https://eloboard.com/players/6312"]'))
+        assert await missing.locator('.shared-tier-avatar').count() == 1
+        assert await missing.locator('.shared-tier-avatar img').count() == 0
+        broken = page.locator('.shared-tier-player').filter(has=page.locator('a[href="https://eloboard.com/players/828"]'))
+        await broken.scroll_into_view_if_needed()
+        await broken.locator('.shared-tier-avatar img').wait_for(state='detached')
+        assert await broken.locator('.shared-tier-avatar').count() == 1
         assert await page.locator('.shared-tier-players').first.evaluate('(el) => getComputedStyle(el).gridTemplateColumns.split(" ").length') >= 2
         assert await page.locator('.shared-tier-live').count() == 0
         assert await page.locator('.shared-tier-preview iframe').count() == 0
@@ -363,12 +378,8 @@ async def check_tier_board(browser, origin):
         src = await page.locator('.shared-tier-preview iframe').get_attribute('src')
         assert src == 'https://play.sooplive.com/dmsgkdn12/123/embed?autoPlay=true&mutePlay=true'
         assert 'loopback-network' in (await page.locator('.shared-tier-preview iframe').get_attribute('allow'))
-        login_link = page.locator('.shared-tier-preview-actions a')
-        assert await login_link.get_attribute('href') == 'https://play.sooplive.com/dmsgkdn12/123'
+        assert await page.locator('.shared-tier-preview-head a').count() == 0
         assert await page.locator('.shared-tier-live').first.get_attribute('href') == 'https://play.sooplive.com/dmsgkdn12/123'
-        assert await login_link.get_attribute('target') == '_blank'
-        assert 'SOOP에서 로그인 시청' in await login_link.inner_text()
-        assert '비로그인으로 표시될 수 있어' in await page.locator('.shared-tier-preview-help').inner_text()
         assert '기기 앱 접근을 허용' in await page.locator('.shared-tier-preview-help').inner_text()
         await page.locator('[data-preview-close]').click()
         assert await page.locator('.shared-tier-preview iframe').count() == 0
