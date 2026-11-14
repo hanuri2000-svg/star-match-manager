@@ -313,7 +313,7 @@ async def check_compact_broadcast(browser, origin, width, height):
 
 
 async def check_tier_board(browser, origin):
-    """The full roster loads first; LIVE needs a matching SOOP channel response."""
+    """LIVE is selected on entry; the full roster remains one click away."""
     context = await browser.new_context()
     payload = {'tierOrder': ['갓', '유스'], 'players': [
         {'eloId': 463, 'name': '엔돌핀', 'tier': '갓', 'race': 'Z', 'active': True, 'soopId': 'dmsgkdn12'},
@@ -348,7 +348,12 @@ async def check_tier_board(browser, origin):
     try:
         await page.goto(origin, wait_until='domcontentloaded')
         await page.locator('[data-tab="tiers"]').click()
+        assert await page.locator('[data-tier-live]').get_attribute('aria-pressed') == 'true'
+        await page.wait_for_function('document.querySelector(".shared-tier-head p")?.textContent.includes("LIVE 1명")')
         await page.locator('.shared-tier-player').first.wait_for()
+        assert await page.locator('.shared-tier-player').count() == 1
+        await page.locator('[data-tier-all]').click()
+        assert await page.locator('[data-tier-all]').get_attribute('aria-pressed') == 'true'
         assert await page.locator('.shared-tier-player').count() == 3
         assert await page.locator('.shared-tier-group').count() == 2
         first = page.locator('.shared-tier-player').filter(has=page.locator('a[href="https://eloboard.com/players/463"]'))
@@ -362,7 +367,7 @@ async def check_tier_board(browser, origin):
         await broken.locator('.shared-tier-avatar img').wait_for(state='detached')
         assert await broken.locator('.shared-tier-avatar').count() == 1
         assert await page.locator('.shared-tier-players').first.evaluate('(el) => getComputedStyle(el).gridTemplateColumns.split(" ").length') >= 2
-        assert await page.locator('.shared-tier-live').count() == 0
+        assert await page.locator('.shared-tier-live').count() == 1
         assert await page.locator('.shared-tier-preview iframe').count() == 0
         assert await page.locator('[data-tier-filter]').count() == 3
         await page.locator('[data-tier-filter="베이비"]').click()
