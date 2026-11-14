@@ -363,6 +363,11 @@ async def check_tier_board(browser, origin):
         src = await page.locator('.shared-tier-preview iframe').get_attribute('src')
         assert src == 'https://play.sooplive.com/dmsgkdn12/123/embed?autoPlay=true&mutePlay=true'
         assert 'loopback-network' in (await page.locator('.shared-tier-preview iframe').get_attribute('allow'))
+        login_link = page.locator('.shared-tier-preview-actions a')
+        assert await login_link.get_attribute('href') == 'https://play.sooplive.com/dmsgkdn12/123'
+        assert await login_link.get_attribute('target') == '_blank'
+        assert 'SOOP에서 로그인 시청' in await login_link.inner_text()
+        assert '비로그인으로 표시될 수 있어' in await page.locator('.shared-tier-preview-help').inner_text()
         assert '기기 앱 접근을 허용' in await page.locator('.shared-tier-preview-help').inner_text()
         await page.locator('[data-preview-close]').click()
         assert await page.locator('.shared-tier-preview iframe').count() == 0
