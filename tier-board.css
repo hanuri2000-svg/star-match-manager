@@ -23,9 +23,7 @@
 .shared-tier-race{flex:none;min-width:20px;font-size:11px;font-weight:850;text-align:center;border-radius:5px;background:#eee;color:#444}
 .shared-tier-race.race-T{color:#fff;background:#668eed}.shared-tier-race.race-P{color:#fff;background:#bd91d6}.shared-tier-race.race-Z{color:#fff;background:#d16d96}
 .shared-tier-player .shared-tier-live{color:#bf1744;font-weight:850;font-size:11px}
-.shared-tier-preview-trigger{flex:none;border:0;background:none;color:#ad2859;font-size:11px;font-weight:750;padding:2px;cursor:pointer}
-.shared-tier-preview-trigger:hover{text-decoration:underline}
-.shared-tier-preview-trigger:focus-visible,.shared-tier-preview button:focus-visible{outline:2px solid #5e3194;outline-offset:2px}
+.shared-tier-preview button:focus-visible{outline:2px solid #5e3194;outline-offset:2px}
 .shared-tier-preview{position:fixed;z-index:10020;width:min(380px,calc(100vw - 24px));overflow:hidden;border:1px solid #dfc9e7;border-radius:13px;background:#fff;box-shadow:0 16px 50px #27173955;color:#3e304b}
 .shared-tier-preview-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:13px}
 .shared-tier-preview-head button{border:0;background:none;color:#6b5578;font-size:22px;line-height:1;cursor:pointer}
@@ -34,5 +32,5 @@
 .shared-tier-preview>a{display:block;padding:9px 12px;color:#7041a1;font-size:12px;font-weight:750;text-decoration:none}
 .shared-tier-empty{padding:35px;text-align:center;color:#75677c}
 .shared-tier-foot{margin:18px 0 0}
-@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-players{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:8px}.shared-tier-player{gap:4px;font-size:11px;padding:2px 4px}.shared-tier-player .shared-tier-live{font-size:10px}.shared-tier-preview-trigger{font-size:10px}.shared-tier-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}}
+@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-players{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:8px}.shared-tier-player{gap:4px;font-size:11px;padding:2px 4px}.shared-tier-player .shared-tier-live{font-size:10px}.shared-tier-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}}
 @media(max-width:380px){.shared-tier-players{grid-template-columns:1fr}}
