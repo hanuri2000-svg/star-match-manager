@@ -99,7 +99,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#updateCheck').count() == 0
                 assert await sponsor.locator('#calendar').count() == 0
                 assert await sponsor.locator('#nav a[href="#stats"]').count() == 0
-                assert await sponsor.locator('#home #stats').count() == 1
+                await sponsor.locator('#home #stats').wait_for()
                 await sponsor.locator('#stats').get_by_role('button', name='맵별', exact=True).click()
                 assert await sponsor.locator('#stats button.selected').inner_text() == '맵별'
                 assert await sponsor.locator('.race-summary-card').count() == 3
@@ -365,6 +365,7 @@ async def check_tier_board(browser, origin):
         assert 'loopback-network' in (await page.locator('.shared-tier-preview iframe').get_attribute('allow'))
         login_link = page.locator('.shared-tier-preview-actions a')
         assert await login_link.get_attribute('href') == 'https://play.sooplive.com/dmsgkdn12/123'
+        assert await page.locator('.shared-tier-live').first.get_attribute('href') == 'https://play.sooplive.com/dmsgkdn12/123'
         assert await login_link.get_attribute('target') == '_blank'
         assert 'SOOP에서 로그인 시청' in await login_link.inner_text()
         assert '비로그인으로 표시될 수 있어' in await page.locator('.shared-tier-preview-help').inner_text()
