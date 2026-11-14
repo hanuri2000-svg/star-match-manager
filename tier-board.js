@@ -5,17 +5,20 @@
   const CHANNEL = id => `https://api-channel.sooplive.co.kr/v1.1/channel/${encodeURIComponent(id)}/home/section/broad`;
   const POLL_MS = 180000;
   const PREVIEW_DELAY_MS = 450;
+  const PREVIEW_REFRESH_MS = 15000;
   // The two Tank profiles share an unresolved channel attribution; neither is inferred LIVE.
   const AMBIGUOUS_ELO_IDS = new Set([170, 6312]);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const profileImage = id => `https://profile.img.sooplive.com/LOGO/${id.slice(0,2)}/${id}/${id}.jpg`;
   const state = {payload:null, loading:null, liveOnly:false, tierFilter:'all', live:new Map(), pending:false, checked:0, errors:0, total:0, lastChecked:0, generation:0, liveError:false};
   const manager = typeof window.HARINA_LOAD_PLAYER_MASTER === 'function';
-  let host, preview, previewTimer, previewCloseTimer;
+  let host, preview, previewTimer, previewCloseTimer, previewRefreshTimer;
 
   function closePreview(){
     clearTimeout(previewTimer);clearTimeout(previewCloseTimer);
+    clearInterval(previewRefreshTimer);
     previewTimer=previewCloseTimer=null;
+    previewRefreshTimer=null;
     preview?.remove();preview=null;
   }
   function deferClose(){clearTimeout(previewTimer);clearTimeout(previewCloseTimer);previewCloseTimer=setTimeout(closePreview,220)}
@@ -25,11 +28,16 @@
     if(!/^[a-z0-9_]{2,40}$/.test(id||'') || !Number.isSafeInteger(Number(number)) || Number(number)<=0)return;
     closePreview();
     const name=row.querySelector('a[href^="https://eloboard.com/players/"]')?.textContent || '방송';
-    const channel=`https://play.sooplive.com/${encodeURIComponent(id)}/${number}`;
+    const thumbnail=`https://liveimg.sooplive.com/m/${number}`;
     preview=document.createElement('aside');
     preview.className='shared-tier-preview';preview.dataset.liveId=id;preview.setAttribute('role','dialog');preview.setAttribute('aria-label',`${name} 방송 미리보기`);
-    preview.innerHTML=`<div class="shared-tier-preview-head"><strong>${esc(name)} · LIVE</strong><button type="button" data-preview-close aria-label="미리보기 닫기">×</button></div><div class="shared-tier-preview-video"><iframe title="${esc(name)} 방송 미리보기" src="${channel}/embed?autoPlay=true&mutePlay=true" allow="autoplay; fullscreen; picture-in-picture; local-network; loopback-network" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><small class="shared-tier-preview-help">영상이 차단되면 SOOP와 이 사이트의 기기 앱 접근을 허용한 뒤 새로고침해 줘.</small>`;
+    preview.innerHTML=`<div class="shared-tier-preview-head"><strong>${esc(name)} · LIVE 화면</strong><button type="button" data-preview-close aria-label="미리보기 닫기">×</button></div><div class="shared-tier-preview-video"><img src="${thumbnail}?t=${Date.now()}" alt="${esc(name)} 방송 화면 썸네일" referrerpolicy="no-referrer"><em>방송 화면을 불러오지 못했어.</em></div><small class="shared-tier-preview-help">영상이 아닌 SOOP 방송 화면 이미지야. 약 15초마다 새로고침해.</small>`;
     document.body.append(preview);
+    const video=preview.querySelector('.shared-tier-preview-video');
+    const image=video.querySelector('img');
+    image.addEventListener('error',()=>video.classList.add('unavailable'));
+    image.addEventListener('load',()=>video.classList.remove('unavailable'));
+    previewRefreshTimer=setInterval(()=>{if(preview?.dataset.liveId===id)image.src=`${thumbnail}?t=${Date.now()}`},PREVIEW_REFRESH_MS);
     const width=preview.getBoundingClientRect().width, height=preview.getBoundingClientRect().height, rect=row.getBoundingClientRect();
     preview.style.left=`${Math.max(12,Math.min(window.innerWidth-width-12,rect.left))}px`;
     preview.style.top=`${Math.max(12,rect.bottom+height+12<window.innerHeight?rect.bottom+8:rect.top-height-8)}px`;

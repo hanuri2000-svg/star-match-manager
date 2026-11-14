@@ -332,6 +332,8 @@ async def check_tier_board(browser, origin):
                 await request.fulfill(status=200, body='<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>', content_type='image/svg+xml')
             else:
                 await request.abort()
+        elif 'liveimg.sooplive.com/m/123' in url:
+            await request.fulfill(status=200, body='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"/>', content_type='image/svg+xml')
         elif 'api-channel.sooplive.co.kr' in url:
             if '/dmsgkdn12/' in url:
                 await request.fulfill(json={'broadNo': 123, 'userId': 'dmsgkdn12'}, headers={'access-control-allow-origin': '*'})
@@ -374,21 +376,22 @@ async def check_tier_board(browser, origin):
         assert await page.locator('.shared-tier-player a[href="https://eloboard.com/players/463"]').count() == 1
         assert await page.locator('.shared-tier-preview-trigger').count() == 0
         await page.locator('.shared-tier-player[data-live-id]').hover()
-        await page.locator('.shared-tier-preview iframe').wait_for()
-        src = await page.locator('.shared-tier-preview iframe').get_attribute('src')
-        assert src == 'https://play.sooplive.com/dmsgkdn12/123/embed?autoPlay=true&mutePlay=true'
-        assert 'loopback-network' in (await page.locator('.shared-tier-preview iframe').get_attribute('allow'))
+        image = page.locator('.shared-tier-preview-video img')
+        await image.wait_for()
+        assert (await image.get_attribute('src')).startswith('https://liveimg.sooplive.com/m/123?t=')
+        assert await image.evaluate('(img) => img.decode().then(() => img.naturalWidth)') == 480
+        assert await page.locator('.shared-tier-preview iframe').count() == 0
         assert await page.locator('.shared-tier-preview-head a').count() == 0
         assert await page.locator('.shared-tier-live').first.get_attribute('href') == 'https://play.sooplive.com/dmsgkdn12/123'
-        assert '기기 앱 접근을 허용' in await page.locator('.shared-tier-preview-help').inner_text()
+        assert '영상이 아닌 SOOP 방송 화면 이미지' in await page.locator('.shared-tier-preview-help').inner_text()
         await page.locator('[data-preview-close]').click()
-        assert await page.locator('.shared-tier-preview iframe').count() == 0
+        assert await page.locator('.shared-tier-preview-video img').count() == 0
         await page.locator('[data-tier-filter="베이비"]').click()
         assert await page.locator('.shared-tier-player').count() == 0
         assert '확인된 LIVE' in await page.locator('.shared-tier-empty').inner_text()
         await page.locator('[data-tier-all]').click()
         assert await page.locator('.shared-tier-player').count() == 1
-        assert await page.locator('.shared-tier-preview iframe').count() == 0
+        assert await page.locator('.shared-tier-preview-video img').count() == 0
         assert not errors, errors
     finally:
         await context.close()
