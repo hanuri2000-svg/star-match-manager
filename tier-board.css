@@ -17,6 +17,8 @@
 .shared-tier-players{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px 12px;padding:10px 13px}
 .shared-tier-player{display:flex;align-items:center;gap:7px;min-width:0;min-height:36px;padding:3px 6px;border:1px solid #f1eaf4;border-radius:8px;font-size:13px}
 .shared-tier-player[data-live-id]{background:#fff8fb;border-color:#f2d2df}
+.shared-tier-avatar{display:block;flex:none;width:26px;height:26px;overflow:hidden;border-radius:50%;background:#f2eaf5;border:1px solid #e7daeb}
+.shared-tier-avatar img{display:block;width:100%;height:100%;object-fit:cover}
 .shared-tier-player a{color:#453354;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .shared-tier-player a[href^="https://eloboard.com/players/"]{flex:1;min-width:0}
 .shared-tier-player a:hover{text-decoration:underline}
@@ -27,14 +29,11 @@
 .shared-tier-preview{position:fixed;z-index:10020;width:min(380px,calc(100vw - 24px));overflow:hidden;border:1px solid #dfc9e7;border-radius:13px;background:#fff;box-shadow:0 16px 50px #27173955;color:#3e304b}
 .shared-tier-preview-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:13px}
 .shared-tier-preview-head strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.shared-tier-preview-actions{display:flex;align-items:center;gap:5px;flex:none}
-.shared-tier-preview-actions a{padding:6px 9px;border-radius:7px;background:#7545a6;color:#fff;font-size:11px;font-weight:800;text-decoration:none;white-space:nowrap}
-.shared-tier-preview-actions a:focus-visible{outline:2px solid #5e3194;outline-offset:2px}
 .shared-tier-preview-head button{border:0;background:none;color:#6b5578;font-size:22px;line-height:1;cursor:pointer}
 .shared-tier-preview-video{aspect-ratio:16/9;background:#17121e}
 .shared-tier-preview-video iframe{display:block;width:100%;height:100%;border:0}
 .shared-tier-preview-help{display:block;padding:9px 12px;color:#705f79;font-size:11px;line-height:1.4}
 .shared-tier-empty{padding:35px;text-align:center;color:#75677c}
 .shared-tier-foot{margin:18px 0 0}
-@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-players{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:8px}.shared-tier-player{gap:4px;font-size:11px;padding:2px 4px}.shared-tier-player .shared-tier-live{font-size:10px}.shared-tier-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}}
+@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-players{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:8px}.shared-tier-player{gap:4px;font-size:11px;padding:2px 4px}.shared-tier-avatar{width:24px;height:24px}.shared-tier-player .shared-tier-live{font-size:10px}.shared-tier-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}}
 @media(max-width:380px){.shared-tier-players{grid-template-columns:1fr}}
