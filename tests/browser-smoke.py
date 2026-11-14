@@ -344,10 +344,21 @@ async def check_tier_board(browser, origin):
         await page.locator('.shared-tier-player').first.wait_for()
         assert await page.locator('.shared-tier-player').count() == 3
         assert await page.locator('.shared-tier-live').count() == 0
+        assert await page.locator('[data-tier-filter]').count() == 3
+        await page.locator('[data-tier-filter="베이비"]').click()
+        assert await page.locator('.shared-tier-player').count() == 1
+        assert await page.locator('.shared-tier-player a[href="https://eloboard.com/players/828"]').count() == 1
+        await page.locator('[data-tier-filter="all"]').click()
+        assert await page.locator('.shared-tier-player').count() == 3
         await page.locator('[data-tier-live]').click()
         await page.wait_for_function('document.querySelector(".shared-tier-head p")?.textContent.includes("LIVE 1명")')
         assert await page.locator('.shared-tier-player').count() == 1
         assert await page.locator('.shared-tier-player a[href="https://eloboard.com/players/463"]').count() == 1
+        await page.locator('[data-tier-filter="베이비"]').click()
+        assert await page.locator('.shared-tier-player').count() == 0
+        assert '확인된 LIVE' in await page.locator('.shared-tier-empty').inner_text()
+        await page.locator('[data-tier-all]').click()
+        assert await page.locator('.shared-tier-player').count() == 1
         assert not errors, errors
     finally:
         await context.close()

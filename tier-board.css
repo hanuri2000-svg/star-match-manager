@@ -5,6 +5,11 @@
 .shared-tier-actions{display:flex;gap:8px}
 .shared-tier-actions button{cursor:pointer;border:1px solid #cbb6d8;background:#fff;color:#604678;border-radius:9px;padding:8px 12px;font-weight:750}
 .shared-tier-actions button[aria-pressed=true]{background:#7754a5;color:#fff;border-color:#7754a5}
+.shared-tier-filters{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 18px}
+.shared-tier-filters button{cursor:pointer;border:1px solid #dfd2e7;border-radius:999px;background:#fff;color:#604678;padding:7px 11px;font:inherit;font-size:13px;font-weight:700;white-space:nowrap}
+.shared-tier-filters button small{margin-left:3px;font-size:11px;opacity:.75}
+.shared-tier-filters button[aria-pressed=true]{background:#7754a5;color:#fff;border-color:#7754a5}
+.shared-tier-filters button:focus-visible,.shared-tier-actions button:focus-visible{outline:2px solid #5e3194;outline-offset:2px}
 .shared-tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start;gap:14px}
 .shared-tier-group{border:1px solid #e2d4e9;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px #48335b0c}
 .shared-tier-group h3{background:#f4edf9;color:#523a68;margin:0;padding:10px 13px;font-size:16px}
@@ -19,4 +24,4 @@
 .shared-tier-player .shared-tier-live{color:#bf1744;font-weight:850;font-size:11px}
 .shared-tier-empty{padding:35px;text-align:center;color:#75677c}
 .shared-tier-foot{margin:18px 0 0}
-@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-grid{grid-template-columns:1fr}.shared-tier-players{max-height:none}}
+@media(max-width:550px){.shared-tier-board{padding:12px}.shared-tier-grid{grid-template-columns:1fr}.shared-tier-players{max-height:none}.shared-tier-filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}}
