@@ -7,7 +7,7 @@
   // The two Tank profiles share an unresolved channel attribution; neither is inferred LIVE.
   const AMBIGUOUS_ELO_IDS = new Set([170, 6312]);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-  const state = {payload:null, loading:null, liveOnly:false, live:new Map(), pending:false, checked:0, errors:0, total:0, lastChecked:0, generation:0, liveError:false};
+  const state = {payload:null, loading:null, liveOnly:false, tierFilter:'all', live:new Map(), pending:false, checked:0, errors:0, total:0, lastChecked:0, generation:0, liveError:false};
   const manager = typeof window.HARINA_LOAD_PLAYER_MASTER === 'function';
   let host;
 
@@ -18,11 +18,14 @@
     if(!host || !active())return;
     const all = players(), visible = state.liveOnly && state.lastChecked ? all.filter(p => !AMBIGUOUS_ELO_IDS.has(p.eloId) && state.live.has(String(p.soopId || '').toLowerCase())) : all;
     const order = state.payload?.tierOrder || [];
+    const counts = new Map();
+    for(const p of all){const name=tierName(p);counts.set(name,(counts.get(name)||0)+1)}
     const groups = new Map();
     for(const p of visible){const name=tierName(p);if(!groups.has(name))groups.set(name,[]);groups.get(name).push(p)}
-    const tiers = [...order.map(t => t === '유스' ? '베이비' : t), ...groups.keys()].filter((v,i,a) => a.indexOf(v) === i && groups.has(v));
+    const tierTabs = [...order.map(t => t === '유스' ? '베이비' : t), ...counts.keys()].filter((v,i,a) => a.indexOf(v) === i && counts.has(v));
+    const tiers = tierTabs.filter(t => groups.has(t) && (state.tierFilter === 'all' || state.tierFilter === t));
     const status = state.pending ? `방송 상태 확인 중 ${state.checked}/${state.total} · 전체 티어표를 표시하고 있어` : state.liveError ? '방송 상태 조회에 실패해서 전체 티어표를 표시하고 있어 · 라이브 보기를 눌러 다시 시도해줘' : state.liveOnly && state.lastChecked ? `방송 확인 ${new Date(state.lastChecked).toLocaleTimeString('ko-KR')} · LIVE ${visible.length}명${state.errors ? ` · ${state.errors}개 채널 미확인` : ''}` : `${all.length}명 · 공통 선수 DB 기준`;
-    host.innerHTML = `<div class="shared-tier-head"><div><h2>티어표</h2><p>${esc(status)}</p></div><div class="shared-tier-actions"><button type="button" data-tier-all aria-pressed="${!state.liveOnly}">전체 보기</button><button type="button" data-tier-live aria-pressed="${state.liveOnly}">${state.pending ? 'LIVE 확인 중…' : '라이브 보기'}</button></div></div>${!state.payload ? '<p class="shared-tier-empty">공통 선수 DB를 불러오는 중…</p>' : state.liveOnly && !state.pending && !visible.length ? '<p class="shared-tier-empty">지금 확인된 LIVE 선수가 없어. 방송주소 미등록 또는 조회 실패 선수는 포함되지 않아.</p>' : ''}<div class="shared-tier-grid">${tiers.map(t => `<section class="shared-tier-group"><h3>${esc(t)} <small>${groups.get(t).length}명</small></h3><div class="shared-tier-players">${groups.get(t).map(p => {const id=String(p.soopId||'').toLowerCase(),live=state.live.get(id);return `<div class="shared-tier-player"><span class="shared-tier-race race-${['T','P','Z'].includes(p.race)?p.race:'unknown'}">${esc(p.race||'?')}</span><a href="https://eloboard.com/players/${p.eloId}" target="_blank" rel="noopener noreferrer">${esc(p.name)}</a>${live ? `<a class="shared-tier-live" href="https://ch.sooplive.co.kr/${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(p.name)} 방송 채널">● LIVE</a>` : ''}</div>`}).join('')}</div></section>`).join('')}</div>${state.payload ? '<p class="shared-tier-foot">방송주소가 등록된 선수만 조회해. 확인할 수 없는 상태는 LIVE로 표시하지 않아.</p>' : ''}`;
+    host.innerHTML = `<div class="shared-tier-head"><div><h2>티어표</h2><p>${esc(status)}</p></div><div class="shared-tier-actions"><button type="button" data-tier-all aria-pressed="${!state.liveOnly}">전체 보기</button><button type="button" data-tier-live aria-pressed="${state.liveOnly}">${state.pending ? 'LIVE 확인 중…' : '라이브 보기'}</button></div></div>${state.payload ? `<nav class="shared-tier-filters" aria-label="티어별 보기"><button type="button" data-tier-filter="all" aria-pressed="${state.tierFilter==='all'}">전체 <small>${all.length}</small></button>${tierTabs.map(t=>`<button type="button" data-tier-filter="${esc(t)}" aria-pressed="${state.tierFilter===t}">${esc(t)} <small>${counts.get(t)}</small></button>`).join('')}</nav>` : ''}${!state.payload ? '<p class="shared-tier-empty">공통 선수 DB를 불러오는 중…</p>' : state.liveOnly && !state.pending && !visible.length ? '<p class="shared-tier-empty">지금 확인된 LIVE 선수가 없어. 방송주소 미등록 또는 조회 실패 선수는 포함되지 않아.</p>' : state.tierFilter !== 'all' && !tiers.length ? '<p class="shared-tier-empty">이 티어에서 확인된 LIVE 선수가 없어.</p>' : ''}<div class="shared-tier-grid">${tiers.map(t => `<section class="shared-tier-group"><h3>${esc(t)} <small>${groups.get(t).length}명</small></h3><div class="shared-tier-players">${groups.get(t).map(p => {const id=String(p.soopId||'').toLowerCase(),live=state.live.get(id);return `<div class="shared-tier-player"><span class="shared-tier-race race-${['T','P','Z'].includes(p.race)?p.race:'unknown'}">${esc(p.race||'?')}</span><a href="https://eloboard.com/players/${p.eloId}" target="_blank" rel="noopener noreferrer">${esc(p.name)}</a>${live ? `<a class="shared-tier-live" href="https://ch.sooplive.co.kr/${encodeURIComponent(id)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(p.name)} 방송 채널">● LIVE</a>` : ''}</div>`}).join('')}</div></section>`).join('')}</div>${state.payload ? '<p class="shared-tier-foot">방송주소가 등록된 선수만 조회해. 확인할 수 없는 상태는 LIVE로 표시하지 않아.</p>' : ''}`;
   }
   async function load(){
     if(state.loading)return state.loading;
@@ -42,10 +45,12 @@
     if(state.errors===ids.length && ids.length){state.liveOnly=false;state.liveError=true;state.lastChecked=0;state.live.clear();draw();return}
     state.liveError=false;state.live=results;state.lastChecked=Date.now();draw();
   }
-  function mount(node){host=node;host.classList.add('shared-tier-board');if(!state.payload)load();else draw();if(state.liveOnly && (!state.lastChecked || Date.now()-state.lastChecked>POLL_MS))checkLive()}
+  function mount(node){host=node;host.classList.add('shared-tier-board');draw();if(!state.payload)load();else if(state.liveOnly && (!state.lastChecked || Date.now()-state.lastChecked>POLL_MS))checkLive()}
   document.addEventListener('click',event=>{
     if(event.target.closest('[data-tier-all]')){state.liveOnly=false;state.liveError=false;state.generation++;state.pending=false;draw()}
     if(event.target.closest('[data-tier-live]')){state.liveOnly=true;state.liveError=false;draw();if(!state.pending)checkLive()}
+    const filter=event.target.closest('[data-tier-filter]');
+    if(filter && host?.contains(filter) && (filter.dataset.tierFilter==='all' || players().some(p=>tierName(p)===filter.dataset.tierFilter))){state.tierFilter=filter.dataset.tierFilter;draw()}
   });
   setInterval(()=>{if(active() && state.liveOnly && !state.pending)checkLive()},POLL_MS);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden && active() && state.liveOnly && Date.now()-state.lastChecked>POLL_MS)checkLive()});
