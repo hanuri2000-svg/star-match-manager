@@ -27,7 +27,7 @@
     const channel=`https://play.sooplive.co.kr/${encodeURIComponent(id)}/${number}`;
     preview=document.createElement('aside');
     preview.className='shared-tier-preview';preview.dataset.liveId=id;preview.setAttribute('role','dialog');preview.setAttribute('aria-label',`${name} 방송 미리보기`);
-    preview.innerHTML=`<div class="shared-tier-preview-head"><strong>${esc(name)} · LIVE</strong><button type="button" data-preview-close aria-label="미리보기 닫기">×</button></div><div class="shared-tier-preview-video"><iframe title="${esc(name)} 방송 미리보기" src="${channel}/embed?autoPlay=true&mutePlay=true" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><a href="${channel}" target="_blank" rel="noopener noreferrer">SOOP에서 방송 보기 ↗</a>`;
+    preview.innerHTML=`<div class="shared-tier-preview-head"><strong>${esc(name)} · LIVE</strong><button type="button" data-preview-close aria-label="미리보기 닫기">×</button></div><div class="shared-tier-preview-video"><iframe title="${esc(name)} 방송 미리보기" src="${channel}/embed?autoPlay=true&mutePlay=true" allow="autoplay; fullscreen; picture-in-picture; local-network; loopback-network" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><a href="${channel}" target="_blank" rel="noopener noreferrer">SOOP에서 방송 보기 ↗</a><small class="shared-tier-preview-help">영상이 차단되면 SOOP 탭에서 기기 앱 접근을 허용한 뒤 새로고침해 줘.</small>`;
     document.body.append(preview);
     const width=preview.getBoundingClientRect().width, height=preview.getBoundingClientRect().height, rect=row.getBoundingClientRect();
     preview.style.left=`${Math.max(12,Math.min(window.innerWidth-width-12,rect.left))}px`;
