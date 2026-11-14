@@ -8,6 +8,10 @@ const ASL_STYLES=`
 .asl-actions{display:flex;gap:7px;flex-wrap:wrap}.asl-status{margin:10px 0;color:#75687f;font-size:12px;font-weight:800}.asl-list{display:grid;gap:7px}.asl-row{display:grid;grid-template-columns:minmax(90px,150px) 1fr 1fr auto;gap:7px;align-items:center;padding:8px;border:1px solid #eee5f3;border-radius:12px;background:#fff}
 .asl-row select{min-width:0;width:100%;padding:9px 8px;border:1px solid #e3d9e9;border-radius:9px;background:#fff;color:var(--text);font-weight:800}.asl-hit{min-width:48px;text-align:center;color:#4b9a78;font-size:11px;font-weight:950}.asl-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px}.asl-result{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.asl-result>div{padding:10px;border-radius:11px;background:#fff;border:1px solid #eadff1;text-align:center}.asl-result b{display:block;color:#765bb0}.asl-result span{font-size:11px;color:var(--muted)}
 @media(max-width:650px){.asl-row{grid-template-columns:82px 1fr 1fr}.asl-hit{grid-column:1/-1;text-align:right}.asl-panel{padding:11px}.asl-row select{font-size:12px;padding:9px 5px}}
+/* Keep the embedded page as tall as its participant lists, not the viewport. */
+:host{min-height:680px!important;height:auto!important}
+.prediction-body.embedded{min-height:680px!important}
+@media(max-width:700px){:host,.prediction-body.embedded{min-height:560px!important}}
 `;
 window.mountPredictionNative=function(host){
   if(!host)return;
