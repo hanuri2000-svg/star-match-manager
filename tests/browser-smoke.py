@@ -343,7 +343,10 @@ async def check_tier_board(browser, origin):
         await page.locator('[data-tab="tiers"]').click()
         await page.locator('.shared-tier-player').first.wait_for()
         assert await page.locator('.shared-tier-player').count() == 3
+        assert await page.locator('.shared-tier-group').count() == 2
+        assert await page.locator('.shared-tier-players').first.evaluate('(el) => getComputedStyle(el).gridTemplateColumns.split(" ").length') >= 2
         assert await page.locator('.shared-tier-live').count() == 0
+        assert await page.locator('.shared-tier-preview iframe').count() == 0
         assert await page.locator('[data-tier-filter]').count() == 3
         await page.locator('[data-tier-filter="베이비"]').click()
         assert await page.locator('.shared-tier-player').count() == 1
@@ -354,11 +357,22 @@ async def check_tier_board(browser, origin):
         await page.wait_for_function('document.querySelector(".shared-tier-head p")?.textContent.includes("LIVE 1명")')
         assert await page.locator('.shared-tier-player').count() == 1
         assert await page.locator('.shared-tier-player a[href="https://eloboard.com/players/463"]').count() == 1
+        assert await page.locator('.shared-tier-preview-trigger').count() == 1
+        await page.locator('.shared-tier-player[data-live-id]').hover()
+        await page.locator('.shared-tier-preview iframe').wait_for()
+        src = await page.locator('.shared-tier-preview iframe').get_attribute('src')
+        assert src == 'https://play.sooplive.co.kr/dmsgkdn12/123/embed?autoPlay=true&mutePlay=true'
+        await page.locator('[data-preview-close]').click()
+        assert await page.locator('.shared-tier-preview iframe').count() == 0
+        await page.locator('.shared-tier-preview-trigger').click()
+        await page.locator('.shared-tier-preview iframe').wait_for()
+        await page.locator('[data-preview-close]').click()
         await page.locator('[data-tier-filter="베이비"]').click()
         assert await page.locator('.shared-tier-player').count() == 0
         assert '확인된 LIVE' in await page.locator('.shared-tier-empty').inner_text()
         await page.locator('[data-tier-all]').click()
         assert await page.locator('.shared-tier-player').count() == 1
+        assert await page.locator('.shared-tier-preview iframe').count() == 0
         assert not errors, errors
     finally:
         await context.close()
