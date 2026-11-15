@@ -12,6 +12,11 @@ const checks = [
   // endpoint needed for records directly, without a directory lookup.
   ['matches', '/api/matches?player_id=443&limit=2&offset=0', 'json'],
   ['races', '/api/players/443/stats/races', 'json'],
+  // Public scripts referenced by the successfully retrieved player page. These
+  // reveal whether its current MatchList still calls the legacy match route.
+  ['player-client-a', '/_next/static/chunks/3yl2sk1v_36wh.js', 'js'],
+  ['player-client-b', '/_next/static/chunks/0an6mxy75apu1.js', 'js'],
+  ['player-client-c', '/_next/static/chunks/0-oq4n09iy6fu.js', 'js'],
 ];
 await mkdir(output, {recursive: true});
 const report = {checkedAt: new Date().toISOString(), playerId: 443, checks: []};
@@ -56,7 +61,9 @@ for (const [name, path, expected] of checks) {
     if (data !== undefined) {
       row.shape = Array.isArray(data) ? {kind: 'array', length: data.length, firstKeys: Object.keys(data[0] || {})} : {kind: typeof data, keys: Object.keys(data || {})};
     }
-    row.ok = response.ok && !challenge && (expected === 'html' ? /<html[\s>]/i.test(body) && /최도랑/.test(body) : data !== undefined);
+    row.ok = response.ok && !challenge && (expected === 'html'
+      ? /<html[\s>]/i.test(body) && /최도랑/.test(body)
+      : expected === 'js' ? /javascript/.test(row.contentType || '') && !/^\s*</.test(body) : data !== undefined);
     if (row.ok) await writeFile(`${output}/${name}.${expected}`, bytes);
     else row.excerpt = body.replace(/\s+/g, ' ').slice(0, 500);
   } catch (error) {
