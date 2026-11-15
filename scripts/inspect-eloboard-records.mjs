@@ -7,7 +7,9 @@ const output = 'record-access-diagnostic';
 const origin = 'https://eloboard.co.kr';
 const checks = [
   ['profile', '/players/443?tab=matches', 'html'],
-  ['players', '/api/players?q=%EC%B5%9C%EB%8F%84%EB%9E%91&limit=20&include_sub=true', 'json'],
+  // The existing public player DB already supplies ID 443. The legacy player
+  // search route returned 403, so do not retry it; check the distinct match
+  // endpoint needed for records directly, without a directory lookup.
   ['matches', '/api/matches?player_id=443&limit=2&offset=0', 'json'],
   ['races', '/api/players/443/stats/races', 'json'],
 ];
