@@ -7,16 +7,11 @@ const output = 'record-access-diagnostic';
 const origin = 'https://eloboard.co.kr';
 const checks = [
   ['profile', '/players/443?tab=matches', 'html'],
-  // The existing public player DB already supplies ID 443. The legacy player
-  // search route returned 403, so do not retry it; check the distinct match
-  // endpoint needed for records directly, without a directory lookup.
-  ['matches', '/api/matches?player_id=443&limit=2&offset=0', 'json'],
-  ['races', '/api/players/443/stats/races', 'json'],
-  // Public scripts referenced by the successfully retrieved player page. These
-  // reveal whether its current MatchList still calls the legacy match route.
-  ['player-client-a', '/_next/static/chunks/3yl2sk1v_36wh.js', 'js'],
-  ['player-client-b', '/_next/static/chunks/0an6mxy75apu1.js', 'js'],
-  ['player-client-c', '/_next/static/chunks/0-oq4n09iy6fu.js', 'js'],
+  // The earlier diagnostic runs captured 403 for the legacy player and match
+  // APIs. Do not repeat them. Resolve CLIENT_BASE/listMatches from the public
+  // shared scripts referenced by the actual player page before changing code.
+  ['shared-client-a', '/_next/static/chunks/14yf5aatnll4x.js', 'js'],
+  ['shared-client-b', '/_next/static/chunks/0nkfr5qem0adp.js', 'js'],
 ];
 await mkdir(output, {recursive: true});
 const report = {checkedAt: new Date().toISOString(), playerId: 443, checks: []};
