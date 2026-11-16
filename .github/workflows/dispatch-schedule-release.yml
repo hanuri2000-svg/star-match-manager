@@ -1,4 +1,4 @@
-name: Dispatch selected-day schedule verification
+name: Dispatch and verify selected-day schedule release
 on:
   push:
     branches: ['ops/schedule-release-20261116']
@@ -9,17 +9,68 @@ permissions:
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
-      - name: Verify requested PR and dispatch checks without production approval
+      - name: Verify exact tested main and request existing guarded production workflow
+        id: request
         uses: actions/github-script@v7
         with:
           script: |
             const sha='a2cba6bc8dee72e46eb949630289fa9aa949ecde';
             const owner=context.repo.owner,repo=context.repo.repo;
-            const {data:pr}=await github.rest.pulls.get({owner,repo,pull_number:36});
-            if(pr.state!=='open'||pr.head.sha!==sha||pr.base.ref!=='main')throw new Error('PR changed; do not test a different version');
-            const {data:head}=await github.rest.git.getRef({owner,repo,ref:'heads/feat/schedule-day-records-20261116'});
-            if(head.object.sha!==sha)throw new Error('Feature branch changed');
-            await github.rest.actions.createWorkflowDispatch({owner,repo,workflow_id:'regression-tests.yml',ref:'feat/schedule-day-records-20261116',inputs:{tested_sha:sha,deploy_sha:''}});
-            core.info('Requested existing regression checks for '+sha+'; production deployment not authorized by this run.');
+            const {data:head}=await github.rest.git.getRef({owner,repo,ref:'heads/main'});
+            if(head.object.sha!==sha)throw new Error('Main changed; do not deploy a different version');
+            const {data:commit}=await github.rest.git.getCommit({owner,repo,commit_sha:sha});
+            if(commit.tree.sha!=='04b4cd32d2acb2cfe5d214395e325a11053bd2a3')throw new Error('Reviewed tree changed');
+            const {data:checks}=await github.rest.actions.getWorkflowRun({owner,repo,run_id:43893669968});
+            if(checks.head_sha!==sha||checks.conclusion!=='success')throw new Error('Required exact-commit regression did not pass');
+            core.setOutput('requested-at',new Date(Date.now()-5000).toISOString());
+            await github.rest.actions.createWorkflowDispatch({owner,repo,workflow_id:'regression-tests.yml',ref:'main',inputs:{tested_sha:sha,deploy_sha:sha}});
+            core.info('Requested existing exact-SHA production gates for '+sha);
+      - name: Verify production workflow and published data
+        uses: actions/github-script@v7
+        env:
+          REQUESTED_AT: ${{ steps.request.outputs.requested-at }}
+        with:
+          script: |
+            const sha='a2cba6bc8dee72e46eb949630289fa9aa949ecde';
+            const owner=context.repo.owner,repo=context.repo.repo;
+            let run;
+            for(let i=0;i<120;i++){
+              const {data}=await github.rest.actions.listWorkflowRuns({owner,repo,workflow_id:'regression-tests.yml',branch:'main',event:'workflow_dispatch',per_page:20});
+              run=data.workflow_runs.find(r=>r.head_sha===sha&&r.created_at>=process.env.REQUESTED_AT);
+              if(run?.status==='completed')break;
+              await new Promise(resolve=>setTimeout(resolve,5000));
+            }
+            if(!run||run.status!=='completed'||run.conclusion!=='success')throw new Error('Production workflow is not successful: '+JSON.stringify({id:run?.id,status:run?.status,conclusion:run?.conclusion}));
+            const {data:jobs}=await github.rest.actions.listJobsForWorkflowRun({owner,repo,run_id:run.id,per_page:100});
+            if(!jobs.jobs.some(j=>j.name==='deploy-pages'&&j.conclusion==='success'))throw new Error('Deployment was not executed successfully');
+            const base='https://hanuri2000-svg.github.io/star-match-manager/';
+            const crypto=require('node:crypto');
+            const expected={'index.html':'0eb1f9a1d59e6b439dd620a0728d0426c8de52830a553dbfccffa7158f70ae60','players.json':'ea945d7c2a3baf5dfffc1a94b3607e6a5238e9a96d6588836b8aa96ed541268c','schedule-play-records.js':'8c6e2aa5f23ff60eebadb5d564cff8d5fb11208244be12302628ddcd18d838a6'};
+            let report;
+            for(let attempt=0;attempt<4;attempt++){
+              try{
+                const read=async path=>{const response=await fetch(base+path+'?release='+sha,{signal:AbortSignal.timeout(20000),cache:'no-store'});if(!response.ok)throw new Error(path+' HTTP '+response.status);return await response.text();};
+                const deployment=JSON.parse(await read('deployment.json'));
+                const version=JSON.parse(await read('version.json'));
+                if(deployment.sha!==sha||version.version!=='5.24.31')throw new Error('Published version not updated');
+                let player;
+                for(const [path,hash] of Object.entries(expected)){
+                  const text=await read(path);
+                  if(crypto.createHash('sha256').update(text).digest('hex')!==hash)throw new Error(path+' differs from reviewed release');
+                  if(path==='players.json')player=JSON.parse(text).players.find(p=>p.eloId===830);
+                }
+                if(player?.name!=='려은'||player.soopId!=='qwer1317'||!player.aliases.includes('으니'))throw new Error('Published nickname mismatch');
+                report={verified:true,version:version.version,sha,deploymentRun:run.id,player,assets:Object.keys(expected)};
+                break;
+              }catch(error){if(attempt===3)throw error;await new Promise(resolve=>setTimeout(resolve,10000));}
+            }
+            core.info('PUBLIC_RELEASE_VERIFIED '+JSON.stringify(report));
+            require('node:fs').writeFileSync('schedule-release-verification.json',JSON.stringify(report,null,2));
+            await core.summary.addHeading('Published release verified').addRaw('Version 5.24.31; exact tested assets; player 830 is 려은 with 으니 preserved as an alias.').write();
+      - uses: actions/upload-artifact@v4
+        with:
+          name: schedule-release-verification
+          path: schedule-release-verification.json
+          retention-days: 7
