@@ -5,7 +5,7 @@
   else global.SchedulePlayRecords = api;
 })(typeof window === 'object' ? window : globalThis, function (global) {
   'use strict';
-  const INTERVAL = 12 * 60 * 60 * 1000;
+  const INTERVAL = 6 * 60 * 60 * 1000;
   const EVENT = 'dorang:schedule-play-updated';
   const SITE = 'dorang-integrated';
   const CACHE_KEY = 'starlog-public-elo:v1:' + SITE + ':443:recent';
@@ -68,7 +68,7 @@
   function panelHTML(stats, isToday) {
     let badge = stats.hasRecords ? recordText(stats) : stats.complete ? '0전 0승 0패' :
       stats.loading ? '확인 중' : stats.remoteAvailable ? '확인 범위 밖' : '연동 확인 필요';
-    let note = stats.remoteAvailable ? '최도랑 연동 전적 + 직접 기록한 래더 · 12시간 간격 자동 확인' :
+    let note = stats.remoteAvailable ? '최도랑 연동 전적 + 직접 기록한 래더 · 6시간 간격 자동 확인' :
       '연동 전적 확인 전에는 직접 기록만 표시해. 전체 전적으로 확정하지 않아.';
     if (stats.remoteAvailable && !stats.complete) note += ' · 최근 50경기 중 확인된 기록이며, 이 날짜의 전체 전적은 확인되지 않았어.';
     if (stats.stale) note += ' · 마지막 확인 자료';
@@ -127,7 +127,7 @@
     if (!clientPromise) clientPromise = (async () => {
       if (!global.StarlogElo) await new Promise((resolve,reject) => {
         const script=global.document.createElement('script');
-        script.src='./starlog/elo-public.js?v=2.0.20';
+        script.src='./starlog/elo-public.js?v=2.0.21';
         script.onload=resolve;script.onerror=()=>reject(new Error('전적 조회 모듈을 불러오지 못했어.'));
         global.document.head.appendChild(script);
       });
@@ -144,7 +144,7 @@
     try {
       if(!model)model=createModel({client:await loadClient(),readRecords:()=>localRecords(global.localStorage),onChange:notify});
       const entry=await model.refresh(force);
-      // Reusing a cache must not restart its 12-hour freshness window.
+      // Reusing a cache must not restart its 6-hour freshness window.
       if(entry && !entry.error && !entry.stale && Number.isFinite(entry.checkedAt) &&
         entry.checkedAt<=Date.now() && Date.now()-entry.checkedAt<INTERVAL)attemptedAt=entry.checkedAt;
     } catch {bootError=true;} finally {starting=false;notify();}

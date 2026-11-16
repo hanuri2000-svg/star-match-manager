@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION='2.0.20';
+const APP_VERSION='2.0.21';
 const KEY='my-starlog-dorang-v1', DRAFT='my-starlog-dorang-draft';
 const SHARED_KEY='my-starlog-spwn-note-v1', SHARED_DRAFT='my-starlog-spwn-note-draft';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
