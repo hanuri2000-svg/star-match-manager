@@ -35,12 +35,13 @@ async def check(browser,origin,width):
       window.Date=class extends NativeDate {constructor(...args){super(...(args.length?args:[time]))}static now(){return time}};
       if(!localStorage.getItem('my-starlog-dorang-v1'))localStorage.setItem('my-starlog-dorang-v1',__RAW__);
     })();""".replace('__RAW__',json.dumps(raw)))
-    gate=asyncio.Event();state={'calls':0,'fail':False};errors=[]
+    gate=asyncio.Event();state={'calls':0,'fail':False,'requests':[]};errors=[]
     master=json.loads((ROOT/'players.json').read_text())
     async def route(req):
         url=req.request.url
         if '/api/elo/public/recent?' in url:
             state['calls']+=1
+            state['requests'].append(url)
             assert 'playerId=443' in url and 'limit=50' in url
             await gate.wait()
             await req.fulfill(status=503 if state['fail'] else 200,json={'error':'unavailable'} if state['fail'] else data())
@@ -90,6 +91,7 @@ async def check(browser,origin,width):
         await page.wait_for_function("document.querySelector('[data-schedule-play-summary]')?.textContent.includes('마지막 확인 자료')")
         assert '6전 5승 1패' in await page.locator('[data-schedule-play-summary] .spawn-day-head').inner_text()
         assert state['calls']==2
+        assert 'refresh=1' in state['requests'][-1]
         await page.locator('[data-tab="tiers"]').click()
         await page.locator('[data-tier-all]').click()
         target=page.locator('.shared-tier-player a[href="https://eloboard.com/players/830"]')
