@@ -1,0 +1,47 @@
+name: Align six-hour refresh regression
+on:
+  push:
+    branches: ['fix/six-hour-manual-refresh-20261117']
+    paths: ['.github/workflows/align-refresh-regression.yml']
+permissions:
+  contents: write
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Keep exact request allowlist and assert a single reload refresh
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tests/browser-smoke.py');s=p.read_text()
+          assert s.count('    recent_requested = asyncio.Event()')==1
+          s=s.replace('    recent_requested = asyncio.Event()', '    recent_requested = asyncio.Event()\n    reload_requested = asyncio.Event()',1)
+          s=s.replace('        if request.request.url == recent_url:\n            recent_requested.set()', "        if request.request.url == recent_url:\n            recent_requested.set()\n        if request.request.url == recent_url + '&refresh=1':\n            reload_requested.set()",1)
+          marker='        await page.reload(wait_until="networkidle")\n        assert await page.locator(\'[data-season-theme-open]\').count() == 0'
+          replacement='        await page.reload(wait_until="networkidle")\n        await asyncio.wait_for(reload_requested.wait(), timeout=15)\n        assert requested_urls.count(recent_url + "&refresh=1") == 1, "browser reload must request fresh schedule data exactly once"\n        assert requested_urls.count(recent_url) == 1, "reload must not repeat a normal cached request"\n        assert await page.locator(\'[data-season-theme-open]\').count() == 0'
+          assert marker in s;s=s.replace(marker,replacement,1)
+          marker='            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50",'
+          assert s.count(marker)==1
+          s=s.replace(marker,marker+'\n            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50&refresh=1",',1)
+          p.write_text(s.replace('same 12-hour cache','same six-hour cache'))
+          for path in ['starlog-embed.js','starlog/sw.js']:
+            p=Path(path);s=p.read_text();assert '2.0.20' in s;p.write_text(s.replace('2.0.20','2.0.21'))
+          PY
+          python -m py_compile tests/browser-smoke.py
+          node --check starlog-embed.js
+          node --check starlog/sw.js
+          node --test tests/*.test.mjs
+      - name: Commit only the regression and cache-alignment changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/browser-smoke.py starlog-embed.js starlog/sw.js
+          git commit -m 'Assert explicit refresh on reload and align embedded cache version'
+          git push origin HEAD:refs/heads/fix/six-hour-manual-refresh-20261117
