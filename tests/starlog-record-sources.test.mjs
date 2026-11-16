@@ -40,11 +40,11 @@ function setup() {
   vm.runInContext(`
     const $=selector=>nodes.get(selector);
     const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    let db=initial,recordSource='elo',syncedRecords=null,eloRecordsController=null,page='records';
+    let db=initial,syncedRecords=null,eloRecordsController=null,page='records';
     let filters={q:'',type:'',race:'',result:'',from:'',to:''};
     ${part('const sorted=', 'function toast(')}
     ${part('function empty(', 'function drawHome(')}
-    ${part('function filtered(){', 'function drawStats(')}
+    ${part('function recordRows(){', 'function drawStats(')}
   `, ctx);
   return {
     ctx, nodes, requests, initial,
@@ -67,8 +67,10 @@ test('the records view places 50 automatic rows under the existing search and fi
   const table = app.nodes.get('#recordsTable').innerHTML;
   assert.equal((table.match(/data-synced-record=/g) || []).length, 50);
   assert.equal((table.match(/data-elo-note=/g)||[]).length,50);
-  assert.doesNotMatch(table, /removeMatch|openForm|toggleStar/);
-  assert.match(app.nodes.get('#resultCount').textContent, /^50경기/);
+  assert.match(table, /openForm\('manual-ladder'\)/);
+  assert.doesNotMatch(layout, /data-record-source|record-sources/);
+  assert.equal((table.match(/data-manual-record=/g)||[]).length,1);
+  assert.match(app.nodes.get('#resultCount').textContent, /^51경기/);
   assert.match(app.nodes.get('#recordsTypeFilter').innerHTML, /특별 대회/);
   assert.deepEqual(app.saved(), app.initial);
 });
@@ -88,48 +90,59 @@ test('automatic records respect opponent, original type, race, result and date f
   assert.deepEqual(app.saved(), app.initial);
 });
 
-test('source switching restores editable ladder records without importing automatic rows', () => {
-  const app = setup();
-  app.run('drawRecords()');
-  app.requests[0].onData(snapshot());
-  app.run("setFilter('q','찾을 상대');setRecordSource('manual')");
-  assert.equal(app.run('filters.q'), '');
-  assert.equal(app.destroyed(), 1);
-  assert.equal(app.requests.length, 1, 'manual source does not start a recent request');
-  assert.match(app.nodes.get('#resultCount').textContent, /^1경기/);
-  assert.match(app.nodes.get('#recordsTypeFilter').innerHTML, /래더/);
-  assert.match(app.nodes.get('#recordsTable').innerHTML, /openForm\('manual-ladder'\)/);
-  assert.match(app.nodes.get('#recordsTable').innerHTML, /removeMatch\('manual-ladder'\)/);
-  assert.doesNotMatch(app.nodes.get('#recordsTable').innerHTML, /data-synced-record=/);
+test('all saved game types appear in the same table and remain editable', () => {
+  const app=setup();app.run('drawRecords()');app.requests[0].onData(snapshot());
+  for(const type of ['스폰','연습','CK','기타'])app.run(`db.matches.push({...db.matches[0],id:'extra-${type}',type:'${type}'})`);
+  app.run('drawRecordRows()');
+  assert.match(app.nodes.get('#resultCount').textContent,/^55경기/);
   app.run("setFilter('q','보존할 복기');setFilter('type','래더')");
-  assert.match(app.nodes.get('#resultCount').textContent, /^1경기/);
-  assert.deepEqual(app.saved(), app.initial);
+  assert.match(app.nodes.get('#resultCount').textContent,/^1경기/);
+  assert.match(app.nodes.get('#recordsTable').innerHTML,/removeMatch\('manual-ladder'\)/);
+  assert.equal(app.requests.length,1);
 });
 
-test('late automatic results cannot replace the selected manual records view', () => {
-  const app = setup();
-  app.run('drawRecords()');
-  app.run("setRecordSource('manual')");
-  const before = app.nodes.get('#recordsTable').innerHTML;
+test('late official results preserve the active filters and local matches', () => {
+  const app=setup();app.run('drawRecords();setFilter("type","래더");setFilter("q","보존할 복기")');
+  const before=app.nodes.get('#recordsTable').innerHTML;
   app.requests[0].onData(snapshot());
-  assert.equal(app.nodes.get('#recordsTable').innerHTML, before);
-  assert.match(app.nodes.get('#resultCount').textContent, /^1경기/);
-  assert.deepEqual(app.saved(), app.initial);
-  app.run("setRecordSource('elo')");
-  assert.equal((app.nodes.get('#recordsTable').innerHTML.match(/data-synced-record=/g) || []).length, 50);
-  assert.deepEqual(app.saved(), app.initial);
+  assert.equal(app.nodes.get('#recordsTable').innerHTML,before);
+  assert.equal(app.run('filters.type'),'래더');
+  assert.deepEqual(app.saved(),app.initial);
+  app.run('resetFilters()');
+  assert.match(app.nodes.get('#resultCount').textContent,/^51경기/);
 });
 
-test('unavailable first data is shown as unknown instead of a fabricated zero record count', () => {
-  const app = setup();
-  app.run('drawRecords()');
-  assert.doesNotMatch(app.nodes.get('#resultCount').textContent, /0경기/);
-  app.requests[0].onData({ matches: [], fetchedAt: null, error: true, loading: false });
-  assert.doesNotMatch(app.nodes.get('#resultCount').textContent, /0경기/);
-  assert.match(app.nodes.get('#recordsTable').innerHTML, /불러오지 못했어요/);
-  app.requests[0].onData({ ...snapshot(), matches: [], complete: true, error: false });
-  assert.match(app.nodes.get('#resultCount').textContent, /^0경기/);
-  assert.deepEqual(app.saved(), app.initial);
+test('missing source data never hides local records or invents zero totals', () => {
+  const app=setup();app.run('drawRecords()');
+  assert.match(app.nodes.get('#resultCount').textContent,/^1경기.*확인 중/);
+  app.requests[0].onData({matches:[],fetchedAt:null,error:true,loading:false});
+  assert.match(app.nodes.get('#recordsTable').innerHTML,/manual-ladder/);
+  assert.match(app.nodes.get('#resultCount').textContent,/연동 전적 확인 필요/);
+  app.run('db.matches=[];drawRecordRows()');
+  assert.doesNotMatch(app.nodes.get('#resultCount').textContent,/0경기/);
+  app.requests[0].onData({...snapshot(),matches:[],complete:true,error:false});
+  assert.match(app.nodes.get('#resultCount').textContent,/^0경기/);
+});
+
+test('only explicit official IDs merge rows; rematches and all notes are preserved', () => {
+  const app=setup();app.run('drawRecords()');app.requests[0].onData(snapshot());
+  app.ctx.explicit={...manual,id:'linked',eloMatchId:1000,memo:'연결 메모',type:'스폰'};
+  app.run('db.matches.push(explicit);drawRecordRows()');
+  assert.match(app.nodes.get('#resultCount').textContent,/^51경기/);
+  assert.match(app.nodes.get('#recordsTable').innerHTML,/openForm\('linked'\)/);
+  app.run('setFilter("q","연결 메모")');
+  assert.match(app.nodes.get('#recordsTable').innerHTML,/data-synced-record="1000"/);
+  app.run('filters.q="";db.matches.push({...explicit,id:"rematch",eloMatchId:undefined});drawRecordRows()');
+  assert.match(app.nodes.get('#resultCount').textContent,/^52경기/);
+  assert.equal(app.saved().matches.length,3);
+});
+
+test('one table is date sorted without changing the source order of same-day rematches', () => {
+  const app=setup();app.run('drawRecords()');app.requests[0].onData(snapshot());
+  app.run('db.matches.push({...db.matches[0],id:"newer",date:"2026-11-17"});drawRecordRows()');
+  const rows=JSON.parse(app.run('JSON.stringify(recordRows())'));
+  assert.equal(rows[0].id,'newer');
+  assert.deepEqual(rows.filter(r=>r.officialId).map(r=>r.id),snapshot().matches.map(r=>r.id));
 });
 
 test('automatic record labels are escaped while retaining the original source type', () => {
@@ -165,10 +178,10 @@ test('saving a manual game after filtering automatic records reveals the saved g
     ${part('form.onsubmit=', '\nfunction removeMatch(')}
     form.onsubmit({preventDefault(){}});
   `, app.ctx);
-  assert.equal(app.run('recordSource'), 'manual');
+  assert.doesNotMatch(app.nodes.get('#records').innerHTML,/data-record-source/);
   assert.equal(app.run('filters.q'), '');
   assert.equal(app.run('filters.type'), '');
   assert.equal(app.run('filters.from'), '');
   assert.match(app.nodes.get('#recordsTable').innerHTML, /openForm\('new-manual'\)/);
-  assert.match(app.nodes.get('#resultCount').textContent, /^2경기/);
+  assert.match(app.nodes.get('#resultCount').textContent, /^52경기/);
 });
