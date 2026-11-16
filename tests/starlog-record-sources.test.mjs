@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
+const StarlogNotes = createRequire(import.meta.url)('../starlog/elo-notes.js');
 
 const code = fs.readFileSync(new URL('../starlog/app.js', import.meta.url), 'utf8');
 const part = (from, to) => code.slice(code.indexOf(from), code.indexOf(to));
@@ -30,7 +32,7 @@ function setup() {
   const ctx = vm.createContext({
     nodes, initial: structuredClone(initial), structuredClone,
     document: { getElementById: id => nodes.get('#' + id) },
-    window: { StarlogElo: { mountRecent(_host, options) {
+    window: { StarlogNotes, StarlogElo: { mountRecent(_host, options) {
       requests.push(options);
       return { destroy() { destroyed++; } };
     } } }
@@ -64,7 +66,8 @@ test('the records view places 50 automatic rows under the existing search and fi
   app.requests[0].onData(snapshot());
   const table = app.nodes.get('#recordsTable').innerHTML;
   assert.equal((table.match(/data-synced-record=/g) || []).length, 50);
-  assert.doesNotMatch(table, /onclick=|<button|removeMatch|openForm|toggleStar/);
+  assert.equal((table.match(/data-elo-note=/g)||[]).length,50);
+  assert.doesNotMatch(table, /removeMatch|openForm|toggleStar/);
   assert.match(app.nodes.get('#resultCount').textContent, /^50경기/);
   assert.match(app.nodes.get('#recordsTypeFilter').innerHTML, /특별 대회/);
   assert.deepEqual(app.saved(), app.initial);

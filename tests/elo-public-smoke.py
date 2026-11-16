@@ -1,5 +1,6 @@
 """Exercise the existing statistics and records views with isolated, mocked data."""
 import asyncio
+import os
 from datetime import datetime, timedelta, timezone
 import functools
 import http.server
@@ -108,7 +109,7 @@ async def prepare(browser, origin, width, harness=False, delay_owner=False, dela
     source = (APP / 'app.js').read_text()
     key = re.search(r"const KEY='([^']+)'", source).group(1)
     raw = json.dumps(journal(), ensure_ascii=False)
-    await context.add_init_script('localStorage.setItem(' + json.dumps(key) + ',' + json.dumps(raw) + ');')
+    await context.add_init_script('if(localStorage.getItem(' + json.dumps(key) + ')===null)localStorage.setItem(' + json.dumps(key) + ',' + json.dumps(raw) + ');')
     if directory_fail:
         old = json.dumps({'players': [PLAYERS[0]]}, ensure_ascii=False)
         await context.add_init_script('localStorage.setItem("starlog-player-directory-v1",' + json.dumps(old) + ');')
@@ -154,6 +155,9 @@ async def prepare(browser, origin, width, harness=False, delay_owner=False, dela
             elif kind == 'recent':
                 assert player_id == 443
                 data = recent()
+                if state.get('hideNotedMatch'):
+                    for row in data['matches']:
+                        row['id'] += 10000
             else:
                 data = rival(player_id, int(params['opponentId'][0]))
             await request.fulfill(json=data)
@@ -168,7 +172,7 @@ async def prepare(browser, origin, width, harness=False, delay_owner=False, dela
     return state
 
 
-async def wait_total(page, total=38):
+async def wait_total(page, total=39):
     await page.wait_for_function("value => document.querySelector('[data-elo-metrics]')?.textContent.includes(String(value))", arg=total)
 
 
@@ -184,7 +188,8 @@ async def check_records(state, width):
     assert await page.locator('#records #recordsTable').count() == 1
     assert '50경기' in await page.locator('#resultCount').inner_text()
     assert '일부 날짜' in await page.locator('#recordSyncStatus').inner_text()
-    assert await page.locator('#recordsTable button').count() == 0
+    assert await page.locator('#recordsTable [data-elo-note]').count() == 50
+    assert await page.locator('#recordsTable button.danger').count() == 0
     geometry = await page.evaluate("""() => ({
       search:document.getElementById('search').getBoundingClientRect().bottom,
       filter:document.getElementById('recordsTypeFilter').getBoundingClientRect().bottom,
@@ -239,9 +244,8 @@ async def check_statistics(browser, origin, width):
         await page.locator('[data-elo-tab="build"]').click()
         assert '나의 빌드' in await page.locator('[data-elo-table]').inner_text()
         assert '직접' in await page.locator('[data-elo-detail-status]').inner_text()
-        await page.locator('[data-elo-source]').select_option('local')
-        assert '1' in await page.locator('[data-elo-metrics]').inner_text()
-        await page.locator('[data-elo-source]').select_option('elo')
+        assert await page.locator('[data-elo-source]').count() == 0
+        assert '래더 1판' in await page.locator('[data-elo-combined-label]').inner_text()
         await wait_total(page)
         assert len([url for url in state['requests'] if '/summary?' in url]) == 1
         assert len([url for url in state['requests'] if '/activity?' in url]) == 1
@@ -350,6 +354,64 @@ async def check_late_recent(browser, origin):
         await state['context'].close()
 
 
+async def check_synced_notes(browser, origin, width):
+    state = await prepare(browser, origin, width)
+    page = state['page']
+    memo = '저장할 메모\n<script>실행되면 안 됨</script>'
+    feedback = '정찰을 놓치지 말고 다음 판에 적용하기'
+    try:
+        await wait_total(page)
+        await page.locator('#nav a[href="#records"]').click()
+        await page.locator('[data-elo-note="1006"]').wait_for()
+        await page.locator('[data-elo-note="1006"]').click()
+        modal = page.locator('#eloNoteDialog[open]')
+        await modal.locator('[name="memo"]').fill(memo)
+        await modal.locator('[name="feedback"]').fill(feedback)
+        await modal.locator('[name="star"]').check()
+        await modal.locator('button[type="submit"]').click()
+        await modal.wait_for(state='hidden')
+        saved = await page.evaluate('(key)=>JSON.parse(localStorage.getItem(key))', state['key'])
+        original = json.loads(state['raw'])
+        for key in ['matches', 'trash', 'settings']:
+            assert saved[key] == original[key], key
+        assert saved['eloNotes']['443:1006']['memo'] == memo
+        assert saved['eloNotes']['443:1006']['feedback'] == feedback
+        await page.locator('#search').fill(feedback)
+        assert await page.locator('#recordsTable [data-synced-record]').count() == 1
+        assert await page.locator('#recordsTable script').count() == 0
+        await page.reload(wait_until='domcontentloaded')
+        await page.locator('[data-elo-note="1006"]').wait_for()
+        await page.locator('[data-elo-note="1006"]').click()
+        assert await modal.locator('[name="memo"]').input_value() == memo
+        assert await modal.locator('[name="feedback"]').input_value() == feedback
+        await page.screenshot(path=str(OUTPUT / ('synced-note-' + str(width) + '.png')))
+        await modal.locator('[data-note-close]').first.click()
+        # Move the original match outside the source's latest 50 without changing personal storage.
+        state['hideNotedMatch'] = True
+        await page.locator('#recordSyncStatus [data-elo-refresh]').click()
+        await page.wait_for_function("document.querySelector('[data-elo-note=\"1006\"]')===null && document.querySelectorAll('[data-synced-record]').length===50")
+        await page.locator('#nav a[href="#review"]').click()
+        await page.locator('#review.active').wait_for()
+        assert '자동연동' in await page.locator('#review').inner_text()
+        note = page.locator('#review .review-card').filter(has_text='자동연동')
+        await note.locator('.review-open').click()
+        assert memo in await page.locator('#reviewDetail .review-full-memo').inner_text()
+        assert feedback in await page.locator('#reviewDetail .review-full-memo').inner_text()
+        await page.locator('#reviewDetail [data-edit]').click()
+        assert await modal.locator('[name="feedback"]').input_value() == feedback
+        await modal.locator('[data-note-close]').first.click()
+        # The existing app backup includes the annotation and no duplicate match rows.
+        async with page.expect_download() as download:
+            await page.evaluate('backup()')
+        file = await (await download.value).path()
+        exported = json.loads(Path(file).read_text())
+        assert exported['eloNotes']['443:1006']['memo'] == memo
+        assert exported['matches'] == original['matches']
+        assert not state['errors'], state['errors']
+    finally:
+        await state['context'].close()
+
+
 async def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Handler, directory=str(ROOT)))
@@ -357,7 +419,7 @@ async def main():
     origin = 'http://127.0.0.1:' + str(server.server_address[1])
     try:
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch()
+            browser = await playwright.chromium.launch(executable_path=os.environ.get('PLAYWRIGHT_CHROMIUM_EXECUTABLE'))
             try:
                 for width in [1440, 390]:
                     await check_statistics(browser, origin, width)
@@ -365,6 +427,8 @@ async def main():
                 await check_directory_recovery(browser, origin)
                 await check_incomplete_periods(browser, origin)
                 if APP != ROOT:
+                    for width in [1440, 390]:
+                        await check_synced_notes(browser, origin, width)
                     await check_late_recent(browser, origin)
             finally:
                 await browser.close()
