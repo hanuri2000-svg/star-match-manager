@@ -2,12 +2,18 @@
 (function(global){
   'use strict';
   const APP='dorang-integrated-page',HISTORY_KEY='dorangIntegratedBackup.v1',MAX_HISTORY=5,MAX_HISTORY_CHARS=900000;
-  const KEYS=['star-match-manager-v1','spawnNote.records.v1','spawnNote.eloPlayer','spawnNote.rivalPlayer','spawnNote.rivalOpponent','starPredictionManager_v31','newcatsleSpawnNote.records.v1','newcatsleEloPlayer','dorangNotificationCenter.v1','my-starlog-spwn-note-v1','my-starlog-spwn-note-draft'];
+  const KEYS=['star-match-manager-v1','spawnNote.records.v1','spawnNote.eloPlayer','spawnNote.rivalPlayer','spawnNote.rivalOpponent','starPredictionManager_v31','newcatsleSpawnNote.records.v1','newcatsleEloPlayer','dorangNotificationCenter.v1','my-starlog-dorang-v1','my-starlog-dorang-draft'];
+  const LEGACY_STARLOG={'my-starlog-dorang-v1':'my-starlog-spwn-note-v1','my-starlog-dorang-draft':'my-starlog-spwn-note-draft'};
+  const emptyStarlog=()=>({version:1,matches:[],trash:[],settings:{name:'최도랑',race:'P',maps:['폴리포이드','투혼','실피드','버터'],builds:['더블 넥서스','게이트 더블','원배럭 더블','팩더블','12앞마당']},lastBackup:null});
   const JSON_KEYS=[KEYS[0],KEYS[1],KEYS[5],KEYS[6],KEYS[8],KEYS[9]];
   const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function validate(backup){
     if(!object(backup)||backup.app!==APP||backup.schemaVersion!==1||typeof backup.createdAt!=='string'||!Number.isFinite(Date.parse(backup.createdAt))||!object(backup.data))throw new Error('올바른 통합 백업 파일이 아니야.');
+    for(const [key,oldKey] of Object.entries(LEGACY_STARLOG)){
+      if(!Object.hasOwn(backup.data,key)&&Object.hasOwn(backup.data,oldKey))backup.data[key]=backup.data[oldKey];
+      delete backup.data[oldKey];
+    }
     if(Object.keys(backup.data).some(key=>!KEYS.includes(key))||KEYS.slice(0,8).some(key=>!Object.hasOwn(backup.data,key)))throw new Error('백업에 필요한 데이터가 빠져 있어.');
     if(!Object.hasOwn(backup.data,KEYS[8]))backup.data[KEYS[8]]=null;
     for(const key of KEYS.slice(9)){if(!Object.hasOwn(backup.data,key))backup.data[key]=null;}
@@ -32,7 +38,8 @@
     return backup;
   }
   function capture(storage,mainState,version=''){
-    const data=Object.fromEntries(KEYS.map(key=>[key,storage.getItem(key)]));
+    const isolatedStarlog=storage.getItem(KEYS[9])!==null;
+    const data=Object.fromEntries(KEYS.map(key=>[key,storage.getItem(key)??(!isolatedStarlog&&LEGACY_STARLOG[key]?storage.getItem(LEGACY_STARLOG[key]):null)]));
     if(mainState!=null)data[KEYS[0]]=mainState;
     return validate({app:APP,schemaVersion:1,appVersion:version,createdAt:new Date().toISOString(),data});
   }
@@ -63,7 +70,9 @@
     const original=Object.fromEntries(KEYS.map(key=>[key,storage.getItem(key)]));
     try{
       KEYS.forEach(key=>storage.removeItem(key));
-      KEYS.forEach(key=>{if(backup.data[key]!==null)storage.setItem(key,backup.data[key])});
+      // A restored empty journal is an established store, not a first visit.
+      // Keep it present so the independent site's legacy data is not copied again.
+      KEYS.forEach(key=>{const value=key===KEYS[9]&&backup.data[key]===null?JSON.stringify(emptyStarlog()):backup.data[key];if(value!==null)storage.setItem(key,value)});
     }catch(error){
       try{KEYS.forEach(key=>storage.removeItem(key));KEYS.forEach(key=>{if(original[key]!==null)storage.setItem(key,original[key])})}catch{throw new Error('복구 중 저장 오류가 발생했어. 복구 전 백업이 보관돼 있어.')}
       throw new Error('복구에 실패해 기존 데이터를 유지했어. 저장 공간을 확인해 줘.');

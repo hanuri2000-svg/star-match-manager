@@ -53,7 +53,8 @@
 
   function readRecords(storage = global.localStorage) {
     try {
-      const current = storage?.getItem('my-starlog-spwn-note-v1');
+      const own = storage?.getItem('my-starlog-dorang-v1');
+      const current = own ?? storage?.getItem('my-starlog-spwn-note-v1');
       if (current !== null && current !== undefined) {
         const db = JSON.parse(current);
         if (db?.version !== 1 || !Array.isArray(db.matches)) return [];
