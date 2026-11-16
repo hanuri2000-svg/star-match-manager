@@ -118,11 +118,13 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#settingsForm [name="name"]').count() == 0
                 assert await sponsor.locator('#settingsForm [name="race"]').count() == 0
                 assert '최도랑 · 프로토스' in await sponsor.locator('#settingsForm').inner_text()
-                await sponsor.locator('#nav a[href="#home"]').click()
-                await sponsor.locator('#home.active').wait_for()
-                await sponsor.get_by_role('button', name='경기 기록하기', exact=True).click()
+                await sponsor.locator('#nav a[href="#records"]').click()
+                await sponsor.locator('#records.active').wait_for()
+                await sponsor.get_by_role('button', name='＋ 경기 기록', exact=True).click()
                 assert await sponsor.locator('#editor').is_visible()
                 await sponsor.locator('button[onclick="closeForm()"]').first.click()
+                await sponsor.locator('#nav a[href="#home"]').click()
+                await sponsor.locator('#home.active').wait_for()
             if label in ['desktop', 'phone']:
                 await page.screenshot(path=str(OUTPUT / f'{label}-{tab_name}.png'), full_page=True)
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
