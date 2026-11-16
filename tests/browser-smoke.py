@@ -27,12 +27,16 @@ async def check_viewport(browser, origin, label, width, height, touch):
     context = await browser.new_context(
         viewport={"width": width, "height": height},
         has_touch=touch, is_mobile=touch, device_scale_factor=1,
-        locale="ko-KR", timezone_id="Asia/Seoul",
+        locale="ko-KR", timezone_id="Asia/Seoul", service_workers="block",
     )
     requested_urls = []
+    recent_requested = asyncio.Event()
+    recent_url = "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50"
     # Do not send requests or data to live stats services during a UI test.
     async def route(request):
         requested_urls.append(request.request.url)
+        if request.request.url == recent_url:
+            recent_requested.set()
         if request.request.url.startswith(origin):
             await request.continue_()
         else:
@@ -99,21 +103,41 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#updateCheck').count() == 0
                 assert await sponsor.locator('#calendar').count() == 0
                 assert await sponsor.locator('#nav a[href="#stats"]').count() == 0
-                await sponsor.locator('#home #stats').wait_for()
-                await sponsor.locator('#stats').get_by_role('button', name='맵별', exact=True).click()
-                assert await sponsor.locator('#stats button.selected').inner_text() == '맵별'
-                assert await sponsor.locator('.race-summary-card').count() == 3
-                assert '0승 0패' in await sponsor.locator('.race-summary-card[data-race="P"]').inner_text()
+                await sponsor.locator('#home #journalStatistics').wait_for()
+                assert await sponsor.locator('#home [data-elo-metrics] > .metric').count() == 4
+                assert await sponsor.locator('#home [data-elo-tab]').count() == 6
+                assert await sponsor.locator('#home .hero, #home .home-recent, #home .race-summary-card, #eloPublic').count() == 0
+                await sponsor.locator('[data-elo-tab="map"]').click()
+                assert await sponsor.locator('[data-elo-tab="map"]').get_attribute('aria-pressed') == 'true'
+                assert not any('/api/elo/public/recent?' in url for url in requested_urls)
+                await sponsor.locator('#nav a[href="#records"]').click()
+                await sponsor.locator('#records.active').wait_for()
+                await sponsor.locator('#recordSyncStatus [data-elo-recent-status]').wait_for()
+                assert await sponsor.locator('[data-record-source="elo"]').get_attribute('aria-pressed') == 'true'
+                assert await sponsor.locator('#records #recordsTable').count() == 1
+                assert await sponsor.locator('#records #search').count() == 1
+                assert await sponsor.locator('#records #recordsTypeFilter').count() == 1
+                # DOM creation alone does not prove that the async controller's
+                # request reached the browser interceptor. Observe it before
+                # changing the source and destroying that controller.
+                try:
+                    await asyncio.wait_for(recent_requested.wait(), timeout=15)
+                except TimeoutError as failure:
+                    raise AssertionError(f'{label}: automatic records did not issue the required recent request: {requested_urls}') from failure
+                await sponsor.locator('[data-record-source="manual"]').click()
+                assert await sponsor.locator('[data-record-source="manual"]').get_attribute('aria-pressed') == 'true'
                 await sponsor.locator('#nav a[href="#settings"]').click()
                 await sponsor.locator('#settings.active').wait_for()
                 assert await sponsor.locator('#settingsForm [name="name"]').count() == 0
                 assert await sponsor.locator('#settingsForm [name="race"]').count() == 0
                 assert '최도랑 · 프로토스' in await sponsor.locator('#settingsForm').inner_text()
-                await sponsor.locator('#nav a[href="#home"]').click()
-                await sponsor.locator('#home.active').wait_for()
-                await sponsor.get_by_role('button', name='＋ 오늘의 경기 기록하기', exact=True).click()
+                await sponsor.locator('#nav a[href="#records"]').click()
+                await sponsor.locator('#records.active').wait_for()
+                await sponsor.get_by_role('button', name='＋ 경기 기록', exact=True).click()
                 assert await sponsor.locator('#editor').is_visible()
                 await sponsor.locator('button[onclick="closeForm()"]').first.click()
+                await sponsor.locator('#nav a[href="#home"]').click()
+                await sponsor.locator('#home.active').wait_for()
             if label in ['desktop', 'phone']:
                 await page.screenshot(path=str(OUTPUT / f'{label}-{tab_name}.png'), full_page=True)
         await page.wait_for_function("window.HARINA_MASTER_SYNC_STATUS?.status==='ok'")
@@ -151,11 +175,12 @@ async def check_viewport(browser, origin, label, width, height, touch):
         }""")
         assert reachability['reachable'], reachability
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
-        # The dashboard now reads only public statistics and the fixed player's
-        # recent list. Legacy import/JSON routes and direct source requests must
-        # still fail this check. The route handler above aborts all remote I/O.
+        # Statistics read summary/activity; the fixed player's recent list is
+        # requested only after the records view is opened above. Legacy import,
+        # JSON and direct source requests still fail this check. Remote I/O is mocked.
         expected_public_queries = {
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/summary?playerId=443",
+            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/activity?playerId=443",
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50",
         }
         stats_requests = {
