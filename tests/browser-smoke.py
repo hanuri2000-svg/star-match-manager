@@ -99,11 +99,20 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#updateCheck').count() == 0
                 assert await sponsor.locator('#calendar').count() == 0
                 assert await sponsor.locator('#nav a[href="#stats"]').count() == 0
-                await sponsor.locator('#home #stats').wait_for()
-                await sponsor.locator('#stats').get_by_role('button', name='맵별', exact=True).click()
-                assert await sponsor.locator('#stats button.selected').inner_text() == '맵별'
-                assert await sponsor.locator('.race-summary-card').count() == 3
-                assert '0승 0패' in await sponsor.locator('.race-summary-card[data-race="P"]').inner_text()
+                await sponsor.locator('#home #journalStatistics').wait_for()
+                assert await sponsor.locator('#home [data-elo-metrics] > .metric').count() == 4
+                assert await sponsor.locator('#home [data-elo-tab]').count() == 6
+                assert await sponsor.locator('#home .hero, #home .home-recent, #home .race-summary-card, #eloPublic').count() == 0
+                await sponsor.locator('[data-elo-tab="map"]').click()
+                assert await sponsor.locator('[data-elo-tab="map"]').get_attribute('aria-pressed') == 'true'
+                assert not any('/api/elo/public/recent?' in url for url in requested_urls)
+                await sponsor.locator('#nav a[href="#records"]').click()
+                await sponsor.locator('#recordSyncStatus').wait_for()
+                assert await sponsor.locator('#records #recordsTable').count() == 1
+                assert await sponsor.locator('#records #search').count() == 1
+                assert await sponsor.locator('#records #recordsTypeFilter').count() == 1
+                await sponsor.locator('[data-record-source="manual"]').click()
+                assert await sponsor.locator('[data-record-source="manual"]').get_attribute('aria-pressed') == 'true'
                 await sponsor.locator('#nav a[href="#settings"]').click()
                 await sponsor.locator('#settings.active').wait_for()
                 assert await sponsor.locator('#settingsForm [name="name"]').count() == 0
@@ -111,7 +120,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert '최도랑 · 프로토스' in await sponsor.locator('#settingsForm').inner_text()
                 await sponsor.locator('#nav a[href="#home"]').click()
                 await sponsor.locator('#home.active').wait_for()
-                await sponsor.get_by_role('button', name='＋ 오늘의 경기 기록하기', exact=True).click()
+                await sponsor.get_by_role('button', name='경기 기록하기', exact=True).click()
                 assert await sponsor.locator('#editor').is_visible()
                 await sponsor.locator('button[onclick="closeForm()"]').first.click()
             if label in ['desktop', 'phone']:
@@ -151,11 +160,12 @@ async def check_viewport(browser, origin, label, width, height, touch):
         }""")
         assert reachability['reachable'], reachability
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
-        # The dashboard now reads only public statistics and the fixed player's
-        # recent list. Legacy import/JSON routes and direct source requests must
-        # still fail this check. The route handler above aborts all remote I/O.
+        # Statistics read summary/activity; the fixed player's recent list is
+        # requested only after the records view is opened above. Legacy import,
+        # JSON and direct source requests still fail this check. Remote I/O is mocked.
         expected_public_queries = {
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/summary?playerId=443",
+            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/activity?playerId=443",
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50",
         }
         stats_requests = {
