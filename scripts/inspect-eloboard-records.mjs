@@ -31,7 +31,7 @@ function jsonValue(source, start) {
 }
 function matchRows(html) {
   const flight = flightData(html);
-  for (const match of flight.matchAll(/"initial":/g)) {
+  for (const match of flight.matchAll(/"playerId":443,"initial":/g)) {
     const rows = jsonValue(flight, match.index + match[0].length);
     if (!Array.isArray(rows) || !rows.every(row => Number.isSafeInteger(row.id) &&
       /^\d{4}-\d{2}-\d{2}$/.test(row.played_on || '') && Array.isArray(row.participants) &&
@@ -97,6 +97,7 @@ if (fixture) {
     await page('maps', '/players/' + playerId + '?tab=maps');
     await page('rival-513', '/players/' + playerId + '?tab=rivals&vs=513');
     const seen = new Map(), batches = [];
+    let boundaryIds = [];
     let boundary = '', status = 'page_bound_reached';
     for (let i = 0; i < maxRecentPages; i++) {
       // MatchFilters exposes this ordinary date filter. Include the boundary
@@ -106,17 +107,24 @@ if (fixture) {
       if (!html) { status = 'public_page_unavailable'; break; }
       const rows = matchRows(html);
       if (boundary && rows.some(row => row.played_on > boundary)) throw new Error('Public date filter was not honored');
+      if (boundary && JSON.stringify(rows.slice(0, boundaryIds.length).map(row => row.id)) !== JSON.stringify(boundaryIds)) {
+        throw new Error('Boundary prefix changed; consistent recent-list continuity not established');
+      }
       const overlap = rows.filter(row => seen.has(row.id)).length;
       if (boundary && rows.length && overlap === 0) throw new Error('Boundary overlap missing; continuity not established');
       const before = seen.size;
-      for (const row of rows) if (!seen.has(row.id)) seen.set(row.id, row);
+      for (const row of rows) {
+        if (seen.has(row.id) && JSON.stringify(seen.get(row.id)) !== JSON.stringify(row)) throw new Error('Overlapping match changed during the snapshot');
+        if (!seen.has(row.id)) seen.set(row.id, row);
+      }
       const oldest = rows.at(-1)?.played_on || '';
       batches.push({queryTo: boundary || null, count: rows.length, overlap, added: seen.size - before, oldest, unique: seen.size});
       console.log(JSON.stringify({batch: batches.at(-1)}));
       if (seen.size >= target) { status = 'target_collected'; break; }
-      if (rows.length < 15) { status = 'source_exhausted'; break; }
+      if (rows.length < 15) { status = 'short_public_page'; break; }
       if (boundary && oldest >= boundary) { status = 'same_day_window_saturated'; break; }
       boundary = oldest;
+      boundaryIds = rows.filter(row => row.played_on === boundary).map(row => row.id);
     }
     const rows = [...seen.values()];
     report.recent = {target, status, uniqueCollected: rows.length, displayed: Math.min(target, rows.length), batches};
