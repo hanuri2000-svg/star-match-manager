@@ -80,12 +80,12 @@ jobs:
           name: schedule-selected-day-checks
           path: test-results/schedule-play-smoke/
           retention-days: 7
-      - name: Commit verified changes on the isolated feature branch only
+      - name: Commit application files on the isolated feature branch only
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          rm .github/workflows/schedule-source.yml .github/workflows/prepare-schedule-release.yml
-          git add index.html version.json players.json schedule-play-records.js tests/schedule-play-records.test.mjs tests/schedule-play-smoke.py .github/workflows
+          git restore -- .github/workflows/regression-tests.yml
+          git add index.html version.json players.json
           git commit -m 'Show selected-day official and ladder results and rename Euni to Ryeoeun'
           git push origin HEAD:refs/heads/feat/schedule-day-records-20261116
