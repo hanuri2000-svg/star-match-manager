@@ -1,0 +1,91 @@
+name: Prepare selected-day schedule and nickname update
+on:
+  push:
+    branches: ['feat/schedule-day-records-20261116']
+    paths: ['.github/workflows/prepare-schedule-release.yml']
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: mcr.microsoft.com/playwright/python:v1.56.0-noble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply exact reviewed integration changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          p=Path('index.html');s=p.read_text()
+          s=s.replace('<script async src="./spawn-schedule-stats.js?v=5.24.30"', '<script async src="./schedule-play-records.js?v=5.24.30" onload="window.__appBootReady&&window.dispatchEvent(new Event(\'dorang:schedule-play-updated\'))"></script>\n<script async src="./spawn-schedule-stats.js?v=5.24.30"',1)
+          s=s.replace('try{return window.SpawnScheduleStats?.summarizeStorage(date,localStorage)', 'try{return window.SchedulePlayRecords?.summarizeStorage(date,localStorage)||window.SpawnScheduleStats?.summarizeStorage(date,localStorage)',1)
+          s=s.replace('const scheduleSpawnText=stats=>`${stats.total.games}전 ${stats.total.wins}승 ${stats.total.losses}패`;', 'const scheduleSpawnText=stats=>window.SchedulePlayRecords?.recordText(stats)||`${stats.total.games}전 ${stats.total.wins}승 ${stats.total.losses}패`;',1)
+          s=s.replace('function scheduleSpawnPanel(stats,isToday){','function scheduleSpawnPanel(stats,isToday){\n  if(window.SchedulePlayRecords)return window.SchedulePlayRecords.panelHTML(stats,isToday);',1)
+          s=s.replace('🎮 스폰 · ${scheduleSpawnText(spawn)}','🎮 플레이 · ${scheduleSpawnText(spawn)}')
+          start=s.index('    <div class="schedule-play-records"');end=s.index('\n    <div class="schedule-day-list"',start)
+          rows=s[start:end].strip().replace('(window.SpawnScheduleStats?.recordsForDate(s.scheduleDate,localStorage)||[])','(window.SchedulePlayRecords?.recordsForDate(s.scheduleDate,localStorage)||window.SpawnScheduleStats?.recordsForDate(s.scheduleDate,localStorage)||[])')
+          s=s[:start]+'    ${schedulePlayRows()}'+s[end:]
+          start=s.index('function scheduleDetail(){')
+          s=s[:start]+'function schedulePlayRows(){return `'+rows+'`;}\n'+s[start:]
+          s=s.replace('    ${scheduleSpawnPanel(spawn,s.scheduleDate===todayKey)}\n    ${schedulePlayRows()}', '    <div data-schedule-play-details>${scheduleSpawnPanel(spawn,s.scheduleDate===todayKey)}${schedulePlayRows()}</div>',1)
+          marker="const refreshScheduleSpawnStats=()=>{if(s.activeTab==='schedule')render()};"
+          replacement='''function refreshSchedulePlayView(){
+            if(s.activeTab!=='schedule')return;
+            const target=document.querySelector('[data-schedule-play-details]');
+            if(target){
+              const focused=target.contains(document.activeElement)&&document.activeElement?.hasAttribute('data-schedule-play-refresh');
+              const stats=scheduleSpawnStats(s.scheduleDate),todayKey=new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10);
+              target.innerHTML=scheduleSpawnPanel(stats,s.scheduleDate===todayKey)+schedulePlayRows();
+              if(focused)target.querySelector('[data-schedule-play-refresh]')?.focus({preventScroll:true});
+            }
+            document.querySelectorAll('.calendar-day[data-date]').forEach(cell=>{
+              const events=cell.querySelector('.calendar-events'),stats=scheduleSpawnStats(cell.dataset.date);
+              events?.querySelector('.calendar-spawn-summary')?.remove();
+              if(events&&stats.hasRecords)events.insertAdjacentHTML('afterbegin',`<span class="calendar-spawn-summary">🎮 ${esc(scheduleSpawnText(stats))}</span>`);
+            });
+            const agenda=document.querySelector('.schedule-agenda');
+            if(agenda)agenda.outerHTML=scheduleAgenda(scheduleMonthData());
+          }
+          window.addEventListener('dorang:schedule-play-updated',refreshSchedulePlayView);
+          const refreshScheduleSpawnStats=refreshSchedulePlayView;'''
+          assert marker in s;s=s.replace(marker,replacement,1)
+          s=s.replace("event.key==='spawnNote.records.v1'||event.key==='my-starlog-spwn-note-v1'","event.key==='spawnNote.records.v1'||event.key==='my-starlog-spwn-note-v1'||event.key==='my-starlog-dorang-v1'")
+          s=s.replace("esc(window.SpawnScheduleStats.normalizeResult(record.result)==='W'?'승':'패')","esc((record.result==='W'||window.SpawnScheduleStats?.normalizeResult(record.result)==='W')?'승':'패')")
+          p.write_text(s.replace('5.24.30','5.24.31'))
+          p=Path('players.json');d=json.loads(p.read_text());rows=[x for x in d['players'] if x.get('eloId')==830];assert len(rows)==1
+          row=rows[0];assert row['name']=='으니' and row['soopId']=='qwer1317'
+          row['name']='려은';row['aliases']=list(dict.fromkeys(row.get('aliases',[])+['으니','려은.','ε으니з']))
+          d['updatedAt']='2026-11-16';p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          p=Path('version.json');d=json.loads(p.read_text());d.update(version='5.24.31',releasedAt='2026-11-16T14:53:02Z',notes='스케줄 선택일 연동 전적·래더 표시 · 공통 티어표 으니 → 려은');p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          p=Path('.github/workflows/regression-tests.yml');s=p.read_text().replace('          python tests/elo-public-smoke.py','          python tests/elo-public-smoke.py\n          python tests/schedule-play-smoke.py',1).replace('            test-results/elo-public-smoke/','            test-results/elo-public-smoke/\n            test-results/schedule-play-smoke/',1);p.write_text(s)
+          expected={'index.html':'0eb1f9a1d59e6b439dd620a0728d0426c8de52830a553dbfccffa7158f70ae60','version.json':'ca162bb0253f7929cdcbb043db7c9a3e94e39b09254f9e0b9ce81a475b2500a0','players.json':'ea945d7c2a3baf5dfffc1a94b3607e6a5238e9a96d6588836b8aa96ed541268c','schedule-play-records.js':'8c6e2aa5f23ff60eebadb5d564cff8d5fb11208244be12302628ddcd18d838a6','tests/schedule-play-records.test.mjs':'9e0eec4a1a9860998f98a82a63e2f5437bee362eb1a83208f614530066f3e147','tests/schedule-play-smoke.py':'d28ed010446a44029485f99243939af7ef10758445e97dc731b97310b492034e','.github/workflows/regression-tests.yml':'9ecd8c723f8c0c4b6c848c5cb858a9c3bde4acbccda566d36ed921f0cfeadc27'}
+          for path,digest in expected.items():assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==digest,path
+          PY
+      - name: Validate data and schedule interface
+        run: |
+          node --check schedule-play-records.js
+          node --test tests/*.test.mjs
+          python -m pip install playwright==1.56.0
+          python tests/schedule-play-smoke.py
+      - name: Save selected-day screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schedule-selected-day-checks
+          path: test-results/schedule-play-smoke/
+          retention-days: 7
+      - name: Commit verified changes on the isolated feature branch only
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/workflows/schedule-source.yml .github/workflows/prepare-schedule-release.yml
+          git add index.html version.json players.json schedule-play-records.js tests/schedule-play-records.test.mjs tests/schedule-play-smoke.py .github/workflows
+          git commit -m 'Show selected-day official and ladder results and rename Euni to Ryeoeun'
+          git push origin HEAD:refs/heads/feat/schedule-day-records-20261116
