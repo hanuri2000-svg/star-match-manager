@@ -1,0 +1,39 @@
+name: Align unified record browser assertions
+on:
+  push:
+    branches: ['fix/unified-record-list-20261117']
+    paths: ['.github/workflows/align-unified-record-test.yml']
+permissions:
+  contents: write
+jobs:
+  align:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Update only obsolete source-selector assertions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tests/browser-smoke.py');s=p.read_text()
+          changes=[
+              ("assert await sponsor.locator('[data-record-source=\"elo\"]').get_attribute('aria-pressed') == 'true'", "assert await sponsor.locator('[data-record-source]').count() == 0"),
+              ("await sponsor.locator('[data-record-source=\"manual\"]').click()", "await sponsor.locator('#recordsTypeFilter').select_option('래더')"),
+              ("assert await sponsor.locator('[data-record-source=\"manual\"]').get_attribute('aria-pressed') == 'true'", "assert await sponsor.locator('#recordsTypeFilter').input_value() == '래더'")
+          ]
+          for old,new in changes:
+              assert s.count(old)==1,old
+              s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          python -m py_compile tests/browser-smoke.py
+          git diff --check
+      - name: Commit the test expectation change only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/browser-smoke.py
+          git commit -m 'Check unified records and the existing ladder filter instead of removed source tabs'
+          git push origin HEAD:refs/heads/fix/unified-record-list-20261117
