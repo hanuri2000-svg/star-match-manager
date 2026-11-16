@@ -65,6 +65,7 @@ jobs:
         run: |
           python tests/browser-smoke.py
           python tests/elo-public-smoke.py
+          python tests/schedule-play-smoke.py
       - name: Save viewport screenshots and results
         if: always()
         uses: actions/upload-artifact@v4
@@ -73,6 +74,7 @@ jobs:
           path: |
             test-results/browser-smoke/
             test-results/elo-public-smoke/
+            test-results/schedule-play-smoke/
           retention-days: 7
 
   build-pages:
