@@ -182,36 +182,38 @@ async def assert_journal(state):
 
 async def check_records(state, width):
     page, requests = state['page'], state['requests']
-    assert not any('/recent?' in url for url in requests), 'recent games must wait until the records view opens'
+    assert not any('/recent?' in url for url in requests)
     await page.locator('#nav a[href="#records"]').click()
     await page.wait_for_function("document.querySelectorAll('#recordsTable [data-synced-record]').length===50")
+    assert await page.locator('[data-record-source]').count() == 0
     assert await page.locator('#records #recordsTable').count() == 1
-    assert '50경기' in await page.locator('#resultCount').inner_text()
+    assert await page.locator('#recordsTable tbody tr').count() == 51
+    assert '51경기' in await page.locator('#resultCount').inner_text()
     assert '일부 날짜' in await page.locator('#recordSyncStatus').inner_text()
     assert await page.locator('#recordsTable [data-elo-note]').count() == 50
-    assert await page.locator('#recordsTable button.danger').count() == 0
+    assert await page.locator('#recordsTable button.danger').count() == 1
+    dates = await page.locator('#recordsTable tbody tr td:first-child').all_text_contents()
+    assert dates == sorted(dates, reverse=True)
     geometry = await page.evaluate("""() => ({
       search:document.getElementById('search').getBoundingClientRect().bottom,
       filter:document.getElementById('recordsTypeFilter').getBoundingClientRect().bottom,
       table:document.getElementById('recordsTable').getBoundingClientRect().top
     })""")
-    assert geometry['search'] <= geometry['table'] and geometry['filter'] <= geometry['table'], geometry
+    assert geometry['search'] <= geometry['table'] and geometry['filter'] <= geometry['table']
     await page.locator('#recordsTypeFilter').select_option('특별 대회')
     assert await page.locator('#recordsTable [data-synced-record]').count() == 17
     await page.locator('#search').fill('찾을 상대')
-    assert await page.locator('#recordsTable [data-synced-record]').count() == 1
-    assert '1경기' in await page.locator('#resultCount').inner_text()
-    await page.locator('[data-record-source="manual"]').click()
-    assert await page.locator('#search').input_value() == ''
     assert await page.locator('#recordsTable tbody tr').count() == 1
-    assert '래더' in await page.locator('#recordsTable').inner_text()
-    assert '나의 빌드' in await page.locator('#recordsTable').inner_text()
-    assert await page.locator('#recordsTable button.danger').count() == 1
+    await page.locator('#recordsTypeFilter').select_option('래더')
     await page.locator('#search').fill('보존할 복기')
     assert await page.locator('#recordsTable tbody tr').count() == 1
-    await page.locator('[data-record-source="elo"]').click()
-    await page.wait_for_function("document.querySelectorAll('#recordsTable [data-synced-record]').length===50")
-    assert len([url for url in requests if '/recent?' in url]) == 1, 'same-day source switching should reuse recent data'
+    assert '나의 빌드' in await page.locator('#recordsTable').inner_text()
+    await page.locator('#recordsTable .icon-btn').filter(has_text='수정').click()
+    assert await page.locator('#matchForm [name="memo"]').input_value() == '보존할 복기\n다음 줄'
+    await page.locator('#editor [aria-label="닫기"]').click()
+    await page.evaluate('resetFilters()')
+    await page.wait_for_function("document.querySelectorAll('#recordsTable tbody tr').length===51")
+    assert len([url for url in requests if '/recent?' in url]) == 1
     await assert_journal(state)
     await page.screenshot(path=str(OUTPUT / ('records-' + str(width) + '.png')))
     await page.locator('#nav a[href="#home"]').click()
@@ -341,12 +343,20 @@ async def check_late_recent(browser, origin):
         await wait_total(page)
         await page.locator('#nav a[href="#records"]').click()
         await asyncio.wait_for(state['started'].wait(), timeout=10)
-        await page.locator('[data-record-source="manual"]').click()
+        assert await page.locator('#recordsTable [data-manual-record]').count() == 1
+        await page.locator('#recordsTypeFilter').select_option('래더')
+        await page.locator('#search').fill('보존할 복기')
         before = await page.locator('#recordsTable').inner_html()
         state['gate'].set()
-        await page.wait_for_timeout(100)
+        await page.wait_for_function("document.querySelector('#recordSyncStatus')?.textContent.includes('50경기')")
         assert await page.locator('#recordsTable').inner_html() == before
-        assert await page.locator('#recordsTable [data-synced-record]').count() == 0
+        assert await page.locator('#search').input_value() == '보존할 복기'
+        await page.evaluate('resetFilters()')
+        await page.wait_for_function("document.querySelectorAll('#recordsTable tbody tr').length===51")
+        state['fail'] = True
+        await page.locator('#recordSyncStatus [data-elo-refresh]').click()
+        await page.wait_for_function("document.querySelector('#recordSyncStatus')?.textContent.includes('마지막')")
+        assert await page.locator('#recordsTable tbody tr').count() == 51
         await assert_journal(state)
         assert not state['errors'], state['errors']
     finally:

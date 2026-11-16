@@ -1,5 +1,5 @@
 'use strict';
-const APP_VERSION='2.0.21';
+const APP_VERSION='2.0.22';
 const KEY='my-starlog-dorang-v1', DRAFT='my-starlog-dorang-draft';
 const SHARED_KEY='my-starlog-spwn-note-v1', SHARED_DRAFT='my-starlog-spwn-note-draft';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -22,7 +22,7 @@ function applyDorangProfile(data){data.settings.name='최도랑';data.settings.r
 applyDorangProfile(db);
 function commit(next){applyDorangProfile(next);if(!storageOK){toast('기존 자료를 먼저 백업하거나 복원해 주세요.');return false}try{localStorage.setItem(KEY,JSON.stringify(next));db=next;return true}catch(e){toast('저장 공간 또는 브라우저 설정 때문에 저장하지 못했어요. 백업을 확인해 주세요.');return false}}
 function change(fn){const next=structuredClone(db);fn(next);return commit(next)}
-let eloStatisticsController=null,eloRecordsController=null,recordSource='elo',syncedRecords=null;
+let eloStatisticsController=null,eloRecordsController=null,syncedRecords=null;
 let page='home',statKey='opponent',reviewMode='all',calendar=new Date(new Date().getFullYear(),new Date().getMonth(),1),filters={q:'',type:'',race:'',result:'',from:'',to:''};
 const sorted=()=>[...db.matches].sort((a,b)=>b.date.localeCompare(a.date)||(b.created||0)-(a.created||0));
 const info=rows=>{const w=rows.filter(m=>m.result==='W').length;return {n:rows.length,w,l:rows.length-w,rate:rows.length?Math.round(w/rows.length*100):0}};
@@ -34,9 +34,34 @@ function heading(title,desc){return `<div class="page-heading"><div><span class=
 function table(rows,compact=false){if(!rows.length)return empty('🪄','아직 기록된 경기가 없어요','첫 번째 한 판을 기록하고<br>나만의 스타 이야기를 시작해 보세요.');return `<div class="table-wrap"><table><thead><tr><th>날짜</th><th>상대</th><th>맵</th><th>결과</th>${compact?'':'<th>유형</th><th>내 빌드</th><th>다시 보기</th><th>관리</th>'}</tr></thead><tbody>${rows.map(m=>`<tr class="clickable"><td><button class="icon-btn" onclick="openForm('${m.id}')">${esc(m.date.slice(5).replace('-','.'))}</button></td><td><button class="icon-btn" onclick="openForm('${m.id}')"><span class="race ${m.race}">${m.race}</span>${esc(m.opponent)}</button></td><td>${esc(m.map)}</td><td><span class="badge ${m.result==='W'?'win':'loss'}">${m.result==='W'?'WIN':'LOSE'}</span></td>${compact?'':`<td>${esc(m.type)}</td><td>${esc(m.build||'—')}</td><td><button class="star-button ${m.star?'on':''}" onclick="toggleStar('${m.id}')" aria-label="다시 보기 ${m.star?'해제':'표시'}">${m.star?'♥':'♡'}</button></td><td><button class="icon-btn" onclick="openForm('${m.id}')">수정</button><button class="icon-btn danger" onclick="removeMatch('${m.id}')">삭제</button></td>`}</tr>`).join('')}</tbody></table></div>`}
 function drawHome(){eloStatisticsController?.destroy();$('#home').innerHTML='<div id="journalStatistics"></div>';eloStatisticsController=window.StarlogElo?.mountStatistics(document.getElementById('journalStatistics'),{site:'dorang-integrated',name:db.settings.name,race:db.settings.race,fixedId:443,matches:db.matches});if(!eloStatisticsController)$('#journalStatistics').innerHTML='<p role="status">통계 화면을 불러오지 못했어요. 새로고침해 주세요.</p>'}
 function openPlaySchedule(){if(window.parent!==window&&typeof window.parent.openIntegratedNotificationTarget==='function')window.parent.openIntegratedNotificationTarget({kind:'schedule',date:today()})}
-function filterDate(date){recordSource='manual';filters={q:'',type:'',race:'',result:'',from:date,to:date};location.hash='records';render()}
-function filtered(){const rows=recordSource==='elo'?window.StarlogNotes.enrich(syncedRecords?.matches||[],db.eloNotes):sorted();return rows.filter(m=>(!filters.q||[m.opponent,m.map,m.build,m.enemyBuild,m.memo,m.feedback,m.tags].some(s=>String(s||'').toLowerCase().includes(filters.q.toLowerCase())))&&(!filters.type||m.type===filters.type)&&(!filters.race||m.race===filters.race)&&(!filters.result||m.result===filters.result)&&(!filters.from||m.date>=filters.from)&&(!filters.to||m.date<=filters.to))}
-function syncedTable(rows){return `<div class="table-wrap"><table><thead><tr><th>날짜</th><th>상대</th><th>맵</th><th>결과</th><th>유형</th><th>메모 · 피드백</th></tr></thead><tbody>${rows.map(m=>`<tr data-synced-record="${esc(m.id)}"><td>${esc(m.date)}</td><td>${['P','T','Z','R'].includes(m.race)?`<span class="race ${m.race}">${m.race}</span>`:''}${esc(m.opponent)}</td><td>${esc(m.map||'맵 미등록')}</td><td><span class="badge ${m.result==='W'?'win':'loss'}">${m.result==='W'?'승리':'패배'}</span></td><td>${esc(m.type||'기타')}</td><td><button type="button" class="btn small" data-elo-note="${Number(m.id)}" onclick="openSyncedNote(${Number(m.id)})">${m.memo||m.feedback?'보기 / 수정':'작성'}</button>${m.memo||m.feedback?`<small style="display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((m.memo||m.feedback).slice(0,70))}</small>`:''}</td></tr>`).join('')}</tbody></table></div>`}
+function filterDate(date){filters={q:'',type:'',race:'',result:'',from:date,to:date};location.hash='records';render()}
+// Combine views, never import source matches into the user's journal.
+function recordRows(){
+ const linked=window.StarlogNotes.enrich(syncedRecords?.matches||[],db.eloNotes).map(m=>({...m,officialId:Number(m.id),manualEntries:[]}));
+ const byId=new Map(linked.map(m=>[m.officialId,m])),extra=[];
+ for(const m of sorted()){
+  // A shared date/opponent/map is not an identity: rematches must survive.
+  const ref=m.eloMatchId??m.eloRecordId??(m.source==='eloboard'?m.sourceId:null);
+  const id=/^[1-9]\d*$/.test(String(ref))&&Number.isSafeInteger(Number(ref))?Number(ref):null;
+  const existing=id&&byId.get(id);
+  if(existing)existing.manualEntries.push(m);
+  else extra.push({...m,officialId:null,manualEntries:[m]});
+ }
+ return [...linked,...extra].map(m=>({...m,
+  build:m.build||m.manualEntries.map(v=>v.build).filter(Boolean).join(' / '),
+  searchText:[m,...m.manualEntries].map(v=>[v.opponent,v.map,v.build,v.enemyBuild,v.memo,v.feedback,v.tags].filter(Boolean).join(' ')).join(' ')
+ })).sort((a,b)=>b.date.localeCompare(a.date));
+}
+function filtered(){return recordRows().filter(m=>(!filters.q||m.searchText.toLowerCase().includes(filters.q.toLowerCase()))&&(!filters.type||m.type===filters.type)&&(!filters.race||m.race===filters.race)&&(!filters.result||m.result===filters.result)&&(!filters.from||m.date>=filters.from)&&(!filters.to||m.date<=filters.to))}
+function unifiedTable(rows){
+ return `<div class="table-wrap"><table><thead><tr><th>날짜</th><th>상대</th><th>맵</th><th>결과</th><th>유형</th><th>내 빌드</th><th>메모 · 피드백</th><th>관리</th></tr></thead><tbody>${rows.map(m=>{
+  const automatic=Boolean(m.officialId),local=m.manualEntries;
+  const memo=[m,...(automatic?local:[])].flatMap(v=>[v.memo,v.feedback]).filter(Boolean).join(' · ');
+  const note=automatic?`<button type="button" class="btn small" data-elo-note="${m.officialId}" onclick="openSyncedNote(${m.officialId})">${m.memo||m.feedback?'보기 / 수정':'작성'}</button>`:`<button type="button" class="btn small" onclick="openForm('${m.id}')">${memo?'보기 / 수정':'작성'}</button>`;
+  const management=local.map(v=>`<button class="star-button ${v.star?'on':''}" onclick="toggleStar('${v.id}')" aria-label="다시 보기 ${v.star?'해제':'표시'}">${v.star?'♥':'♡'}</button><button class="icon-btn" onclick="openForm('${v.id}')">수정</button><button class="icon-btn danger" onclick="removeMatch('${v.id}')">삭제</button>`).join('');
+  return `<tr ${automatic?`data-synced-record="${m.officialId}"`:`data-manual-record="${esc(m.id)}"`}><td>${esc(m.date)}</td><td>${['P','T','Z','R'].includes(m.race)?`<span class="race ${m.race}">${m.race}</span>`:''}${esc(m.opponent)}</td><td>${esc(m.map||'맵 미등록')}</td><td><span class="badge ${m.result==='W'?'win':'loss'}">${m.result==='W'?'승리':'패배'}</span></td><td>${esc(m.type||'기타')}</td><td>${esc(m.build||'—')}</td><td>${note}${memo?`<small style="display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(memo.slice(0,70))}</small>`:''}</td><td>${management||'<span class="date-label">—</span>'}</td></tr>`;
+ }).join('')}</tbody></table></div>`;
+}
 function openSyncedNote(id){
  const notes=window.StarlogNotes,existing=notes.get(db.eloNotes,id),match=(syncedRecords?.matches||[]).find(row=>Number(row.id)===Number(id))||existing?.match;
  if(!match){toast('메모를 연결할 경기 정보를 확인해 주세요.');return}
@@ -58,19 +83,18 @@ function openSyncedNote(id){
 function reviewRecords(){return [...sorted(),...window.StarlogNotes.reviewRows(db.eloNotes)].sort((a,b)=>b.date.localeCompare(a.date)||(b.created||0)-(a.created||0))}
 function drawRecordRows(){
  const target=$('#recordsTable'),count=$('#resultCount');if(!target||!count||page!=='records')return;
- const automatic=recordSource==='elo',rows=filtered(),s=info(rows),known=!automatic||Boolean(syncedRecords?.fetchedAt);
- const types=automatic?[...new Set((syncedRecords?.matches||[]).map(m=>m.type).filter(Boolean))]:typeOptions;
- const typeFilter=$('#recordsTypeFilter');if(typeFilter)typeFilter.innerHTML='<option value="">모든 유형</option>'+[...new Set([...types,...(filters.type?[filters.type]:[])])].map(v=>`<option value="${esc(v)}" ${filters.type===v?'selected':''}>${esc(v)}</option>`).join('');
- count.textContent=known?`${s.n}경기 · ${s.w}승 ${s.l}패`:(syncedRecords?.error?'전적 확인이 필요해요':'최근 경기를 확인하고 있어요…');
- target.innerHTML=rows.length?(automatic?syncedTable(rows):table(rows)):!known?empty('⌛',syncedRecords?.error?'최근 경기를 불러오지 못했어요':'최근 경기를 확인하고 있어요',syncedRecords?.error?'조회 상태에서 다시 확인할 수 있어요. 직접 기록은 계속 볼 수 있어요.':'최도랑의 최근 50경기를 준비하고 있어요.'):empty('🔎','찾은 경기가 없어요',automatic?'검색 조건을 확인해 주세요.':'검색 조건을 바꾸거나 새로운 경기를 기록해 보세요.');
+ const rows=filtered(),s=info(rows),known=Boolean(syncedRecords?.fetchedAt);
+ const types=[...new Set([...typeOptions,...recordRows().map(m=>m.type).filter(Boolean),...(filters.type?[filters.type]:[])])];
+ const typeFilter=$('#recordsTypeFilter');if(typeFilter)typeFilter.innerHTML='<option value="">모든 유형</option>'+types.map(v=>`<option value="${esc(v)}" ${filters.type===v?'selected':''}>${esc(v)}</option>`).join('');
+ count.textContent=(known||rows.length?`${s.n}경기 · ${s.w}승 ${s.l}패`:'')+(!known?(rows.length?' · ':'')+(syncedRecords?.error?'연동 전적 확인 필요':'연동 전적 확인 중…'):'');
+ target.innerHTML=rows.length?unifiedTable(rows):!known?empty('⌛',syncedRecords?.error?'최근 경기를 불러오지 못했어요':'최근 경기를 확인하고 있어요',syncedRecords?.error?'저장된 경기는 그대로 유지돼요. 다시 확인을 눌러 주세요.':'저장된 경기는 먼저 표시하고, 확인된 전적을 같은 목록에 추가해요.'):empty('🔎','찾은 경기가 없어요','검색 조건을 바꾸거나 새로운 경기를 기록해 보세요.');
 }
-function setRecordSource(source){if(!['elo','manual'].includes(source))return;recordSource=source;filters={q:'',type:'',race:'',result:'',from:'',to:''};drawRecords()}
 function drawRecords(){
  eloRecordsController?.destroy();eloRecordsController=null;
- $('#records').innerHTML=heading('경기 기록 📖','최도랑의 최근 경기와 직접 작성한 스폰·래더·연습 기록을 확인해요.')+`<div class="segmented record-sources" role="group" aria-label="경기 기록 출처"><button type="button" data-record-source="elo" class="${recordSource==='elo'?'selected':''}" aria-pressed="${recordSource==='elo'}" onclick="setRecordSource('elo')">자동 연동 · 최근 50경기</button><button type="button" data-record-source="manual" class="${recordSource==='manual'?'selected':''}" aria-pressed="${recordSource==='manual'}" onclick="setRecordSource('manual')">직접 기록 · 래더 포함</button></div><div id="recordSyncStatus" ${recordSource==='elo'?'':'hidden'}></div><div class="filters"><input id="search" value="${esc(filters.q)}" placeholder="상대, 맵, 빌드, 메모 검색" aria-label="경기 검색" oninput="setFilter('q',this.value)"><select id="recordsTypeFilter" aria-label="유형 필터" onchange="setFilter('type',this.value)"></select><select aria-label="종족 필터" onchange="setFilter('race',this.value)"><option value="">모든 종족</option>${Object.entries(raceNames).map(([k,v])=>`<option value="${k}" ${filters.race===k?'selected':''}>${v}</option>`).join('')}</select><select aria-label="결과 필터" onchange="setFilter('result',this.value)"><option value="">모든 결과</option><option value="W" ${filters.result==='W'?'selected':''}>승리</option><option value="L" ${filters.result==='L'?'selected':''}>패배</option></select><input type="date" aria-label="시작 날짜" value="${filters.from}" onchange="setFilter('from',this.value)"><input type="date" aria-label="종료 날짜" value="${filters.to}" onchange="setFilter('to',this.value)"><button class="btn small" onclick="resetFilters()">초기화</button></div><div class="panel"><div class="panel-title"><h3 id="resultCount"></h3><span class="date-label">${recordSource==='elo'?'ELOBOARD · 최신 50경기':'직접 기록 · 최신 경기순'}</span></div><div id="recordsTable"></div></div>`;
+ $('#records').innerHTML=heading('경기 기록 📖','최도랑의 연동 경기와 래더·스폰·연습·CK 기록을 날짜순으로 함께 확인해요.')+`<div id="recordSyncStatus"></div><div class="filters"><input id="search" value="${esc(filters.q)}" placeholder="상대, 맵, 빌드, 메모 검색" aria-label="경기 검색" oninput="setFilter('q',this.value)"><select id="recordsTypeFilter" aria-label="유형 필터" onchange="setFilter('type',this.value)"></select><select aria-label="종족 필터" onchange="setFilter('race',this.value)"><option value="">모든 종족</option>${Object.entries(raceNames).map(([k,v])=>`<option value="${k}" ${filters.race===k?'selected':''}>${v}</option>`).join('')}</select><select aria-label="결과 필터" onchange="setFilter('result',this.value)"><option value="">모든 결과</option><option value="W" ${filters.result==='W'?'selected':''}>승리</option><option value="L" ${filters.result==='L'?'selected':''}>패배</option></select><input type="date" aria-label="시작 날짜" value="${filters.from}" onchange="setFilter('from',this.value)"><input type="date" aria-label="종료 날짜" value="${filters.to}" onchange="setFilter('to',this.value)"><button class="btn small" onclick="resetFilters()">초기화</button></div><div class="panel"><div class="panel-title"><h3 id="resultCount"></h3><span class="date-label">날짜순 · 연동 최근 50경기와 저장된 경기</span></div><div id="recordsTable"></div></div>`;
  drawRecordRows();
- if(recordSource==='elo')eloRecordsController=window.StarlogElo?.mountRecent(document.getElementById('recordSyncStatus'),{site:'dorang-integrated',name:'최도랑',race:'P',fixedId:443,onData(snapshot){syncedRecords={...syncedRecords,...snapshot};if(recordSource==='elo')drawRecordRows()}});
- if(recordSource==='elo'&&!eloRecordsController){syncedRecords={...syncedRecords,error:true};drawRecordRows()}
+ eloRecordsController=window.StarlogElo?.mountRecent(document.getElementById('recordSyncStatus'),{site:'dorang-integrated',name:'최도랑',race:'P',fixedId:443,onData(snapshot){syncedRecords={...syncedRecords,...snapshot};drawRecordRows()}});
+ if(!eloRecordsController){syncedRecords={...syncedRecords,error:true};drawRecordRows()}
 }
 function setFilter(k,v){filters[k]=v;drawRecordRows()}
 function resetFilters(){filters={q:'',type:'',race:'',result:'',from:'',to:''};drawRecords()}
@@ -103,7 +127,7 @@ function openForm(id){form.reset();fillForm({id:'',date:today(),myRace:db.settin
 function closeForm(){saveDraft();$('#editor').close()}
 form.addEventListener('input',saveDraft);$('#editor').addEventListener('cancel',saveDraft);
 function copyLast(){const last=sorted()[0];if(!last){toast('먼저 기록한 경기가 필요해요.');return}const currentId=form.elements.id.value;fillForm({...last,id:currentId,date:today(),result:'',memo:'',tags:'',star:false});saveDraft();toast('상대와 맵, 빌드를 가져왔어요. 결과를 선택해 주세요.')}
-form.onsubmit=e=>{e.preventDefault();const v=formData();for(const k of ['opponent','map','build','enemyBuild','memo','tags'])v[k]=(v[k]||'').trim();const existing=db.matches.find(m=>m.id===v.id);v.id=existing?.id||crypto.randomUUID();v.created=existing?.created||Date.now();if(!validMatch(v)){toast('상대 이름, 맵, 날짜와 결과를 확인해 주세요.');return}if(change(d=>{const i=d.matches.findIndex(m=>m.id===v.id);if(i<0)d.matches.push(v);else d.matches[i]=v})){try{localStorage.removeItem(DRAFT)}catch(e){}$('#editor').close();if(recordSource==='elo')filters={q:'',type:'',race:'',result:'',from:'',to:''};recordSource='manual';render();toast(existing?'기록을 수정했어요 ✨':'나의 별 하나를 기록했어요 ✨')}};
+form.onsubmit=e=>{e.preventDefault();const v=formData();for(const k of ['opponent','map','build','enemyBuild','memo','tags'])v[k]=(v[k]||'').trim();const existing=db.matches.find(m=>m.id===v.id);for(const k of ['eloMatchId','eloRecordId','source','sourceId','legacyRecord'])if(existing&&Object.hasOwn(existing,k))v[k]=existing[k];v.id=existing?.id||crypto.randomUUID();v.created=existing?.created||Date.now();if(!validMatch(v)){toast('상대 이름, 맵, 날짜와 결과를 확인해 주세요.');return}if(change(d=>{const i=d.matches.findIndex(m=>m.id===v.id);if(i<0)d.matches.push(v);else d.matches[i]=v})){try{localStorage.removeItem(DRAFT)}catch(e){}$('#editor').close();filters={q:'',type:'',race:'',result:'',from:'',to:''};render();toast(existing?'기록을 수정했어요 ✨':'나의 별 하나를 기록했어요 ✨')}};
 function toggleStar(id){if(id.startsWith('elo-note-')){const matchId=Number(id.slice(9)),note=window.StarlogNotes.get(db.eloNotes,matchId);if(note&&change(d=>{d.eloNotes=window.StarlogNotes.save(d.eloNotes,note.match,note.memo,note.feedback,!note.star)}))render();return}if(change(d=>{const m=d.matches.find(m=>m.id===id);if(m)m.star=!m.star}))render()}
 function removeMatch(id){if(!confirm('이 경기를 휴지통으로 옮길까요? 설정에서 복구할 수 있어요.'))return;if(change(d=>{const i=d.matches.findIndex(m=>m.id===id);if(i>=0)d.trash.push(d.matches.splice(i,1)[0])})){render();toast('휴지통으로 옮겼어요. 설정에서 복구할 수 있어요.')}}
 function recover(id){if(change(d=>{const i=d.trash.findIndex(m=>m.id===id);if(i>=0)d.matches.push(d.trash.splice(i,1)[0])})){render();toast('기록을 복구했어요 ✨')}}

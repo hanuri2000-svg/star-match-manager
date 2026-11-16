@@ -118,7 +118,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 await sponsor.locator('#nav a[href="#records"]').click()
                 await sponsor.locator('#records.active').wait_for()
                 await sponsor.locator('#recordSyncStatus [data-elo-recent-status]').wait_for()
-                assert await sponsor.locator('[data-record-source="elo"]').get_attribute('aria-pressed') == 'true'
+                assert await sponsor.locator('[data-record-source]').count() == 0
                 assert await sponsor.locator('#records #recordsTable').count() == 1
                 assert await sponsor.locator('#records #search').count() == 1
                 assert await sponsor.locator('#records #recordsTypeFilter').count() == 1
@@ -128,8 +128,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
                     await asyncio.wait_for(recent_requested.wait(), timeout=15)
                 except TimeoutError as failure:
                     raise AssertionError(f'{label}: automatic records did not issue the required recent request: {requested_urls}') from failure
-                await sponsor.locator('[data-record-source="manual"]').click()
-                assert await sponsor.locator('[data-record-source="manual"]').get_attribute('aria-pressed') == 'true'
+                await sponsor.locator('#recordsTypeFilter').select_option('래더')
+                assert await sponsor.locator('#recordsTypeFilter').input_value() == '래더'
                 await sponsor.locator('#nav a[href="#settings"]').click()
                 await sponsor.locator('#settings.active').wait_for()
                 assert await sponsor.locator('#settingsForm [name="name"]').count() == 0
