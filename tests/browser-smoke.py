@@ -48,6 +48,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
     try:
         await page.goto(origin, wait_until="networkidle")
         await page.wait_for_function("window.__appBootReady === true")
+        await asyncio.wait_for(recent_requested.wait(), timeout=15)
+        assert requested_urls.count(recent_url) == 1, "schedule should request the fixed player recent list once"
         assert await page.evaluate("document.compatMode") == "CSS1Compat"
         assert await page.locator("#app > .head").count() == 1
         assert await page.locator(".season-hero-badge").count() == 0
@@ -109,7 +111,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#home .hero, #home .home-recent, #home .race-summary-card, #eloPublic').count() == 0
                 await sponsor.locator('[data-elo-tab="map"]').click()
                 assert await sponsor.locator('[data-elo-tab="map"]').get_attribute('aria-pressed') == 'true'
-                assert not any('/api/elo/public/recent?' in url for url in requested_urls)
+                assert requested_urls.count(recent_url) == 1, 'statistics must not repeat the schedule recent request'
                 await sponsor.locator('#nav a[href="#records"]').click()
                 await sponsor.locator('#records.active').wait_for()
                 await sponsor.locator('#recordSyncStatus [data-elo-recent-status]').wait_for()
@@ -117,9 +119,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#records #recordsTable').count() == 1
                 assert await sponsor.locator('#records #search').count() == 1
                 assert await sponsor.locator('#records #recordsTypeFilter').count() == 1
-                # DOM creation alone does not prove that the async controller's
-                # request reached the browser interceptor. Observe it before
-                # changing the source and destroying that controller.
+                # The schedule already requested this list; opening records shares
+                # the same 12-hour cache/failed-attempt state without extra I/O.
                 try:
                     await asyncio.wait_for(recent_requested.wait(), timeout=15)
                 except TimeoutError as failure:
@@ -175,8 +176,8 @@ async def check_viewport(browser, origin, label, width, height, touch):
         }""")
         assert reachability['reachable'], reachability
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
-        # Statistics read summary/activity; the fixed player's recent list is
-        # requested only after the records view is opened above. Legacy import,
+        # Statistics read summary/activity; schedule and records share the fixed
+        # player's recent list. Legacy import,
         # JSON and direct source requests still fail this check. Remote I/O is mocked.
         expected_public_queries = {
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/summary?playerId=443",
