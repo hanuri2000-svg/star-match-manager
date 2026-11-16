@@ -31,12 +31,15 @@ async def check_viewport(browser, origin, label, width, height, touch):
     )
     requested_urls = []
     recent_requested = asyncio.Event()
+    reload_requested = asyncio.Event()
     recent_url = "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50"
     # Do not send requests or data to live stats services during a UI test.
     async def route(request):
         requested_urls.append(request.request.url)
         if request.request.url == recent_url:
             recent_requested.set()
+        if request.request.url == recent_url + '&refresh=1':
+            reload_requested.set()
         if request.request.url.startswith(origin):
             await request.continue_()
         else:
@@ -120,7 +123,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('#records #search').count() == 1
                 assert await sponsor.locator('#records #recordsTypeFilter').count() == 1
                 # The schedule already requested this list; opening records shares
-                # the same 12-hour cache/failed-attempt state without extra I/O.
+                # the same six-hour cache/failed-attempt state without extra I/O.
                 try:
                     await asyncio.wait_for(recent_requested.wait(), timeout=15)
                 except TimeoutError as failure:
@@ -152,6 +155,9 @@ async def check_viewport(browser, origin, label, width, height, touch):
         assert await page.locator('html').get_attribute('data-season-month') is None
         assert '이쁜 도랑아! 오늘도 반가워!' in await page.locator('.dorang-welcome').inner_text()
         await page.reload(wait_until="networkidle")
+        await asyncio.wait_for(reload_requested.wait(), timeout=15)
+        assert requested_urls.count(recent_url + "&refresh=1") == 1, "browser reload must request fresh schedule data exactly once"
+        assert requested_urls.count(recent_url) == 1, "reload must not repeat a normal cached request"
         assert await page.locator('[data-season-theme-open]').count() == 0
         await page.screenshot(path=str(OUTPUT / f'{label}.png'), full_page=True)
         toolbar_geometry = await page.locator('.schedule-toolbar').evaluate("""toolbar => {
@@ -183,6 +189,7 @@ async def check_viewport(browser, origin, label, width, height, touch):
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/summary?playerId=443",
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/activity?playerId=443",
             "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50",
+            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50&refresh=1",
         }
         stats_requests = {
             url for url in requested_urls
