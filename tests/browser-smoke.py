@@ -154,10 +154,15 @@ async def check_viewport(browser, origin, label, width, height, touch):
         assert await page.locator('#season-scene').count() == 0
         assert await page.locator('html').get_attribute('data-season-month') is None
         assert '이쁜 도랑아! 오늘도 반가워!' in await page.locator('.dorang-welcome').inner_text()
+        # The scoreboard persistence checks above intentionally reload twice.
+        # Measure this navigation separately while retaining those checks.
+        forced_before = requested_urls.count(recent_url + "&refresh=1")
+        normal_before = requested_urls.count(recent_url)
+        reload_requested.clear()
         await page.reload(wait_until="networkidle")
         await asyncio.wait_for(reload_requested.wait(), timeout=15)
-        assert requested_urls.count(recent_url + "&refresh=1") == 1, "browser reload must request fresh schedule data exactly once"
-        assert requested_urls.count(recent_url) == 1, "reload must not repeat a normal cached request"
+        assert requested_urls.count(recent_url + "&refresh=1") == forced_before + 1, {"message": "one additional fresh request per reload", "before": forced_before, "after": requested_urls.count(recent_url + "&refresh=1"), "requests": requested_urls}
+        assert requested_urls.count(recent_url) == normal_before, "reload must not repeat a normal cached request"
         assert await page.locator('[data-season-theme-open]').count() == 0
         await page.screenshot(path=str(OUTPUT / f'{label}.png'), full_page=True)
         toolbar_geometry = await page.locator('.schedule-toolbar').evaluate("""toolbar => {
