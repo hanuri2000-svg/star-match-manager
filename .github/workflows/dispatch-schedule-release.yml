@@ -1,0 +1,25 @@
+name: Dispatch selected-day schedule verification
+on:
+  push:
+    branches: ['ops/schedule-release-20261116']
+    paths: ['.github/workflows/dispatch-schedule-release.yml']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify requested PR and dispatch checks without production approval
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha='a2cba6bc8dee72e46eb949630289fa9aa949ecde';
+            const owner=context.repo.owner,repo=context.repo.repo;
+            const {data:pr}=await github.rest.pulls.get({owner,repo,pull_number:36});
+            if(pr.state!=='open'||pr.head.sha!==sha||pr.base.ref!=='main')throw new Error('PR changed; do not test a different version');
+            const {data:head}=await github.rest.git.getRef({owner,repo,ref:'heads/feat/schedule-day-records-20261116'});
+            if(head.object.sha!==sha)throw new Error('Feature branch changed');
+            await github.rest.actions.createWorkflowDispatch({owner,repo,workflow_id:'regression-tests.yml',ref:'feat/schedule-day-records-20261116',inputs:{tested_sha:sha,deploy_sha:''}});
+            core.info('Requested existing regression checks for '+sha+'; production deployment not authorized by this run.');
