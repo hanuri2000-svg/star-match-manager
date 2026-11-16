@@ -1,73 +1,137 @@
-import {mkdir, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 
-// Read-only diagnostic in the same runner that already fetches the tier list.
-// Do not change the player DB, import user records, or retry access challenges.
+// Read-only: ordinary public pages only. No rejected JSON API, credentials,
+// DB writes, scheduled collection, or production deployment.
 const output = 'record-access-diagnostic';
-const origin = 'https://eloboard.co.kr';
-const checks = [
-  ['profile', '/players/443?tab=matches', 'html'],
-  // The earlier diagnostic runs captured 403 for the legacy player and match
-  // APIs. Do not repeat them. Resolve CLIENT_BASE/listMatches from the public
-  // shared scripts referenced by the actual player page before changing code.
-  ['shared-client-a', '/_next/static/chunks/14yf5aatnll4x.js', 'js'],
-  ['shared-client-b', '/_next/static/chunks/0nkfr5qem0adp.js', 'js'],
-];
-await mkdir(output, {recursive: true});
-const report = {checkedAt: new Date().toISOString(), playerId: 443, checks: []};
-let apiBlocked = false;
-for (const [name, path, expected] of checks) {
-  if (expected === 'json' && apiBlocked) {
-    report.checks.push({name, skipped: 'Earlier API response was an access challenge or rate limit'});
-    continue;
-  }
-  const url = new URL(path, origin);
-  const row = {name, requestedUrl: url.href};
-  try {
-    const response = await fetch(url, {
-      headers: {'user-agent': 'star-match-manager-record-check/1.0', accept: expected === 'json' ? 'application/json' : 'text/html'},
-      signal: AbortSignal.timeout(20_000),
-    });
-    Object.assign(row, {status: response.status, finalUrl: response.url, contentType: response.headers.get('content-type')});
-    const reader = response.body.getReader();
-    const chunks = [];
-    let size = 0;
-    while (true) {
-      const {value, done} = await reader.read();
-      if (done) break;
-      size += value.length;
-      if (size > 5_000_000) {
-        await reader.cancel();
-        throw new Error('Response exceeds the 5 MB diagnostic bound');
-      }
-      chunks.push(value);
-    }
-    const bytes = Buffer.concat(chunks);
-    const body = bytes.toString('utf8');
-    row.bytes = bytes.length;
-    row.sha256 = createHash('sha256').update(bytes).digest('hex');
-    row.title = body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '';
-    const challenge = /site unavailable|access denied|just a moment|verify you are human|cf-chl-|captcha/i.test(body);
-    row.accessChallenge = challenge;
-    if (expected === 'json' && ([401, 403, 429].includes(response.status) || challenge)) apiBlocked = true;
-    let data;
-    try { data = JSON.parse(body); } catch {}
-    row.json = data !== undefined;
-    if (data !== undefined) {
-      row.shape = Array.isArray(data) ? {kind: 'array', length: data.length, firstKeys: Object.keys(data[0] || {})} : {kind: typeof data, keys: Object.keys(data || {})};
-    }
-    row.ok = response.ok && !challenge && (expected === 'html'
-      ? /<html[\s>]/i.test(body) && /최도랑/.test(body)
-      : expected === 'js' ? /javascript/.test(row.contentType || '') && !/^\s*</.test(body) : data !== undefined);
-    if (row.ok) await writeFile(`${output}/${name}.${expected}`, bytes);
-    else row.excerpt = body.replace(/\s+/g, ' ').slice(0, 500);
-  } catch (error) {
-    row.ok = false;
-    row.error = error.message;
-  }
-  report.checks.push(row);
-  console.log(JSON.stringify(row));
+const origin = 'https://eloboard.com';
+const playerId = 443, target = 50, maxRecentPages = 7;
+
+function flightData(html) {
+  const chunks = [];
+  for (const match of html.matchAll(/self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)<\/script>/g)) chunks.push(JSON.parse(match[1]));
+  if (!chunks.length) throw new Error('Public profile data not found');
+  return chunks.join('');
 }
-await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n');
-const summary = ['# EloBoard 전적 접근 확인', '', `확인: ${report.checkedAt}`, '', '| 자료 | HTTP | 실제 내용 확인 |', '|---|---:|---|', ...report.checks.map(r => `| ${r.name} | ${r.status || '—'} | ${r.skipped ? '제한 응답 후 추가 API 요청 중단' : r.ok ? '확인' : '확인 실패'} |`), '', '읽기 전용 진단이며 선수DB·개인 경기 기록·운영 사이트는 변경하지 않습니다.', '프로필 HTML 성공만으로 전체 경기 수집 성공을 의미하지 않습니다.', ''];
-await writeFile(`${output}/report.md`, summary.join('\n'));
+function jsonValue(source, start) {
+  let depth = 0, quoted = false, escaped = false;
+  for (let i = start; i < source.length; i++) {
+    const c = source[i];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (c === '\\') escaped = true;
+      else if (c === '"') quoted = false;
+      continue;
+    }
+    if (c === '"') quoted = true;
+    else if (c === '[' || c === '{') depth++;
+    else if ((c === ']' || c === '}') && --depth === 0) return JSON.parse(source.slice(start, i + 1));
+  }
+  throw new Error('Incomplete public profile data');
+}
+function matchRows(html) {
+  const flight = flightData(html);
+  for (const match of flight.matchAll(/"initial":/g)) {
+    const rows = jsonValue(flight, match.index + match[0].length);
+    if (!Array.isArray(rows) || !rows.every(row => Number.isSafeInteger(row.id) &&
+      /^\d{4}-\d{2}-\d{2}$/.test(row.played_on || '') && Array.isArray(row.participants) &&
+      row.participants.some(p => p.player_id === playerId))) continue;
+    if (new Set(rows.map(row => row.id)).size !== rows.length) throw new Error('Duplicate IDs in one response');
+    if (rows.some((row, i) => i && row.played_on > rows[i - 1].played_on)) throw new Error('Source order is not newest first');
+    return rows;
+  }
+  throw new Error('Match list not found');
+}
+
+const fixture = process.argv.find(arg => arg.startsWith('--fixture='));
+if (fixture) {
+  const rows = matchRows(await readFile(fixture.slice('--fixture='.length), 'utf8'));
+  console.log(JSON.stringify({fixture: true, rows: rows.length, first: rows[0]?.id, last: rows.at(-1)?.id}));
+} else {
+  await mkdir(output, {recursive: true});
+  const report = {checkedAt: new Date().toISOString(), playerId, checks: [], recent: {target, status: 'not_checked'}};
+  let stopped = false;
+  async function page(name, path) {
+    if (stopped) return null;
+    const row = {name, requestedUrl: new URL(path, origin).href};
+    try {
+      const response = await fetch(row.requestedUrl, {
+        headers: {'user-agent': 'star-match-manager-stat-check/1.0', accept: 'text/html'},
+        signal: AbortSignal.timeout(15_000),
+      });
+      Object.assign(row, {status: response.status, finalUrl: response.url, contentType: response.headers.get('content-type')});
+      const reader = response.body.getReader(), chunks = [];
+      let size = 0;
+      while (true) {
+        const {value, done} = await reader.read();
+        if (done) break;
+        if ((size += value.length) > 5_000_000) {
+          await reader.cancel();
+          throw new Error('Public page exceeds diagnostic size bound');
+        }
+        chunks.push(value);
+      }
+      const bytes = Buffer.concat(chunks), body = bytes.toString('utf8');
+      row.bytes = bytes.length;
+      row.sha256 = createHash('sha256').update(bytes).digest('hex');
+      row.title = body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '';
+      const challenge = /site unavailable|access denied|just a moment|verify you are human|cf-chl-|captcha/i.test(body);
+      row.ok = response.ok && !challenge && /최도랑/.test(row.title) && /text\/html/.test(row.contentType || '');
+      if ([401, 403, 429].includes(response.status) || challenge) stopped = true;
+      if (!row.ok) throw new Error('Public page response is unavailable or unexpected');
+      await writeFile(output + '/' + name + '.html', bytes);
+      row.visibleExcerpt = body.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 2300);
+      report.checks.push(row);
+      console.log(JSON.stringify({...row, visibleExcerpt: undefined}));
+      return body;
+    } catch (error) {
+      row.ok = false; row.error = error.message;
+      report.checks.push(row); console.log(JSON.stringify(row));
+      return null;
+    }
+  }
+  try {
+    await page('summary', '/players/' + playerId);
+    await page('maps', '/players/' + playerId + '?tab=maps');
+    await page('rival-513', '/players/' + playerId + '?tab=rivals&vs=513');
+    const seen = new Map(), batches = [];
+    let boundary = '', status = 'page_bound_reached';
+    for (let i = 0; i < maxRecentPages; i++) {
+      // MatchFilters exposes this ordinary date filter. Include the boundary
+      // day again; skipping directly to the preceding day loses games.
+      const path = '/players/' + playerId + '?tab=matches' + (boundary ? '&to=' + boundary : '');
+      const html = await page('recent-' + (i + 1), path);
+      if (!html) { status = 'public_page_unavailable'; break; }
+      const rows = matchRows(html);
+      if (boundary && rows.some(row => row.played_on > boundary)) throw new Error('Public date filter was not honored');
+      const overlap = rows.filter(row => seen.has(row.id)).length;
+      if (boundary && rows.length && overlap === 0) throw new Error('Boundary overlap missing; continuity not established');
+      const before = seen.size;
+      for (const row of rows) if (!seen.has(row.id)) seen.set(row.id, row);
+      const oldest = rows.at(-1)?.played_on || '';
+      batches.push({queryTo: boundary || null, count: rows.length, overlap, added: seen.size - before, oldest, unique: seen.size});
+      console.log(JSON.stringify({batch: batches.at(-1)}));
+      if (seen.size >= target) { status = 'target_collected'; break; }
+      if (rows.length < 15) { status = 'source_exhausted'; break; }
+      if (boundary && oldest >= boundary) { status = 'same_day_window_saturated'; break; }
+      boundary = oldest;
+    }
+    const rows = [...seen.values()];
+    report.recent = {target, status, uniqueCollected: rows.length, displayed: Math.min(target, rows.length), batches};
+    await writeFile(output + '/recent-matches.json', JSON.stringify(rows.slice(0, target), null, 2) + '\n');
+  } catch (error) {
+    report.recent.status = 'validation_failed'; report.recent.error = error.message;
+  } finally {
+    await writeFile(output + '/report.json', JSON.stringify(report, null, 2) + '\n');
+    const lines = ['# 공개 통계·상대전적·최근 50경기 확인', '', '확인: ' + report.checkedAt, '',
+      '| 공개 페이지 | HTTP | 내용 확인 |', '|---|---:|---|',
+      ...report.checks.map(r => '| ' + r.name + ' | ' + (r.status || '—') + ' | ' + (r.ok ? '성공' : '실패') + ' |'), '',
+      '최근 경기: ' + report.recent.status + ', 고유 ' + (report.recent.uniqueCollected || 0) + '건, 표시 ' + (report.recent.displayed || 0) + '건', '',
+      '일반 공개 페이지의 날짜 필터만 확인했습니다. 거절된 API를 재요청하지 않습니다.',
+      '진단 완료와 자동 연동 배포 완료는 다릅니다. 선수DB·개인 기록·운영 배포는 변경하지 않습니다.', ''];
+    await writeFile(output + '/report.md', lines.join('\n'));
+    console.log(JSON.stringify({recent: report.recent}));
+  }
+}
