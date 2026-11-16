@@ -27,12 +27,16 @@ async def check_viewport(browser, origin, label, width, height, touch):
     context = await browser.new_context(
         viewport={"width": width, "height": height},
         has_touch=touch, is_mobile=touch, device_scale_factor=1,
-        locale="ko-KR", timezone_id="Asia/Seoul",
+        locale="ko-KR", timezone_id="Asia/Seoul", service_workers="block",
     )
     requested_urls = []
+    recent_requested = asyncio.Event()
+    recent_url = "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50"
     # Do not send requests or data to live stats services during a UI test.
     async def route(request):
         requested_urls.append(request.request.url)
+        if request.request.url == recent_url:
+            recent_requested.set()
         if request.request.url.startswith(origin):
             await request.continue_()
         else:
@@ -107,10 +111,19 @@ async def check_viewport(browser, origin, label, width, height, touch):
                 assert await sponsor.locator('[data-elo-tab="map"]').get_attribute('aria-pressed') == 'true'
                 assert not any('/api/elo/public/recent?' in url for url in requested_urls)
                 await sponsor.locator('#nav a[href="#records"]').click()
-                await sponsor.locator('#recordSyncStatus').wait_for()
+                await sponsor.locator('#records.active').wait_for()
+                await sponsor.locator('#recordSyncStatus [data-elo-recent-status]').wait_for()
+                assert await sponsor.locator('[data-record-source="elo"]').get_attribute('aria-pressed') == 'true'
                 assert await sponsor.locator('#records #recordsTable').count() == 1
                 assert await sponsor.locator('#records #search').count() == 1
                 assert await sponsor.locator('#records #recordsTypeFilter').count() == 1
+                # DOM creation alone does not prove that the async controller's
+                # request reached the browser interceptor. Observe it before
+                # changing the source and destroying that controller.
+                try:
+                    await asyncio.wait_for(recent_requested.wait(), timeout=15)
+                except TimeoutError as failure:
+                    raise AssertionError(f'{label}: automatic records did not issue the required recent request: {requested_urls}') from failure
                 await sponsor.locator('[data-record-source="manual"]').click()
                 assert await sponsor.locator('[data-record-source="manual"]').get_attribute('aria-pressed') == 'true'
                 await sponsor.locator('#nav a[href="#settings"]').click()
