@@ -1,0 +1,43 @@
+name: Dispatch approved 12-hour release
+on:
+  push:
+    branches: ['ops/deploy-12h-20261116']
+    paths: ['.github/workflows/dispatch-verified-12h-release.yml']
+permissions:
+  contents: read
+  pull-requests: read
+  actions: write
+jobs:
+  dispatch:
+    if: github.ref == 'refs/heads/ops/deploy-12h-20261116'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify approved PR and exact tree before requesting the existing gated workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repo = context.repo;
+            const expectedHead = 'c3f31b185a5b44efc9849421dad10337047a88fd';
+            const expectedTree = '7df4730a5b1943cfffb6fe1228011ffe956c376b';
+            const {data: pr} = await github.rest.pulls.get({...repo,pull_number:35});
+            if (!pr.merged || pr.head.sha !== expectedHead || pr.base.ref !== 'main') {
+              throw new Error('The approved PR is not yet merged; no deployment was requested.');
+            }
+            const {data: head} = await github.rest.git.getRef({...repo,ref:'heads/main'});
+            const sha = head.object.sha;
+            if (sha !== pr.merge_commit_sha) throw new Error('Main moved after this PR; review required.');
+            const {data: commit} = await github.rest.git.getCommit({...repo,commit_sha:sha});
+            if (commit.tree.sha !== expectedTree || !commit.parents.some(p=>p.sha===expectedHead)) {
+              throw new Error('The current main does not contain the exact reviewed source tree.');
+            }
+            const {data: validation} = await github.rest.actions.getWorkflowRun({...repo,run_id:43878100036});
+            if (validation.head_sha!==expectedHead || validation.conclusion!=='success') {
+              throw new Error('Required exact-source regression run has not succeeded.');
+            }
+            const result = await github.rest.actions.createWorkflowDispatch({...repo,
+              workflow_id:'regression-tests.yml',ref:'main',
+              inputs:{tested_sha:sha,deploy_sha:sha}});
+            core.info('Requested existing gated verification/deployment for exact main SHA '+sha);
+            await core.summary.addHeading('Approved production request')
+              .addRaw('PR #35; tested source '+expectedHead+'; exact main '+sha+'. The existing regression, browser, Pages-source and latest-SHA guards are unchanged.').write();
