@@ -1,0 +1,111 @@
+name: Deploy and verify six-hour refresh release
+on:
+  push:
+    branches: ['ops/six-hour-release-20261117']
+    paths: ['.github/workflows/dispatch-refresh-release.yml']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Require the successful reviewed tree and dispatch existing production gates
+        id: request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner=context.repo.owner,repo=context.repo.repo;
+            const sha='7f1dff214317bb5c4f2e3e7c787c17d024ae091f',reviewed='978d924e4dd76d97bed6cd24d17776721d23c16b';
+            const {data:main}=await github.rest.git.getRef({owner,repo,ref:'heads/main'});
+            if(main.object.sha!==sha)throw new Error('Main changed; refuse to deploy a different commit');
+            const {data:commit}=await github.rest.git.getCommit({owner,repo,commit_sha:sha});
+            const {data:approved}=await github.rest.git.getCommit({owner,repo,commit_sha:reviewed});
+            if(commit.tree.sha!==approved.tree.sha)throw new Error('Merged tree differs from reviewed tree');
+            const {data:run}=await github.rest.actions.getWorkflowRun({owner,repo,run_id:43912433945});
+            if(run.head_sha!==reviewed||run.conclusion!=='success')throw new Error('Exact reviewed regression is not successful');
+            const {data:checks}=await github.rest.actions.listJobsForWorkflowRun({owner,repo,run_id:run.id,per_page:100});
+            for(const name of ['test','browser-smoke'])if(!checks.jobs.some(j=>j.name===name&&j.conclusion==='success'))throw new Error('Missing successful '+name);
+            core.setOutput('requested-at',new Date(Date.now()-5000).toISOString());
+            await github.rest.actions.createWorkflowDispatch({owner,repo,workflow_id:'regression-tests.yml',ref:'main',inputs:{tested_sha:sha,deploy_sha:sha}});
+      - name: Verify deployment and published code on all three sites
+        uses: actions/github-script@v7
+        env:
+          REQUESTED_AT: ${{ steps.request.outputs.requested-at }}
+        with:
+          script: |
+            const owner=context.repo.owner,repo=context.repo.repo,sha='7f1dff214317bb5c4f2e3e7c787c17d024ae091f';
+            let run;
+            for(let i=0;i<120;i++){
+              const {data}=await github.rest.actions.listWorkflowRuns({owner,repo,workflow_id:'regression-tests.yml',branch:'main',event:'workflow_dispatch',per_page:20});
+              run=data.workflow_runs.find(r=>r.head_sha===sha&&r.created_at>=process.env.REQUESTED_AT);
+              if(run?.status==='completed')break;
+              await new Promise(resolve=>setTimeout(resolve,5000));
+            }
+            if(!run||run.status!=='completed'||run.conclusion!=='success')throw new Error('Production checks/deployment not successful: '+JSON.stringify({id:run?.id,status:run?.status,conclusion:run?.conclusion}));
+            const {data:jobs}=await github.rest.actions.listJobsForWorkflowRun({owner,repo,run_id:run.id,per_page:100});
+            if(!jobs.jobs.some(j=>j.name==='deploy-pages'&&j.conclusion==='success'))throw new Error('Production deployment did not execute');
+            const expectedHash='2eac13e72e1fb80a27b179651a58ee004c8800ede9aa86d864c41dfd0aa3f124';
+            const crypto=require('node:crypto'),fs=require('node:fs');
+            const sites=[
+              {name:'dorang',base:'https://hanuri2000-svg.github.io/star-match-manager/',version:'5.24.32',script:'starlog/elo-public.js'},
+              {name:'spwn-note',base:'https://hanuri2000-svg.github.io/spwn-note/',version:'2.2.15',script:'elo-public.js'},
+              {name:'my-starlog',base:'https://my-starlog.pages.dev/',version:'2.0.3',script:'elo-public.js'}
+            ];
+            const read=async url=>{
+              const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(25000)});
+              if(!response.ok)throw new Error('Public asset HTTP '+response.status+' '+url);
+              return await response.text();
+            };
+            const report={verified:false,sha,deploymentRun:run.id,sites:[]};
+            for(const site of sites){
+              let verified;
+              for(let attempt=0;attempt<4;attempt++){
+                const version=JSON.parse(await read(site.base+'version.json?release='+sha));
+                const source=await read(site.base+site.script+'?release='+sha);
+                const hash=crypto.createHash('sha256').update(source).digest('hex');
+                if(version.version===site.version&&hash===expectedHash){verified={name:site.name,version:version.version,clientSha256:hash};break;}
+                if(attempt===3)throw new Error('Published assets differ from reviewed release: '+site.name);
+                await new Promise(resolve=>setTimeout(resolve,10000));
+              }
+              report.sites.push(verified);
+            }
+            const base=sites[0].base;
+            const deployment=JSON.parse(await read(base+'deployment.json?release='+sha));
+            if(deployment.sha!==sha)throw new Error('Integrated published SHA mismatch');
+            const schedule=await read(base+'schedule-play-records.js?release='+sha);
+            if(!schedule.includes('6 * 60 * 60 * 1000')||!schedule.includes('6시간')||!schedule.includes('v=2.0.21'))throw new Error('Schedule refresh version mismatch');
+            const embed=await read(base+'starlog-embed.js?release='+sha);
+            if(!embed.includes('v=2.0.21'))throw new Error('Embedded journal URL not updated');
+            const relay='https://spawn-note-elo-relay.hajimayo8130.workers.dev';
+            report.health=JSON.parse(await read(relay+'/health'));
+            if(report.health.version!=='1.7.2')throw new Error('Canonical relay version mismatch');
+            report.verified=true;
+            fs.writeFileSync('refresh-release-verification.json',JSON.stringify(report,null,2));
+            core.info('ALL_THREE_RELEASES_VERIFIED '+JSON.stringify(report));
+            await core.summary.addHeading('All three published clients verified').addRaw(JSON.stringify(report,null,2)).write();
+      - name: Observe one manual source refresh without retrying source failures
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const endpoint='https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/rival?playerId=443&opponentId=513';
+            const result={};
+            for(const [key,suffix] of [['normal',''],['manual','&refresh=1']]){
+              try{
+                const response=await fetch(endpoint+suffix,{cache:'no-store',signal:AbortSignal.timeout(40000)});
+                const body=await response.json();
+                result[key]={status:response.status,cacheControl:response.headers.get('cache-control'),fetchedAt:body.fetchedAt||null,stale:body.stale??null,playerId:body.player?.id,opponentId:body.opponent?.id,games:body.headToHead?.games,error:body.error||null};
+              }catch(error){result[key]={error:String(error)};}
+            }
+            result.freshManualConfirmed=result.manual.status===200&&result.manual.stale===false&&result.manual.cacheControl?.includes('no-store')&&result.manual.playerId===443&&result.manual.opponentId===513;
+            require('node:fs').writeFileSync('refresh-source-observation.json',JSON.stringify(result,null,2));
+            core.info('MANUAL_SOURCE_OBSERVATION '+JSON.stringify(result));
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: six-hour-release-verification
+          path: |
+            refresh-release-verification.json
+            refresh-source-observation.json
+          retention-days: 7
