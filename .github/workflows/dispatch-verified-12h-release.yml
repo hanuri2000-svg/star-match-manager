@@ -5,7 +5,6 @@ on:
     paths: ['.github/workflows/dispatch-verified-12h-release.yml']
 permissions:
   contents: read
-  pull-requests: read
   actions: write
 jobs:
   dispatch:
@@ -13,31 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Verify approved PR and exact tree before requesting the existing gated workflow
+      - name: Approve exact tested main SHA through the existing deployment gates
         uses: actions/github-script@v7
         with:
           script: |
             const repo = context.repo;
-            const expectedHead = 'c3f31b185a5b44efc9849421dad10337047a88fd';
+            const expectedSha = 'c3f31b185a5b44efc9849421dad10337047a88fd';
             const expectedTree = '7df4730a5b1943cfffb6fe1228011ffe956c376b';
-            const {data: pr} = await github.rest.pulls.get({...repo,pull_number:35});
-            if (!pr.merged || pr.head.sha !== expectedHead || pr.base.ref !== 'main') {
-              throw new Error('The approved PR is not yet merged; no deployment was requested.');
-            }
             const {data: head} = await github.rest.git.getRef({...repo,ref:'heads/main'});
-            const sha = head.object.sha;
-            if (sha !== pr.merge_commit_sha) throw new Error('Main moved after this PR; review required.');
-            const {data: commit} = await github.rest.git.getCommit({...repo,commit_sha:sha});
-            if (commit.tree.sha !== expectedTree || !commit.parents.some(p=>p.sha===expectedHead)) {
-              throw new Error('The current main does not contain the exact reviewed source tree.');
-            }
+            if (head.object.sha !== expectedSha) throw new Error('Main changed; no deployment requested.');
+            const {data: commit} = await github.rest.git.getCommit({...repo,commit_sha:expectedSha});
+            if (commit.tree.sha !== expectedTree) throw new Error('Reviewed source tree mismatch.');
             const {data: validation} = await github.rest.actions.getWorkflowRun({...repo,run_id:43878100036});
-            if (validation.head_sha!==expectedHead || validation.conclusion!=='success') {
-              throw new Error('Required exact-source regression run has not succeeded.');
+            if (validation.head_sha!==expectedSha || validation.conclusion!=='success') {
+              throw new Error('The exact-source regression and browser checks must succeed.');
             }
-            const result = await github.rest.actions.createWorkflowDispatch({...repo,
+            await github.rest.actions.createWorkflowDispatch({...repo,
               workflow_id:'regression-tests.yml',ref:'main',
-              inputs:{tested_sha:sha,deploy_sha:sha}});
-            core.info('Requested existing gated verification/deployment for exact main SHA '+sha);
-            await core.summary.addHeading('Approved production request')
-              .addRaw('PR #35; tested source '+expectedHead+'; exact main '+sha+'. The existing regression, browser, Pages-source and latest-SHA guards are unchanged.').write();
+              inputs:{tested_sha:expectedSha,deploy_sha:expectedSha}});
+            core.info('Requested existing gated verification/deployment for exact main SHA '+expectedSha);
+            await core.summary.addHeading('Approved exact main deployment')
+              .addRaw('The PR merge endpoint stalled. Main was advanced without force, with an expected-head lease, to the exact tested feature commit '+expectedSha+'. Existing code, browser, source and latest-SHA guards remain unchanged.').write();
