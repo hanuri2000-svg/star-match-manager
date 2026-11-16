@@ -1,0 +1,33 @@
+name: Apply reviewed refresh update
+on:
+  push:
+    branches: ['fix/six-hour-manual-refresh-20261117']
+    paths: ['.github/workflows/apply-refresh-update.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright/python:v1.56.0-noble
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply exact reviewed patch and version changes
+        env:
+          PATCH: |
+            H4sIAAAAAAAC/90abW/bxvl7fsXFA0qpomi9mbHlyE7WumvXNgnsbsNgGMaZPNmsKZLlHe0IqYF2CIZi6dAUaPq2JEuxbkWBfsjWDAuwftpP2cdI/g97nruj
+            SMmSbTnN1s6AJZG8e97fj+VymdBZ7uwwN/FZOfJptxwzJ4xdbr3Jz5VKJbI1+fGlS6Q8T0rz5NKlc2VCnDDggrxy5Y2V1V9efo20SLVGnid2Jf2oViqVxXOl
+            MQvtMesQ+IUqKcG/Ak+IzwQJQsFgBxdUcCtmHbi8vEc9n275jCwTo//3u70Pbvbuf0j6nzzsffAZ6T+42X/wLimR/lfv9h98SJ48ftj74t7hnbukd//T3u8/
+            Iv/6BxDav3X3ycObBP6f/O1r0r9/G7cefnanf++xQZpI9DNEbHv5+AHUVRrVdICT9SYeAfd2IvEhaPnZZhzQJRsR9uzzI/LEfJlu85oKTlvVbNqli1irGouJhy
+            X9VQqqg2LgB++Mjwz86SVZZwL9gmlDgUrIR0Ei5lRGKGUAXxBAfplnfCJCZtuLkTMM7Jvhe44b6VEnRaQPYkOGVlxuP4SG147DPJGNhYtTpkwqsrL62urL28
+            eWpTHrNhoklXzAoatVltIM6S5P4ysEl9shWH+5zFcOGH1CWU73LCQByEBW4UeoEgYeAw0g61DIhLBbXIyxR+BnTP26bCCwNTA22HTsJNABbDdhZzQgMXRBp3
+            ANOex1GgQL3wgoQimQehnGGSOSk0zAV5cREd6odXmWEhHTRHS5dBFeJ4t9BF7Cc11R+Q7fYbFdITdxFSERkwAMboEItISIotfWgvKBhhCoZoR3yPp2xLdo
+        run: |
+          python - <<'PY'
+          raise SystemExit('Payload transport pending: do not apply or deploy an incomplete patch')
+          PY
