@@ -49,7 +49,7 @@
     const ttl = options.ttl ?? 5 * 60 * 1000;
     // Each route has its own loading region. Give the bounded server fetches
     // time to finish without making a slow recent list block the summary.
-    const timeouts = { summary: 45000, rival: 15000, recent: 95000 };
+    const timeouts = { summary: 100000, rival: 35000, recent: 220000 };
     const site = String(options.site || 'starlog'), base = options.base || API;
     const memory = new Map(), pending = new Map(), failures = new Map();
     function key(kind, playerId, opponentId) {

@@ -151,7 +151,22 @@ async def check_viewport(browser, origin, label, width, height, touch):
         }""")
         assert reachability['reachable'], reachability
         await page.screenshot(path=str(OUTPUT / f'{label}-scrolled.png'))
-        assert not any("/api/elo/" in url or "spawn-note-elo-relay" in url or "dorang-live" in url or "eloboard.co.kr" in url for url in requested_urls), requested_urls
+        # The dashboard now reads only public statistics and the fixed player's
+        # recent list. Legacy import/JSON routes and direct source requests must
+        # still fail this check. The route handler above aborts all remote I/O.
+        expected_public_queries = {
+            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/summary?playerId=443",
+            "https://spawn-note-elo-relay.hajimayo8130.workers.dev/api/elo/public/recent?playerId=443&limit=50",
+        }
+        stats_requests = {
+            url for url in requested_urls
+            if any(marker in url for marker in (
+                "/api/elo/", "spawn-note-elo-relay", "dorang-live", "eloboard.co.kr", "eloboard.com"
+            ))
+        }
+        assert stats_requests == expected_public_queries, {
+            "expected": sorted(expected_public_queries), "actual": sorted(stats_requests)
+        }
         assert not errors, errors
         return {"viewport": label, "geometry": geometry, "tabs": tabs, "fixedTheme": True,
                 "calendarButtons": toolbar_geometry, "saveReachability": reachability,
