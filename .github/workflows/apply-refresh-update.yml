@@ -17,28 +17,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Apply exact reviewed patch and version changes
-        env:
-          PATCH: |
-            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
+      - name: Apply reviewed client and schedule changes
+        run: python .maintenance/apply-client-refresh.py
+      - name: Verify application and browser behavior
         run: |
-          python - <<'PY'
-          raise SystemExit('Do not deploy until full patch hash is verified')
-          PY
+          node --test tests/*.test.mjs
+          python -m pip install playwright==1.56.0
+          python tests/elo-public-smoke.py
+          python tests/schedule-play-smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: six-hour-refresh-browser-checks
+          path: |
+            test-results/elo-public-smoke/
+            test-results/schedule-play-smoke/
+          retention-days: 7
+      - name: Commit tested application files only
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html version.json schedule-play-records.js starlog tests
+          git commit -m 'Use six-hour refresh and immediate manual updates in statistics and schedule'
+          git push origin HEAD:refs/heads/fix/six-hour-manual-refresh-20261117
