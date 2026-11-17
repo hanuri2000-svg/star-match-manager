@@ -21,7 +21,7 @@ review = yaml.safe_load((ROOT / '.github/workflows/sync-eloboard-tiers.yml').rea
 assert review['permissions']['contents'] == 'read'
 steps = review['jobs']['sync']['steps']
 assert any('--proposal-dir=tier-sync-proposal' in s.get('run', '') for s in steps)
-assert any(s.get('uses') == 'actions/upload-artifact@v4' for s in steps)
+assert any(s.get('uses') == 'actions/upload-artifact@v6' for s in steps)
 assert not any('git push' in s.get('run', '') or '--apply' in s.get('run', '') for s in steps)
 approval = yaml.safe_load((ROOT / '.github/workflows/apply-eloboard-proposal.yml').read_text())
 assert set(approval.get('on', approval.get(True))) == {'workflow_dispatch'}
@@ -73,7 +73,7 @@ assert deploy['environment']['name'] == 'github-pages'
 assert deploy['permissions']['pages'] == deploy['permissions']['id-token'] == 'write'
 upload = next(s for s in jobs['build-pages']['steps'] if s.get('uses', '').startswith('actions/upload-pages-artifact@'))
 publish = deploy['steps'][-1]
-assert publish['uses'] == 'actions/deploy-pages@v4'
+assert publish['uses'] == 'actions/deploy-pages@v5.0.1'
 assert deploy['steps'][-2]['id'] == 'guard'
 assert upload['if'] == publish['if'] == "steps.guard.outputs.current == 'true'"
 assert upload['with']['name'] == '${{ steps.package.outputs.artifact-name }}'

@@ -31,15 +31,16 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
+          package-manager-cache: false
       - name: Verify source run and artifact ZIP digest
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REVIEW_RUN_ID: ${{ inputs.review_run_id }}
           APPROVED_CHANGES: ${{ inputs.approved_changes }}
@@ -68,12 +69,12 @@ jobs:
           python tests/pages-workflow.py
           python tests/browser-smoke.py
       - name: Create reviewed data PR and explicitly dispatch its checks
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: await require('./scripts/eloboard-actions.cjs').publish({github, context, core});
       - name: Save verification evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: eloboard-approval-results
           path: |
