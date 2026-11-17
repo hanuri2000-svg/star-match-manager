@@ -1,0 +1,76 @@
+name: Prepare requested youth tier additions
+on:
+  push:
+    branches: ['feat/add-subitna-kimarin-youth-20261117']
+    paths: ['.github/workflows/prepare-youth-tier.yml']
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply only reviewed shared data and renderer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          original={'players.json':'f29e8730d5c01f5f29620ab2723a77513696ea48','tier-board.js':'ccd99ed34afe37d4ec998f508e0290871918c0a6'}
+          for name,expected in original.items():
+              raw=Path(name).read_bytes()
+              actual=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+              assert actual==expected, f'{name} changed since review'
+          p=Path('players.json');d=json.loads(p.read_text());before=list(d['players'])
+          for name,channel in [('수빛나','492877vv'),('김아린','skdidkfl')]:
+              assert not any(x['name']==name or x.get('soopId')==channel for x in d['players'])
+              d['players'].append({'name':name,'tier':'유스','tierLabel':'베이비','race':'Z','aliases':[],'active':True,'eloId':None,'soopId':channel,'thumbUrl':''})
+          assert d['players'][:-2]==before and len(before)==369
+          d['updatedAt']='2026-11-17';p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          p=Path('tier-board.js');s=p.read_text()
+          old='''    const name=row.querySelector('a[href^="https://eloboard.com/players/"]')?.textContent || '방송';'''
+          new='''    const name=row.querySelector('[data-tier-player-name]')?.textContent || '방송';'''
+          assert s.count(old)==1;s=s.replace(old,new,1)
+          old="  function players(){return (state.payload?.players || []).filter(p => p && p.active !== false && p.name && Number.isSafeInteger(p.eloId))}"
+          new='''  // User-registered players may have a confirmed SOOP channel but no EloBoard ID.
+            // Never invent an EloBoard ID or link /players/null for those entries.
+            const hasEloId = p => Number.isSafeInteger(p?.eloId) && p.eloId > 0;
+            const channelId = p => {
+              const id=String(p?.soopId||'').trim().toLowerCase();
+              return /^[a-z0-9_]{2,40}$/.test(id) ? id : '';
+            };
+            function playerHref(p){
+              if(hasEloId(p))return `https://eloboard.com/players/${p.eloId}`;
+              const id=channelId(p);
+              return id ? `https://www.sooplive.com/station/${encodeURIComponent(id)}` : '';
+            }
+            function players(){return (state.payload?.players || []).filter(p => p && p.active !== false && typeof p.name === 'string' && p.name.trim() && (hasEloId(p) || channelId(p)))}'''
+          new=new.splitlines()[0]+'\n'+'\n'.join(line[10:] for line in new.splitlines()[1:])
+          assert s.count(old)==1;s=s.replace(old,new,1)
+          old="const id=String(p.soopId||'').toLowerCase(),live="
+          assert s.count(old)==1;s=s.replace(old,'const id=channelId(p),live=',1)
+          old='<a href="https://eloboard.com/players/${p.eloId}" target="_blank"'
+          new='<a data-tier-player-name href="${esc(playerHref(p))}" target="_blank"'
+          assert s.count(old)==1;s=s.replace(old,new,1);p.write_text(s)
+          expected={'players.json':'413c315e08b5054efac9652014d48cc26d00ca97bdeba80cd288b40c76a86247','tier-board.js':'2e527058ced0a942d3111c1eda64b2b2f284edf379f0399a1f1d3ccaed140dec'}
+          for name,digest in expected.items():
+              actual=hashlib.sha256(Path(name).read_bytes()).hexdigest()
+              assert actual==digest, (name,actual,digest)
+          print('Exact reviewed patch verified: 369 existing players preserved; two Zerg youth players added.')
+          PY
+      - name: Run complete JavaScript regression suite
+        run: |
+          node --check tier-board.js
+          node --test tests/*.test.mjs
+      - name: Commit only the two application files on the isolated branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add players.json tier-board.js
+          git commit -m 'Add 수빛나 and 김아린 as Zerg youth players with SOOP links'
+          git push origin HEAD:refs/heads/feat/add-subitna-kimarin-youth-20261117
