@@ -64,14 +64,14 @@ jobs:
             for width in [1440,390]:
               page=browser.new_page(viewport={'width':width,'height':900})
               errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-              page.route('**/players.json',lambda r:r.fulfill(json=db))
-              page.route('**/home/section/broad',lambda r:r.fulfill(status=200,body=''))
+              page.route('**/players.json',lambda r:r.fulfill(json=db,headers={'Access-Control-Allow-Origin':'*'}))
+              page.route('**/home/section/broad',lambda r:r.fulfill(status=200,body='',headers={'Access-Control-Allow-Origin':'*'}))
               page.route('**/LOGO/**',lambda r:r.fulfill(content_type='image/svg+xml',body='<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"/>'))
               page.goto('about:blank#tiers')
               page.set_content('<nav id="nav"></nav><div class="content"></div>')
               page.add_style_tag(content=css)
               page.add_script_tag(content=code)
-              page.wait_for_function('document.querySelector("[data-tier-filter=\"베이비\"]")')
+              page.locator('[data-tier-filter="베이비"]').wait_for()
               page.locator('[data-tier-all]').click()
               page.locator('[data-tier-filter="베이비"]').click()
               for name,channel in [('수빛나','492877vv'),('김아린','skdidkfl')]:
