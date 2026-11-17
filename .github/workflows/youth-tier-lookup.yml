@@ -1,0 +1,43 @@
+name: Inspect requested youth identities
+on:
+  push:
+    branches: ['ops/youth-tier-lookup-20261117']
+    paths: ['.github/workflows/youth-tier-lookup.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Inspect public tier identities and channel profile images
+        run: |
+          python - <<'PY'
+          import json,re,urllib.request
+          names={'수빛나','김아린'}
+          urls=['https://eloboard.co.kr/tiers','https://eloboard.com/tiers']
+          for url in urls:
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'star-match-manager-tier-sync/1.0','Accept':'text/html'})
+              with urllib.request.urlopen(req,timeout=25) as r: html=r.read(5000000).decode('utf-8'); print('SOURCE',url,r.status,len(html))
+              frames=[json.loads(m) for m in re.findall(r'self\.__next_f\.push\(\[1,("(?:\\.|[^"\\])*")\]\)</script>',html)]
+              text='\n'.join(frames)
+              marker='"sections":'
+              if marker in text:
+                sections,_=json.JSONDecoder().raw_decode(text[text.index(marker)+len(marker):])
+                found=[]
+                for section in sections:
+                  for p in section.get('players',[]):
+                    if re.sub(r'[^가-힣a-zA-Z0-9]','',p.get('name','')) in names:
+                      found.append({'section':{k:v for k,v in section.items() if k!='players'},'player':p})
+                print('IDENTITIES',json.dumps(found,ensure_ascii=False))
+                if len(found)==2:break
+              else: print('No sections in public document')
+            except Exception as exc: print('UNAVAILABLE',url,str(exc))
+          for channel in ['492877vv','skdidkfl']:
+            url=f'https://profile.img.sooplive.com/LOGO/{channel[:2]}/{channel}/{channel}.jpg'
+            try:
+              with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'}),timeout=15) as r:
+                print('PROFILE',channel,r.status,r.headers.get('Content-Type'),len(r.read(5000000)))
+            except Exception as exc: print('PROFILE_UNAVAILABLE',channel,str(exc))
+          PY
