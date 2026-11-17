@@ -50,7 +50,6 @@ jobs:
               return id ? `https://www.sooplive.com/station/${encodeURIComponent(id)}` : '';
             }
             function players(){return (state.payload?.players || []).filter(p => p && p.active !== false && typeof p.name === 'string' && p.name.trim() && (hasEloId(p) || channelId(p)))}'''
-          new=new.splitlines()[0]+'\n'+'\n'.join(line[10:] for line in new.splitlines()[1:])
           assert s.count(old)==1;s=s.replace(old,new,1)
           old="const id=String(p.soopId||'').toLowerCase(),live="
           assert s.count(old)==1;s=s.replace(old,'const id=channelId(p),live=',1)
