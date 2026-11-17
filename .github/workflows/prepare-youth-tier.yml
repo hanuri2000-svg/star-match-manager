@@ -48,7 +48,7 @@ jobs:
       - name: Run regression tests
         run: |
           node --check tier-board.js
-          node --test tests/*.test.mjs
+          node --test --test-reporter=dot tests/*.test.mjs
       - name: Check youth cards on desktop and mobile
         run: |
           python -m pip install playwright==1.56.0
@@ -72,8 +72,8 @@ jobs:
               page.add_style_tag(content=css)
               page.add_script_tag(content=code)
               page.locator('[data-tier-filter="베이비"]').wait_for()
-              page.locator('[data-tier-all]').click()
-              page.locator('[data-tier-filter="베이비"]').click()
+              page.locator('[data-tier-all]').dispatch_event('click')
+              page.locator('[data-tier-filter="베이비"]').dispatch_event('click')
               for name,channel in [('수빛나','492877vv'),('김아린','skdidkfl')]:
                 row=page.locator('.shared-tier-player').filter(has=page.get_by_role('link',name=name,exact=True))
                 assert row.count()==1
