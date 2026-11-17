@@ -1,0 +1,96 @@
+name: Prepare requested youth tier additions
+on:
+  push:
+    branches: ['feat/youth-tier-entries-20261117']
+    paths: ['.github/workflows/prepare-youth-tier.yml']
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    container: mcr.microsoft.com/playwright/python:v1.56.0-noble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply scoped player and shared-view changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          p=Path('players.json');raw=p.read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()=='f29e8730d5c01f5f29620ab2723a77513696ea48'
+          d=json.loads(raw);old=json.loads(raw)
+          for name,channel,aliases in [('수빛나','492877vv',[]),('김아린','skdidkfl',['♥김아린'])]:
+            assert not any(x.get('name')==name or x.get('soopId')==channel for x in d['players'])
+            d['players'].append(dict(name=name,tier='유스',tierLabel='베이비',race='Z',aliases=aliases,active=True,eloId=None,soopId=channel,thumbUrl=''))
+          d['updatedAt']='2026-11-17'
+          assert d['players'][:-2]==old['players']
+          assert d['source']==old['source'] and d['tierOrder']==old['tierOrder']
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          p=Path('tier-board.js');raw=p.read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()=='ccd99ed34afe37d4ec998f508e0290871918c0a6'
+          s=raw.decode()
+          s=s.replace('  const profileImage = id =>',"  const hasEloId = p => Number.isSafeInteger(p?.eloId) && p.eloId > 0;\n  const channelId = p => /^[a-z0-9_]{2,40}$/.test(String(p?.soopId || '').toLowerCase()) ? String(p.soopId).toLowerCase() : '';\n  const playerUrl = p => hasEloId(p) ? `https://eloboard.com/players/${p.eloId}` : channelId(p) ? `https://www.sooplive.com/station/${encodeURIComponent(channelId(p))}` : '';\n  const profileImage = id =>",1)
+          s=s.replace("row.querySelector('a[href^=\"https://eloboard.com/players/\"]')","row.querySelector('.shared-tier-player-name')",1)
+          s=s.replace('p.name && Number.isSafeInteger(p.eloId)','p.name && (hasEloId(p) || channelId(p))',1)
+          s=s.replace('<a href="https://eloboard.com/players/${p.eloId}" target="_blank" rel="noopener noreferrer">${esc(p.name)}</a>','<a class="shared-tier-player-name" href="${esc(playerUrl(p))}" target="_blank" rel="noopener noreferrer">${esc(p.name)}</a>',1)
+          assert s.count('class="shared-tier-player-name"')==1
+          p.write_text(s)
+          p=Path('index.html');s=p.read_text();assert '5.24.33' in s;p.write_text(s.replace('5.24.33','5.24.34'))
+          p=Path('version.json');v=json.loads(p.read_text());assert v['version']=='5.24.33';v.update(version='5.24.34',releasedAt='2026-11-17T10:30:00Z',notes='공통 티어표 수빛나·김아린 저그 유스 추가 · 방송국 기반 선수 표시');p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n')
+          print('Preserved',len(old['players']),'existing players; total',len(d['players']))
+          PY
+      - name: Run regression tests
+        run: |
+          node --check tier-board.js
+          node --test tests/*.test.mjs
+      - name: Check youth cards on desktop and mobile
+        run: |
+          python -m pip install playwright==1.56.0
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from playwright.sync_api import sync_playwright
+          db=json.loads(Path('players.json').read_text())
+          code=Path('tier-board.js').read_text()
+          css=Path('tier-board.css').read_text()
+          with sync_playwright() as p:
+            browser=p.chromium.launch()
+            for width in [1440,390]:
+              page=browser.new_page(viewport={'width':width,'height':900})
+              errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+              page.route('**/players.json',lambda r:r.fulfill(json=db))
+              page.route('**/home/section/broad',lambda r:r.fulfill(status=200,body=''))
+              page.route('**/LOGO/**',lambda r:r.fulfill(content_type='image/svg+xml',body='<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"/>'))
+              page.goto('about:blank#tiers')
+              page.set_content('<nav id="nav"></nav><div class="content"></div>')
+              page.add_style_tag(content=css)
+              page.add_script_tag(content=code)
+              page.wait_for_function('document.querySelector("[data-tier-filter=\"베이비\"]")')
+              page.locator('[data-tier-all]').click()
+              page.locator('[data-tier-filter="베이비"]').click()
+              for name,channel in [('수빛나','492877vv'),('김아린','skdidkfl')]:
+                row=page.locator('.shared-tier-player').filter(has=page.get_by_role('link',name=name,exact=True))
+                assert row.count()==1
+                assert row.locator('.shared-tier-race').inner_text()=='Z'
+                assert row.locator('.shared-tier-player-name').get_attribute('href')=='https://www.sooplive.com/station/'+channel
+                assert row.locator('img').get_attribute('src')==f'https://profile.img.sooplive.com/LOGO/{channel[:2]}/{channel}/{channel}.jpg'
+              assert page.locator('a[href*="/players/null"]').count()==0
+              assert not errors,errors
+              print('PASS',width,'both youth names/races/station links/profile URLs')
+              page.close()
+            browser.close()
+          PY
+      - name: Commit only tested application files
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add players.json tier-board.js index.html version.json
+          git commit -m 'Add Subitna and Kim Arin as Zerg youth with verified SOOP channels'
+          git push origin HEAD:refs/heads/feat/youth-tier-entries-20261117
