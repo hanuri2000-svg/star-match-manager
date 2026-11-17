@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-16",
+  "updatedAt": "2026-11-17",
   "source": {
     "name": "스타CK 밸런스 티어표",
     "version": "3.62",
@@ -4126,6 +4126,30 @@
       "active": false,
       "eloId": 6487,
       "soopId": "",
+      "thumbUrl": ""
+    },
+    {
+      "name": "수빛나",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "Z",
+      "aliases": [],
+      "active": true,
+      "eloId": null,
+      "soopId": "492877vv",
+      "thumbUrl": ""
+    },
+    {
+      "name": "김아린",
+      "tier": "유스",
+      "tierLabel": "베이비",
+      "race": "Z",
+      "aliases": [
+        "♥김아린"
+      ],
+      "active": true,
+      "eloId": null,
+      "soopId": "skdidkfl",
       "thumbUrl": ""
     }
   ]
