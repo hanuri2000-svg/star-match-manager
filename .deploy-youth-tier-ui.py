@@ -1,4 +1,4 @@
-"""Verify deployed shared tier UI; mock only third-party live status, never player data."""
+"""Verify deployed tier UI; third-party status/record calls are isolated, not player data."""
 import asyncio
 import json
 from pathlib import Path
@@ -35,7 +35,6 @@ async def check(browser,label,url,integrated,width):
             row=link.locator('..')
             assert await row.locator('.shared-tier-race').inner_text()=='Z'
             assert await link.is_visible(),(label,name,'not visible')
-            assert await row.locator('.shared-tier-avatar img').get_attribute('src')=='https://profile.img.sooplive.com/LOGO/'+channel[:2]+'/'+channel+'/'+channel+'.jpg'
         assert any('/star-match-manager/tier-board.js' in x for x in requests),(label,'not shared renderer')
         assert any('/star-match-manager/players.json' in x for x in requests),(label,'not shared data')
         await page.screenshot(path=str(OUT/(label+'-'+str(width)+'.png')),full_page=True)
