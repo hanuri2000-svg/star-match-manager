@@ -23,14 +23,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
+          package-manager-cache: false
       - name: Verify explicitly requested commit
         env:
           TESTED_SHA: ${{ inputs.tested_sha }}
@@ -40,7 +41,7 @@ jobs:
         run: node scripts/verify-eloboard-receipt.mjs
       - name: Run all regression tests
         run: node --test tests/*.test.mjs
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Validate deployment workflow wiring
@@ -54,7 +55,7 @@ jobs:
       image: mcr.microsoft.com/playwright/python:v1.56.0-noble
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
@@ -68,7 +69,7 @@ jobs:
           python tests/schedule-play-smoke.py
       - name: Save viewport screenshots and results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: main-screen-browser-smoke
           path: |
@@ -92,14 +93,14 @@ jobs:
       current: ${{ steps.guard.outputs.current }}
       artifact-name: ${{ steps.package.outputs.artifact-name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
       - name: Check required results, latest main, and Actions publishing source
         id: guard
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REQUIRED_RESULTS: ${{ toJSON(needs) }}
         with:
@@ -115,7 +116,7 @@ jobs:
           git archive "$GITHUB_SHA" -- . ':!.github' ':!tests' ':!scripts' ':!docs' ':!README.md' ':!.deploy-*' | tar -x -C _site
           node -e 'require("fs").writeFileSync("_site/deployment.json", JSON.stringify({sha:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID}) + "\n")'
           echo "artifact-name=github-pages-$GITHUB_SHA-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5.0.0
         if: steps.guard.outputs.current == 'true'
         with:
           name: ${{ steps.package.outputs.artifact-name }}
@@ -139,14 +140,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 0
       - name: Recheck latest commit immediately before deployment
         id: guard
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           REQUIRED_RESULTS: ${{ toJSON(needs) }}
         with:
@@ -156,7 +157,7 @@ jobs:
       - name: Deploy verified commit
         id: deployment
         if: steps.guard.outputs.current == 'true'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.1
         with:
           # Reuse the producing job's name when only a failed deploy is rerun.
           artifact_name: ${{ needs.build-pages.outputs.artifact-name }}
