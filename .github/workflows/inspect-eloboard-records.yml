@@ -1,0 +1,36 @@
+name: Check EloBoard record access
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/inspect-eloboard-records.mjs'
+      - '.github/workflows/inspect-eloboard-records.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Inspect a bounded sample of public match data
+        run: node scripts/inspect-eloboard-records.mjs
+      - name: Show actual response results
+        if: always()
+        run: cat record-access-diagnostic/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eloboard-record-access
+          path: record-access-diagnostic/
+          retention-days: 7
+          if-no-files-found: error
